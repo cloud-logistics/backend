@@ -85,7 +85,7 @@ DATABASES = {
         'OPTIONS': {
                     'options': '-c search_path=iot'
                 },
-        'NAME': 'postgres',
+        'NAME': 'cloudbox',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': '127.0.0.1',
