@@ -17,5 +17,5 @@ Including another URLconf
 from django.conf.urls import url, include
 
 urlpatterns = [
-    url(r'^', include('sensor.urls')),
+    url(r'^api/v1/cloudbox', include('sensor.urls')),
 ]
