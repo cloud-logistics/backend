@@ -5,5 +5,5 @@ from django.conf.urls import url
 from sensor import views
 
 urlpatterns = [
-    url(r'^/sensor$', views.input_data),
+    url(r'^sensor$', views.input_data),
 ]
