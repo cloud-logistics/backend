@@ -17,7 +17,7 @@ def get_conn_pool():
         maxconn=20,
         database="cloudbox",
         user="postgres",
-        password="root",
+        password="postgres",
         host="127.0.0.1",
         port="5432"
     )
