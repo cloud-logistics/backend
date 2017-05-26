@@ -12,7 +12,7 @@ urlpatterns = [
     url(r'^satellites$', views.satellites_overview),
     url(r'^satellites$', views.realtime_message),                # 实时报文
     url(r'^containerInstantInfo', views.realtime_position),      # 实时位置
-    url(r'^containerReportHistory', views.history_path),         # 历史轨迹
+    url(r'^containerhistory', views.history_path),         # 历史轨迹
     url(r'^alerts', views.alarm_monitor),                        # 报警监控
     url(r'^basicInfo', views.basic_info),                        # 基础信息查询
     url(r'^historyMsg', views.history_message),                  # 历史报文

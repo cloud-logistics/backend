@@ -137,7 +137,56 @@ def basic_info(request):
 
 @csrf_exempt
 def history_message(request):
-    pass
+    param = request.body
+    container_dic_list = []
+    final_response = {}
+    if param:
+        try:
+            param_dic = json.loads(param)
+            if param_dic['containerId'] and param_dic['startTime'] and param_dic['endTime']:
+                request_starttime = param_dic['startTime']
+                request_endtime = param_dic['endTime']
+                query_template = '''select srcid, dstid, starttime, endtime
+                        from iot.order_info where iot.order_info.trackid
+                        in (select trackid from iot.box_order_relation
+                        where iot.box_order_relation.deviceid = '%s')''' % param_dic['containerId']
+                order_info_query_list = query_list(query_template)
+                site_info_query_list = query_list('select id, latitude, longitude from iot.site_info')
+                site_info_dic = {}
+                '''
+                site info dic
+                dic ['id'] = {'lat':12, 'lng':120}
+                '''
+                for item in site_info_query_list:
+                    gpsdic = {}
+                    gpsdic['lat'] = item[1]
+                    gpsdic['lng'] = item[2]
+                    site_info_dic[item[0]] = gpsdic
+                # contract final response
+                for item in order_info_query_list:
+                    if int(request_starttime) <= int(item[2]) and int(request_endtime) >= int(item[3]):
+                        start_dic = {}
+                        start_dic['time'] = item[2]
+                        if item[0] in site_info_dic.keys():
+                            start_dic['position'] = site_info_dic[item[0]]
+                        end_dic = {}
+                        end_dic['time'] = item[3]
+                        if item[1] in site_info_dic.keys():
+                            end_dic['position'] = site_info_dic[item[1]]
+                        container_dic = {}
+                        container_dic['containerId'] = param_dic['containerId']
+                        container_dic['start'] = start_dic
+                        container_dic['end'] = end_dic
+                        container_dic_list.append(container_dic)
+                final_response['containerhistory'] = container_dic_list
+                log.debug(final_response)
+        except Exception, e:
+            log.error(e)
+        finally:
+            return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
+    else:
+        return JsonResponse(final_response, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 @csrf_exempt
