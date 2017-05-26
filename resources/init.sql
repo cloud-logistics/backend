@@ -104,8 +104,8 @@ CREATE INDEX idx_timestamp
 CREATE TABLE iot.box_order_relation
 (
     "id " integer NOT NULL DEFAULT nextval('iot."box_order_relation_id _seq"'::regclass),
-    trackid integer,
-    deviceid integer
+    trackid text COLLATE pg_catalog."default",
+    deviceid text COLLATE pg_catalog."default"
 )
 WITH (
     OIDS = FALSE
@@ -121,7 +121,7 @@ CREATE TABLE iot.order_info
     id integer NOT NULL DEFAULT nextval('iot.order_info_id_seq'::regclass),
     srcid integer,
     dstid integer,
-    trackid integer,
+    trackid text COLLATE pg_catalog."default",
     starttime text COLLATE pg_catalog."default",
     endtime text COLLATE pg_catalog."default"
 )
@@ -137,8 +137,8 @@ CREATE TABLE iot.site_info
 (
     id integer NOT NULL DEFAULT nextval('iot.site_info_id_seq'::regclass),
     location text COLLATE pg_catalog."default",
-    latitude integer,
-    longitude integer
+    latitude text COLLATE pg_catalog."default",
+    longitude text COLLATE pg_catalog."default"
 )
 WITH (
     OIDS = FALSE
