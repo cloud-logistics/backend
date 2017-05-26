@@ -30,7 +30,6 @@ CREATE TABLE iot.box_info
     manufacturer text COLLATE pg_catalog."default",
     type integer,
     produce_area text COLLATE pg_catalog."default",
-    carrierid integer,
     date_of_production text COLLATE pg_catalog."default",
     temperature_threshold_max integer,
     temperature_threshold_min integer,
@@ -123,7 +122,8 @@ CREATE TABLE iot.order_info
     dstid integer,
     trackid text COLLATE pg_catalog."default",
     starttime text COLLATE pg_catalog."default",
-    endtime text COLLATE pg_catalog."default"
+    endtime text COLLATE pg_catalog."default",
+    carrierid integer
 )
 WITH (
     OIDS = FALSE
