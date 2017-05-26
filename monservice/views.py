@@ -7,14 +7,15 @@ import os
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
-from util.db import save_to_db, query_list
+from util.db import query_list
 from util import logger
 
 # Create your views here.
 
 log = logger.get_logger('monservice.view.py')
 file_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + 'mock_data.json'
-
+NOT_APPLICABLE = 'NA'
+ZERO = 0
 
 @csrf_exempt
 def containers_overview(request):
@@ -45,7 +46,60 @@ def realtime_message(request):
 
 @csrf_exempt
 def realtime_position(request):
-    pass
+    id = 'ESP32_AI_001'
+    data = query_list('select box_info.deviceid, carrier_info.carrier_name, site_info_src.location, site_info_dst.location '
+                      'from iot.box_info box_info left join ' 
+                      'iot.box_order_relation relation on box_info.deviceid = relation.deviceid ' 
+                      'left join iot.order_info order_info on order_info.trackid = relation.trackid ' 
+                      'left join iot.carrier_info carrier_info on carrier_info.id = box_info.carrierid '
+                      'left join iot.site_info site_info_src on site_info_src.id = order_info.srcid '
+                      'left join iot.site_info site_info_dst on site_info_dst.id = order_info.dstid '
+                      'where box_info.deviceid = \'' + id + '\' ' 
+                      ' group by box_info.deviceid,carrier_info.carrier_name, site_info_src.location, site_info_dst.location')
+
+    if len(data) > 0:
+        clientid = to_str(data[0][0])
+        carrier = to_str(data[0][1])
+        origination = to_str(data[0][2])
+        destination = to_str(data[0][3])
+    else:
+        clientid = NOT_APPLICABLE
+        carrier = NOT_APPLICABLE
+        origination = NOT_APPLICABLE
+        destination = NOT_APPLICABLE
+
+    ori_data = query_list('select latitude, longitude from iot.site_info where location = \'' + origination + '\'')
+    dst_data = query_list('select latitude, longitude from iot.site_info where location = \'' + destination + '\'')
+    if len(ori_data) > 0:
+        ori_latitude = float(to_str(ori_data[0][0]))
+        ori_longitude = float(to_str(ori_data[0][1]))
+    else:
+        ori_latitude = ZERO
+        ori_longitude = ZERO
+
+    if len(dst_data) > 0:
+        dst_latitude = float(to_str(dst_data[0][0]))
+        dst_longitude = float(to_str(dst_data[0][1]))
+    else:
+        dst_latitude = ZERO
+        dst_longitude = ZERO
+
+    cur_data = query_list('select latitude,longitude from iot.sensor_data '
+                          'where deviceid = \'' + clientid + '\' order by timestamp desc limit 1')
+    if len(cur_data) > 0:
+        cur_latitude = cal_position(cur_data[0][0])
+        cur_longitude = cal_position(cur_data[0][1])
+    else:
+        cur_latitude = ZERO
+        cur_longitude = ZERO
+
+    ret_data = {'containerInstantInfo':
+                {'containerInfo': {'containerId': clientid, 'carrier': carrier},
+                 'startPosition': {'lng': ori_longitude, 'lat': ori_latitude},
+                 'currentPosition': {'lng': cur_longitude, 'lat': cur_latitude},
+                 'endPosition': {'lng': dst_longitude, 'lat': dst_latitude}}}
+
+    return JsonResponse(ret_data, safe=False, status=status.HTTP_200_OK)
 
 
 @csrf_exempt
@@ -60,8 +114,11 @@ def alarm_monitor(request):
 
 @csrf_exempt
 def basic_info(request):
-    data = query_list('select clientid, type, produce_area, manufacturer, carrier, date_of_production ' \
-                      'from iot.box_info')
+    data = query_list('select deviceid, iot.box_type_info.box_type_name, produce_area, manufacturer, ' 
+                      'iot.carrier_info.carrier_name, date_of_production ' 
+                      'from iot.box_info '
+                      'inner join iot.box_type_info on iot.box_info.type = iot.box_type_info.id '
+                      'inner join iot.carrier_info on iot.box_info.carrierid = iot.carrier_info.id')
     ret_list = []
     for item in data:
         dicitem = {}
@@ -94,3 +151,12 @@ def to_str(unicode_or_str):
     else:
         value = unicode_or_str
     return value
+
+
+# 将传感器数据的经度或纬度转换为小数点形式，Longitude: 116296046, //dddmmmmmm   Latitude: 39583032,  //ddmmmmmm
+def cal_position(value):
+    hour = value[:-6]
+    minute = value[len(hour):len(value)]
+
+    return float(hour + '.' + minute)
+
