@@ -55,6 +55,8 @@ def realtime_message(request):
         dstid = carrier_data[0][2]
     else:
         carrier_name = NOT_APPLICABLE
+        srcid = ZERO
+        dstid = ZERO
 
     # 获取起始点经纬度
     src_site_data = query_list('select latitude,longitude from iot.site_info where id = ' + str(srcid) + '')
