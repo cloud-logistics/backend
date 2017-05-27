@@ -394,10 +394,10 @@ def is_same_position(cur_longitude, cur_latitude, dst_longitude, dst_latitude):
         return False
 
 
-def get_utc(str):
-    if str == 'NaN':
+def get_utc(str_to_trans):
+    if str_to_trans == 'NaN':
         str_current_utc = str(int(time.mktime(datetime.datetime.now().timetuple())))
         log.info("NaN mapping to: %s" % to_str(str_current_utc))
         return to_str(str_current_utc)
     else:
-        return str
+        return str_to_trans
