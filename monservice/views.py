@@ -207,11 +207,6 @@ def realtime_position(request):
 
 
 @csrf_exempt
-def history_path(request):
-    pass
-
-
-@csrf_exempt
 def alarm_monitor(request):
     pass
 
@@ -243,7 +238,7 @@ def basic_info(request):
 
 
 @csrf_exempt
-def history_message(request):
+def history_path(request):
     param = request.body
     container_dic_list = []
     final_response = {}
@@ -264,12 +259,14 @@ def history_message(request):
                 site info dic
                 dic ['id'] = {'lat':12, 'lng':120}
                 '''
+                log.info("site_info_query_list:%s" % site_info_query_list)
                 for item in site_info_query_list:
                     gpsdic = {}
                     gpsdic['lat'] = item[1]
                     gpsdic['lng'] = item[2]
                     site_info_dic[item[0]] = gpsdic
                 # contract final response
+                log.info("order_info_query_list:%s" % order_info_query_list)
                 for item in order_info_query_list:
                     if int(request_starttime) <= int(item[2]) and int(request_endtime) >= int(item[3]):
                         start_dic = {}
@@ -286,7 +283,7 @@ def history_message(request):
                         container_dic['end'] = end_dic
                         container_dic_list.append(container_dic)
                 final_response['containerhistory'] = container_dic_list
-                log.debug(final_response)
+                log.info("final_response:%s" % final_response)
         except Exception, e:
             log.error(e)
         finally:
@@ -295,11 +292,14 @@ def history_message(request):
         return JsonResponse(final_response, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@csrf_exempt
+def history_message(request):
+    pass
+
 
 @csrf_exempt
 def status_summary(request):
     pass
-
 
 
 @csrf_exempt
