@@ -41,21 +41,122 @@ def satellites_overview(request):
 
 @csrf_exempt
 def realtime_message(request):
-    pass
+    id = 'ESP32_AI_001'
+    # 获取承运方
+    carrier_data = query_list('select carrier_info.carrier_name,order_info.srcid,order_info.dstid '
+                              'from iot.order_info order_info '
+                              'left join iot.box_order_relation box_order_relation on order_info.trackid = box_order_relation.trackid '
+                              'left join iot.carrier_info carrier_info on order_info.carrierid = carrier_info.id '
+                              'where box_order_relation.deviceid =  \'' + id + '\' '
+                                                                               'group by carrier_info.carrier_name,order_info.srcid,order_info.dstid')
+    if len(carrier_data) > 0:
+        carrier_name = carrier_data[0][0]
+        srcid = carrier_data[0][1]
+        dstid = carrier_data[0][2]
+    else:
+        carrier_name = NOT_APPLICABLE
+
+    # 获取起始点经纬度
+    src_site_data = query_list('select latitude,longitude from iot.site_info where id = ' + str(srcid) + '')
+    if len(src_site_data) > 0:
+        src_latitude = src_site_data[0][0]
+        src_longitude = src_site_data[0][1]
+    else:
+        src_latitude = ZERO
+        src_longitude = ZERO
+
+    # 获取结束点经纬度
+    dst_site_data = query_list('select latitude,longitude from iot.site_info where id = ' + str(dstid) + '')
+    if len(dst_site_data) > 0:
+        dst_latitude = dst_site_data[0][0]
+        dst_longitude = dst_site_data[0][1]
+    else:
+        dst_latitude = ZERO
+        dst_longitude = ZERO
+
+    # 获取云箱型号
+    box_type_data = query_list('select box_type_info.box_type_name from iot.box_info box_info '
+                               'left join iot.box_type_info box_type_info on box_info.type = box_type_info.id '
+                               'where box_info.deviceid = \'' + id + '\' group by box_type_info.box_type_name')
+
+    if len(box_type_data) > 0:
+        box_type = box_type_data[0][0]
+    else:
+        box_type = NOT_APPLICABLE
+
+    # 获取传感器数据
+    sensor_data = query_list('select temperature,humidity,longitude,latitude,speed,collide '
+                             'from iot.sensor_data where deviceid = \'' + id + '\' order by timestamp desc limit 1')
+    if len(sensor_data) > 0:
+        temperature = sensor_data[0][0]
+        humidity = sensor_data[0][1]
+        longitude = cal_position(sensor_data[0][2])
+        latitude = cal_position(sensor_data[0][3])
+        speed = sensor_data[0][4]
+        collide = sensor_data[0][5]
+    else:
+        temperature = ZERO
+        humidity = ZERO
+        longitude = ZERO
+        latitude = ZERO
+        speed = ZERO
+        collide = ZERO
+
+    # 获取箱子阈值
+    threshold_data = query_list('select temperature_threshold_max,temperature_threshold_min,'
+                                'humidity_threshold_max,humidity_threshold_min '
+                                'from iot.box_info where deviceid = \'' + id + '\'')
+
+    if len(threshold_data) > 0:
+        temperature_threshold_max = threshold_data[0][0]
+        temperature_threshold_min = threshold_data[0][1]
+        humidity_threshold_max = threshold_data[0][2]
+        humidity_threshold_min = threshold_data[0][3]
+    else:
+        temperature_threshold_max = ZERO
+        temperature_threshold_min = ZERO
+        humidity_threshold_max = ZERO
+        humidity_threshold_min = ZERO
+
+    # 计算箱子在运还是停靠
+    if not is_same_position(longitude, latitude, src_longitude, src_latitude) and \
+            not is_same_position(longitude, latitude, dst_longitude, dst_latitude):
+        shipping_status = '在运'
+    else:
+        shipping_status = '停靠'
+
+    # 计算温度、湿度是否在正常范围
+    if temperature in range(temperature_threshold_min, temperature_threshold_max):
+        temperature_status = '正常'
+    else:
+        temperature_status = '异常'
+    if humidity in range(humidity_threshold_min, humidity_threshold_max):
+        humidity_status = '正常'
+    else:
+        humidity_status = '异常'
+
+    ret_data = {'realtimeInfo': {'containerId': id, 'containerType': box_type, 'currentStatus': shipping_status,
+                                 'carrier': carrier_name, 'position': {'lng': longitude, 'lat': latitude},
+                                 'speed': float(speed), 'temperature': {'value': float(temperature), 'status': temperature_status},
+                                 'humidity': {'value': float(humidity), 'status': humidity_status},
+                                 'battery': {'value': 0.6, 'status': '正常'},  # 后续需要修改为真实值
+                                 'boxStatus': {'num_of_collide': float(collide), 'num_of_door_open': 54}}}
+    return JsonResponse(ret_data, safe=False, status=status.HTTP_200_OK)
 
 
 @csrf_exempt
 def realtime_position(request):
     id = 'ESP32_AI_001'
-    data = query_list('select box_info.deviceid, carrier_info.carrier_name, site_info_src.location, site_info_dst.location '
-                      'from iot.box_info box_info '
-                      'left join iot.box_order_relation relation on box_info.deviceid = relation.deviceid '
-                      'left join iot.order_info order_info on order_info.trackid = relation.trackid '
-                      'left join iot.carrier_info carrier_info on carrier_info.id = order_info.carrierid '
-                      'left join iot.site_info site_info_src on site_info_src.id = order_info.srcid '
-                      'left join iot.site_info site_info_dst on site_info_dst.id = order_info.dstid '
-                      'where box_info.deviceid = \'' + id + '\' '
-                      'group by box_info.deviceid,carrier_info.carrier_name, site_info_src.location, site_info_dst.location')
+    data = query_list(
+        'select box_info.deviceid, carrier_info.carrier_name, site_info_src.location, site_info_dst.location '
+        'from iot.box_info box_info '
+        'left join iot.box_order_relation relation on box_info.deviceid = relation.deviceid '
+        'left join iot.order_info order_info on order_info.trackid = relation.trackid '
+        'left join iot.carrier_info carrier_info on carrier_info.id = order_info.carrierid '
+        'left join iot.site_info site_info_src on site_info_src.id = order_info.srcid '
+        'left join iot.site_info site_info_dst on site_info_dst.id = order_info.dstid '
+        'where box_info.deviceid = \'' + id + '\' '
+        'group by box_info.deviceid,carrier_info.carrier_name, site_info_src.location, site_info_dst.location')
 
     if len(data) > 0:
         clientid = to_str(data[0][0])
@@ -94,10 +195,10 @@ def realtime_position(request):
         cur_longitude = ZERO
 
     ret_data = {'containerInstantInfo':
-                {'containerInfo': {'containerId': clientid, 'carrier': carrier},
-                 'startPosition': {'lng': ori_longitude, 'lat': ori_latitude},
-                 'currentPosition': {'lng': cur_longitude, 'lat': cur_latitude},
-                 'endPosition': {'lng': dst_longitude, 'lat': dst_latitude}}}
+                    {'containerInfo': {'containerId': clientid, 'carrier': carrier},
+                     'startPosition': {'lng': ori_longitude, 'lat': ori_latitude},
+                     'currentPosition': {'lng': cur_longitude, 'lat': cur_latitude},
+                     'endPosition': {'lng': dst_longitude, 'lat': dst_latitude}}}
 
     return JsonResponse(ret_data, safe=False, status=status.HTTP_200_OK)
 
@@ -114,8 +215,8 @@ def alarm_monitor(request):
 
 @csrf_exempt
 def basic_info(request):
-    data = query_list('select box_info.deviceid, box_type_info.box_type_name, produce_area, manufacturer, ' 
-                      'carrier_info.carrier_name, date_of_production ' 
+    data = query_list('select box_info.deviceid, box_type_info.box_type_name, produce_area, manufacturer, '
+                      'carrier_info.carrier_name, date_of_production '
                       'from iot.box_info '
                       'left join iot.box_type_info on box_info.type = box_type_info.id '
                       'left join iot.box_order_relation box_order_relation on box_order_relation.deviceid = box_info.deviceid '
@@ -267,3 +368,12 @@ def strip_tuple(todo_list, index):
                 strip_list.append(query_item[index])
     return strip_list
 
+
+# 判断当前位置与目的位置是否相同
+def is_same_position(cur_longitude, cur_latitude, dst_longitude, dst_latitude):
+    threshold = 0.01
+
+    if abs(float(cur_longitude) - float(dst_longitude)) < threshold and abs(float(cur_latitude) - float(dst_latitude)) < threshold:
+        return True
+    else:
+        return False
