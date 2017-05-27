@@ -147,6 +147,7 @@ def realtime_message(request):
     return JsonResponse(ret_data, safe=False, status=status.HTTP_200_OK)
 
 
+# 实时位置
 @csrf_exempt
 def realtime_position(request):
     id = 'ESP32_AI_001'
@@ -197,11 +198,10 @@ def realtime_position(request):
         cur_latitude = ZERO
         cur_longitude = ZERO
 
-    ret_data = {'containerInstantInfo':
-                    {'containerInfo': {'containerId': clientid, 'carrier': carrier},
-                     'startPosition': {'lng': ori_longitude, 'lat': ori_latitude},
-                     'currentPosition': {'lng': cur_longitude, 'lat': cur_latitude},
-                     'endPosition': {'lng': dst_longitude, 'lat': dst_latitude}}}
+    ret_data = {'containerInfo': {'containerId': clientid, 'carrier': carrier},
+                'startPosition': {'lng': ori_longitude, 'lat': ori_latitude},
+                'currentPosition': {'lng': cur_longitude, 'lat': cur_latitude},
+                'endPosition': {'lng': dst_longitude, 'lat': dst_latitude}}
 
     return JsonResponse(ret_data, safe=False, status=status.HTTP_200_OK)
 
