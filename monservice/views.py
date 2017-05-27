@@ -39,6 +39,7 @@ def satellites_overview(request):
         return JsonResponse('', safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# 实时报文
 @csrf_exempt
 def realtime_message(request):
     id = 'ESP32_AI_001'
@@ -137,12 +138,12 @@ def realtime_message(request):
     else:
         humidity_status = '异常'
 
-    ret_data = {'realtimeInfo': {'containerId': id, 'containerType': box_type, 'currentStatus': shipping_status,
+    ret_data = {'containerId': id, 'containerType': box_type, 'currentStatus': shipping_status,
                                  'carrier': carrier_name, 'position': {'lng': longitude, 'lat': latitude},
                                  'speed': float(speed), 'temperature': {'value': float(temperature), 'status': temperature_status},
                                  'humidity': {'value': float(humidity), 'status': humidity_status},
                                  'battery': {'value': 0.6, 'status': '正常'},  # 后续需要修改为真实值
-                                 'boxStatus': {'num_of_collide': float(collide), 'num_of_door_open': 54}}}
+                                 'boxStatus': {'num_of_collide': float(collide), 'num_of_door_open': 54}}
     return JsonResponse(ret_data, safe=False, status=status.HTTP_200_OK)
 
 
