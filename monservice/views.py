@@ -3,12 +3,14 @@
 
 import json
 import os
-
+import time
+import datetime
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from util.db import query_list
 from util import logger
+
 
 # Create your views here.
 
@@ -246,8 +248,8 @@ def history_path(request):
         try:
             param_dic = json.loads(param)
             if param_dic['containerId'] and param_dic['startTime'] and param_dic['endTime']:
-                request_starttime = param_dic['startTime']
-                request_endtime = param_dic['endTime']
+                request_starttime = get_utc(param_dic['startTime'])
+                request_endtime = get_utc(param_dic['endTime'])
                 query_template = '''select srcid, dstid, starttime, endtime
                         from iot.order_info where iot.order_info.trackid
                         in (select trackid from iot.box_order_relation
@@ -267,8 +269,18 @@ def history_path(request):
                     site_info_dic[item[0]] = gpsdic
                 # contract final response
                 log.info("order_info_query_list:%s" % order_info_query_list)
+                log.info("request_starttime:%s" % request_starttime)
+                log.info("request_endtime:%s" % request_endtime)
                 for item in order_info_query_list:
-                    if int(request_starttime) <= int(item[2]) and int(request_endtime) >= int(item[3]):
+                    if len(request_starttime) > 10:
+                        req_starttime_int = int(request_starttime) / 1000
+                    else:
+                        req_starttime_int = int(request_starttime)
+                    if len(request_endtime) > 10:
+                        req_endtime_int = int(request_endtime) / 1000
+                    else:
+                        req_endtime_int = int(request_endtime)
+                    if req_starttime_int <= int(item[2]) and req_endtime_int >= int(item[3]):
                         start_dic = {}
                         start_dic['time'] = item[2]
                         if item[0] in site_info_dic.keys():
@@ -380,3 +392,12 @@ def is_same_position(cur_longitude, cur_latitude, dst_longitude, dst_latitude):
         return True
     else:
         return False
+
+
+def get_utc(str):
+    if str == 'NaN':
+        str_current_utc = str(int(time.mktime(datetime.datetime.now().timetuple())))
+        log.info("NaN mapping to: %s" % to_str(str_current_utc))
+        return to_str(str_current_utc)
+    else:
+        return str
