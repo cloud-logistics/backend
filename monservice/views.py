@@ -48,14 +48,14 @@ def realtime_message(request):
 def realtime_position(request):
     id = 'ESP32_AI_001'
     data = query_list('select box_info.deviceid, carrier_info.carrier_name, site_info_src.location, site_info_dst.location '
-                      'from iot.box_info box_info left join ' 
-                      'iot.box_order_relation relation on box_info.deviceid = relation.deviceid ' 
-                      'left join iot.order_info order_info on order_info.trackid = relation.trackid ' 
-                      'left join iot.carrier_info carrier_info on carrier_info.id = box_info.carrierid '
+                      'from iot.box_info box_info '
+                      'left join iot.box_order_relation relation on box_info.deviceid = relation.deviceid '
+                      'left join iot.order_info order_info on order_info.trackid = relation.trackid '
+                      'left join iot.carrier_info carrier_info on carrier_info.id = order_info.carrierid '
                       'left join iot.site_info site_info_src on site_info_src.id = order_info.srcid '
                       'left join iot.site_info site_info_dst on site_info_dst.id = order_info.dstid '
-                      'where box_info.deviceid = \'' + id + '\' ' 
-                      ' group by box_info.deviceid,carrier_info.carrier_name, site_info_src.location, site_info_dst.location')
+                      'where box_info.deviceid = \'' + id + '\' '
+                      'group by box_info.deviceid,carrier_info.carrier_name, site_info_src.location, site_info_dst.location')
 
     if len(data) > 0:
         clientid = to_str(data[0][0])
@@ -114,11 +114,14 @@ def alarm_monitor(request):
 
 @csrf_exempt
 def basic_info(request):
-    data = query_list('select deviceid, iot.box_type_info.box_type_name, produce_area, manufacturer, ' 
-                      'iot.carrier_info.carrier_name, date_of_production ' 
+    data = query_list('select box_info.deviceid, box_type_info.box_type_name, produce_area, manufacturer, ' 
+                      'carrier_info.carrier_name, date_of_production ' 
                       'from iot.box_info '
-                      'inner join iot.box_type_info on iot.box_info.type = iot.box_type_info.id '
-                      'inner join iot.carrier_info on iot.box_info.carrierid = iot.carrier_info.id')
+                      'left join iot.box_type_info on box_info.type = box_type_info.id '
+                      'left join iot.box_order_relation box_order_relation on box_order_relation.deviceid = box_info.deviceid '
+                      'left join iot.order_info order_info on order_info.trackid = box_order_relation.trackid '
+                      'left join iot.carrier_info on order_info.carrierid = carrier_info.id '
+                      'group by box_info.deviceid, box_type_name, produce_area, manufacturer, carrier_name, date_of_production')
     ret_list = []
     for item in data:
         dicitem = {}
