@@ -194,6 +194,52 @@ def status_summary(request):
     pass
 
 
+
+@csrf_exempt
+def options_to_show(request):
+    final_response = {}
+    req_param_str_utf8 = to_str(request.body)
+    req_param = json.loads(req_param_str_utf8)
+    if req_param:
+        if req_param['requiredOptions']:
+            for item in req_param['requiredOptions']:
+                if item == 'alertLevel':
+                    alert_level_list = query_list('select level from iot.alert_level_info')
+                    final_response['alertLevel'] = strip_tuple(alert_level_list, 0)
+                if item == 'alertCode':
+                    alert_code_list = query_list('select errcode from iot.alert_code_info')
+                    final_response['alertCode'] = strip_tuple(alert_code_list, 0)
+                if item == 'alertType':
+                    alert_type_list = query_list('select type from iot.alert_type_info')
+                    final_response['alertType'] = strip_tuple(alert_type_list, 0)
+                if item == 'containerType':
+                    container_type_list = query_list('select box_type_name from iot.box_type_info')
+                    final_response['containerType'] = strip_tuple(container_type_list, 0)
+                if item == 'currentStatus':
+                    status_list = []
+                    status_list.append(to_str('在途'))
+                    status_list.append(to_str('抵达'))
+                    final_response['currentStatus'] = status_list
+                if item == 'location':
+                    location_list = query_list('select location from iot.site_info')
+                    final_response['location'] = strip_tuple(location_list, 0)
+                if item == 'carrier':
+                    carrier_list = query_list('select carrier_name from iot.carrier_info')
+                    final_response['carrier'] = strip_tuple(carrier_list, 0)
+                if item == 'factory':
+                    factory_list = query_list('select manufacturer from iot.box_info')
+                    final_response['factory'] = strip_tuple(factory_list, 0)
+                if item == 'factoryLocation':
+                    location_list = query_list('select produce_area from iot.box_info')
+                    final_response['factoryLocation'] = strip_tuple(location_list, 0)
+            log.debug(json.dumps(final_response))
+            return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse(req_param, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return JsonResponse(req_param, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 def to_str(unicode_or_str):
     if isinstance(unicode_or_str, unicode):
         value = unicode_or_str.encode('UTF-8')
@@ -208,4 +254,13 @@ def cal_position(value):
     minute = value[len(hour):len(value)]
 
     return float(hour + '.' + minute)
+
+
+def strip_tuple(todo_list, index):
+    strip_list = []
+    if isinstance(todo_list, type([])):
+        for query_item in todo_list:
+            if index < len(query_item):
+                strip_list.append(query_item[index])
+    return strip_list
 

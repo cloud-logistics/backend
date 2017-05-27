@@ -23,6 +23,16 @@ ALTER SEQUENCE iot.order_info_id_seq OWNER TO postgres;
 CREATE SEQUENCE iot.site_info_id_seq INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
 ALTER SEQUENCE iot.site_info_id_seq OWNER TO postgres;
 
+CREATE SEQUENCE iot."alert_level_info_seq" INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
+ALTER SEQUENCE iot."alert_level_info_seq" OWNER TO postgres;
+
+CREATE SEQUENCE iot."alert_type_info_seq" INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
+ALTER SEQUENCE iot."alert_type_info_seq" OWNER TO postgres;
+
+CREATE SEQUENCE iot."alert_code_info_seq" INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
+ALTER SEQUENCE iot."alert_code_info_seq" OWNER TO postgres;
+
+
 CREATE TABLE iot.box_info
 (
     id integer NOT NULL DEFAULT nextval('iot.box_info_id_seq'::regclass),
@@ -146,3 +156,42 @@ WITH (
 TABLESPACE pg_default;
 
 ALTER TABLE iot.site_info OWNER to postgres;
+
+
+CREATE TABLE iot.alert_level_info
+(
+  id integer NOT NULL DEFAULT nextval('iot."alert_level_info_seq"'::regclass),
+  level text COLLATE pg_catalog."default"
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE iot.alert_level_info OWNER to postgres;
+
+
+CREATE TABLE iot.alert_type_info
+(
+  id integer NOT NULL DEFAULT nextval('iot."alert_type_info_seq"'::regclass),
+  type text COLLATE pg_catalog."default"
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE iot.alert_type_info OWNER to postgres;
+
+
+CREATE TABLE iot.alert_code_info
+(
+  id integer NOT NULL DEFAULT nextval('iot."alert_code_info_seq"'::regclass),
+  errcode integer
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE iot.alert_code_info OWNER to postgres;
