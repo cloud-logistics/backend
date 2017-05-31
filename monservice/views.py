@@ -264,8 +264,9 @@ def history_path(request):
                 log.info("site_info_query_list:%s" % site_info_query_list)
                 for item in site_info_query_list:
                     gpsdic = {}
-                    gpsdic['lat'] = item[1]
-                    gpsdic['lng'] = item[2]
+                    # string to float type
+                    gpsdic['lat'] = float(item[1])
+                    gpsdic['lng'] = float(item[2])
                     site_info_dic[item[0]] = gpsdic
                 # contract final response
                 log.info("order_info_query_list:%s" % order_info_query_list)
