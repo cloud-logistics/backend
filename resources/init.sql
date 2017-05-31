@@ -32,6 +32,18 @@ ALTER SEQUENCE iot."alert_type_info_seq" OWNER TO postgres;
 CREATE SEQUENCE iot."alert_code_info_seq" INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
 ALTER SEQUENCE iot."alert_code_info_seq" OWNER TO postgres;
 
+CREATE SEQUENCE iot."battery_info_seq" INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
+ALTER SEQUENCE iot."battery_info_seq" OWNER TO postgres;
+
+CREATE SEQUENCE iot."maintenance_info_seq" INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
+ALTER SEQUENCE iot."maintenance_info_seq" OWNER TO postgres;
+
+CREATE SEQUENCE iot."interval_time_info_seq" INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
+ALTER SEQUENCE iot."interval_time_info_seq" OWNER TO postgres;
+
+CREATE SEQUENCE iot."hardware_info_seq" INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
+ALTER SEQUENCE iot."hardware_info_seq" OWNER TO postgres;
+
 
 CREATE TABLE iot.box_info
 (
@@ -195,3 +207,55 @@ WITH (
 TABLESPACE pg_default;
 
 ALTER TABLE iot.alert_code_info OWNER to postgres;
+
+
+CREATE TABLE iot.battery_info
+(
+  id integer NOT NULL DEFAULT nextval('iot."battery_info_seq"'::regclass),
+  battery_detail text
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE iot.battery_info OWNER to postgres;
+
+
+CREATE TABLE iot.maintenance_info
+(
+  id integer NOT NULL DEFAULT nextval('iot."maintenance_info_seq"'::regclass),
+  location text
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE iot.maintenance_info OWNER to postgres;
+
+
+CREATE TABLE iot.interval_time_info
+(
+  id integer NOT NULL DEFAULT nextval('iot."interval_time_info_seq"'::regclass),
+  interval_time_min integer
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE iot.interval_time_info OWNER to postgres;
+
+
+CREATE TABLE iot.hardware_info
+(
+  id integer NOT NULL DEFAULT nextval('iot."hardware_info_seq"'::regclass),
+  hardware_detail text
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE iot.hardware_info OWNER to postgres;

@@ -352,6 +352,19 @@ def options_to_show(request):
                 if item == 'factoryLocation':
                     location_list = query_list('select produce_area from iot.box_info')
                     final_response['factoryLocation'] = strip_tuple(location_list, 0)
+                if item == 'batteryInfo':
+                    batteryinfo_list = query_list('select battery_detail from iot.battery_info')
+                    final_response['batteryInfo'] = strip_tuple(batteryinfo_list, 0)
+                if item == 'maintenanceLocation':
+                    location_list = query_list('select location from iot.maintenance_info')
+                    final_response['maintenanceLocation'] = strip_tuple(location_list, 0)
+                if item == 'intervalTime':
+                    interval_time_list = query_list('select interval_time_min from iot.interval_time_info')
+                    # interval time type is integer
+                    final_response['intervalTime'] = strip_tuple(interval_time_list, 0)
+                if item == 'hardwareInfo':
+                    hardware_info_list = query_list('select hardware_detail from iot.hardware_info')
+                    final_response['hardwareInfo'] = strip_tuple(hardware_info_list, 0)
             log.debug(json.dumps(final_response))
             return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
         else:
@@ -381,7 +394,10 @@ def strip_tuple(todo_list, index):
     if isinstance(todo_list, type([])):
         for query_item in todo_list:
             if index < len(query_item):
-                strip_list.append(query_item[index])
+                if isinstance(query_item[index], type(" ")):
+                    strip_list.append(to_str(query_item[index]))
+                else:
+                    strip_list.append(query_item[index])
     return strip_list
 
 
