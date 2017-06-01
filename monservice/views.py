@@ -44,7 +44,11 @@ def satellites_overview(request):
 # 实时报文
 @csrf_exempt
 def realtime_message(request):
-    id = 'ESP32_AI_001'
+    try:
+        id = json.loads(request.body)['containerId']
+    except Exception, e:
+        id = NOT_APPLICABLE
+        log.error(e.message)
     # 获取承运方
     carrier_data = query_list('select carrier_info.carrier_name,order_info.srcid,order_info.dstid '
                               'from iot.order_info order_info '
@@ -131,11 +135,11 @@ def realtime_message(request):
         shipping_status = '停靠'
 
     # 计算温度、湿度是否在正常范围
-    if temperature in range(temperature_threshold_min, temperature_threshold_max):
+    if float(temperature) in range(temperature_threshold_min, temperature_threshold_max):
         temperature_status = '正常'
     else:
         temperature_status = '异常'
-    if humidity in range(humidity_threshold_min, humidity_threshold_max):
+    if float(humidity) in range(humidity_threshold_min, humidity_threshold_max):
         humidity_status = '正常'
     else:
         humidity_status = '异常'
@@ -152,7 +156,12 @@ def realtime_message(request):
 # 实时位置
 @csrf_exempt
 def realtime_position(request):
-    id = 'ESP32_AI_001'
+    try:
+        id = json.loads(request.body)['containerId']
+    except Exception, e:
+        id = NOT_APPLICABLE
+        log.error(e.message)
+
     data = query_list(
         'select box_info.deviceid, carrier_info.carrier_name, site_info_src.location, site_info_dst.location '
         'from iot.box_info box_info '
@@ -312,6 +321,11 @@ def history_message(request):
 
 @csrf_exempt
 def status_summary(request):
+    pass
+
+
+@csrf_exempt
+def basic_info_manage(request):
     pass
 
 

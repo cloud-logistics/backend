@@ -18,4 +18,5 @@ urlpatterns = [
     url(r'^basicInfo$', views.basic_info),                        # 基础信息查询
     url(r'^historyMsg$', views.history_message),                  # 历史报文
     url(r'^statusSummary$', views.status_summary),                # 云箱状态汇总
+    url(r'^basicInfoManage$', views.basic_info_manage),           # 云箱状态汇总
 ]
