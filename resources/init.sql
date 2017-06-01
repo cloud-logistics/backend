@@ -44,19 +44,25 @@ ALTER SEQUENCE iot."interval_time_info_seq" OWNER TO postgres;
 CREATE SEQUENCE iot."hardware_info_seq" INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
 ALTER SEQUENCE iot."hardware_info_seq" OWNER TO postgres;
 
+CREATE SEQUENCE iot.manufacturer_info_id_seq INCREMENT 1 START 3 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
+ALTER SEQUENCE iot.manufacturer_info_id_seq OWNER TO postgres;
+
+CREATE SEQUENCE iot.produce_area_info_id_seq INCREMENT 1 START 3 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
+ALTER SEQUENCE iot.produce_area_info_id_seq OWNER TO postgres;
+
 
 CREATE TABLE iot.box_info
 (
     id integer NOT NULL DEFAULT nextval('iot.box_info_id_seq'::regclass),
     deviceid text COLLATE pg_catalog."default",
-    manufacturer text COLLATE pg_catalog."default",
     type integer,
-    produce_area text COLLATE pg_catalog."default",
     date_of_production text COLLATE pg_catalog."default",
-    temperature_threshold_max integer,
-    temperature_threshold_min integer,
-    humidity_threshold_max integer,
-    humidity_threshold_min integer
+    manufacturer integer,
+    produce_area integer,
+    hardware integer,
+    battery integer,
+    carrier integer
+
 )
 WITH (
     OIDS = FALSE
@@ -259,3 +265,31 @@ WITH (
 TABLESPACE pg_default;
 
 ALTER TABLE iot.hardware_info OWNER to postgres;
+
+
+CREATE TABLE iot.manufacturer_info
+(
+    id bigint NOT NULL DEFAULT nextval('iot.manufacturer_info_id_seq'::regclass),
+    name text COLLATE pg_catalog."default"
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE iot.manufacturer_info
+    OWNER to postgres;
+
+
+CREATE TABLE iot.produce_area_info
+(
+    id integer NOT NULL DEFAULT nextval('iot.produce_area_info_id_seq'::regclass),
+    address text COLLATE pg_catalog."default"
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE iot.produce_area_info
+    OWNER to postgres;

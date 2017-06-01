@@ -8,7 +8,7 @@ import datetime
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
-from util.db import query_list
+from util.db import query_list, save_to_db
 from util import logger
 
 
@@ -18,6 +18,11 @@ log = logger.get_logger('monservice.view.py')
 file_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + 'mock_data.json'
 NOT_APPLICABLE = 'NA'
 ZERO = 0
+STATUS_NORMAL = '正常'
+STATUS_ABNORMAL = '异常'
+IN_TRANSPORT = '在运'
+ANCHORED = '停靠'
+
 
 @csrf_exempt
 def containers_overview(request):
@@ -55,7 +60,7 @@ def realtime_message(request):
                               'left join iot.box_order_relation box_order_relation on order_info.trackid = box_order_relation.trackid '
                               'left join iot.carrier_info carrier_info on order_info.carrierid = carrier_info.id '
                               'where box_order_relation.deviceid =  \'' + id + '\' '
-                                                                               'group by carrier_info.carrier_name,order_info.srcid,order_info.dstid')
+                              'group by carrier_info.carrier_name,order_info.srcid,order_info.dstid')
     if len(carrier_data) > 0:
         carrier_name = carrier_data[0][0]
         srcid = carrier_data[0][1]
@@ -113,43 +118,87 @@ def realtime_message(request):
 
     # 获取箱子阈值
     threshold_data = query_list('select temperature_threshold_max,temperature_threshold_min,'
-                                'humidity_threshold_max,humidity_threshold_min '
-                                'from iot.box_info where deviceid = \'' + id + '\'')
+                                'humidity_threshold_max,humidity_threshold_min,'
+                                'collision_threshold_max,collision_threshold_min,'
+                                'battery_threshold_max,battery_threshold_min,'
+                                'operation_threshold_max,operation_threshold_min ' \
+                                'from iot.box_info box_info ' \
+                                'INNER join iot.box_type_info box_type_info on box_info.type = box_type_info.id '
+                                'where deviceid = \'' + id + '\'')
 
     if len(threshold_data) > 0:
         temperature_threshold_max = threshold_data[0][0]
         temperature_threshold_min = threshold_data[0][1]
         humidity_threshold_max = threshold_data[0][2]
         humidity_threshold_min = threshold_data[0][3]
+        collision_threshold_max = threshold_data[0][4]
+        collision_threshold_min = threshold_data[0][5]
+        battery_threshold_max = threshold_data[0][6]
+        battery_threshold_min = threshold_data[0][7]
+        operation_threshold_max = threshold_data[0][8]
+        operation_threshold_min =  threshold_data[0][9]
+
     else:
         temperature_threshold_max = ZERO
         temperature_threshold_min = ZERO
         humidity_threshold_max = ZERO
         humidity_threshold_min = ZERO
+        collision_threshold_max = ZERO
+        collision_threshold_min = ZERO
+        battery_threshold_max = ZERO
+        battery_threshold_min = ZERO
+        operation_threshold_max = ZERO
+        operation_threshold_min = ZERO
 
     # 计算箱子在运还是停靠
     if not is_same_position(longitude, latitude, src_longitude, src_latitude) and \
             not is_same_position(longitude, latitude, dst_longitude, dst_latitude):
-        shipping_status = '在运'
+        shipping_status = IN_TRANSPORT
     else:
-        shipping_status = '停靠'
+        shipping_status = ANCHORED
 
-    # 计算温度、湿度是否在正常范围
-    if float(temperature) in range(temperature_threshold_min, temperature_threshold_max):
-        temperature_status = '正常'
+    # 计算温度是否在正常范围
+    if float(temperature_threshold_min) <= float(temperature) <= float(temperature_threshold_max):
+        temperature_status = STATUS_NORMAL
     else:
-        temperature_status = '异常'
-    if float(humidity) in range(humidity_threshold_min, humidity_threshold_max):
-        humidity_status = '正常'
-    else:
-        humidity_status = '异常'
+        temperature_status = STATUS_ABNORMAL
 
-    ret_data = {'containerId': id, 'containerType': box_type, 'currentStatus': shipping_status,
-                                 'carrier': carrier_name, 'position': {'lng': longitude, 'lat': latitude},
-                                 'speed': float(speed), 'temperature': {'value': float(temperature), 'status': temperature_status},
-                                 'humidity': {'value': float(humidity), 'status': humidity_status},
-                                 'battery': {'value': 0.6, 'status': '正常'},  # 后续需要修改为真实值
-                                 'boxStatus': {'num_of_collide': float(collide), 'num_of_door_open': 54}}
+    # 计算湿度是否在正常范围
+    if humidity_threshold_min <= float(humidity) <= humidity_threshold_max:
+        humidity_status = STATUS_NORMAL
+    else:
+        humidity_status = STATUS_ABNORMAL
+
+    # 计算电量是否咋正常范围
+    battery = 0.6           # 后续需要修改为真实值
+    if float(battery_threshold_min) <= float(battery) <= float(battery_threshold_max):
+        battery_status = STATUS_NORMAL
+    else:
+        battery_status = STATUS_ABNORMAL
+
+    # 计算碰撞次数是否咋正常范围
+    if collision_threshold_min <= int(collide) <= collision_threshold_max:
+        collide_status = STATUS_NORMAL
+    else:
+        collide_status = STATUS_ABNORMAL
+
+    # 计算开门次数是否在正常范围
+    num_of_door_open = 54   # 后续需要修改为真实值
+    if operation_threshold_min <= int(num_of_door_open) <= operation_threshold_max:
+        door_open_status = STATUS_NORMAL
+    else:
+        door_open_status = STATUS_ABNORMAL
+
+    ret_data = {'containerId': id,
+                'containerType': box_type,
+                'currentStatus': shipping_status,
+                'carrier': carrier_name, 'position': {'lng': longitude, 'lat': latitude},
+                'speed': float(speed),
+                'temperature': {'value': float(temperature), 'status': temperature_status},
+                'humidity': {'value': float(humidity), 'status': humidity_status},
+                'battery': {'value': float(battery), 'status': battery_status},
+                'boxStatus': {'num_of_collide': {'value': int(collide),'status': collide_status},
+                              'num_of_door_open': {'value': int(num_of_door_open), 'status': door_open_status}}}
     return JsonResponse(ret_data, safe=False, status=status.HTTP_200_OK)
 
 
@@ -222,16 +271,20 @@ def alarm_monitor(request):
     pass
 
 
+# 基础信息查询
 @csrf_exempt
 def basic_info(request):
-    data = query_list('select box_info.deviceid, box_type_info.box_type_name, produce_area, manufacturer, '
-                      'carrier_info.carrier_name, date_of_production '
-                      'from iot.box_info '
+    data = query_list('select box_info.deviceid, box_type_info.box_type_name, produce_area_info.address, '
+                      'manufacturer_info.name, carrier_info.carrier_name, date_of_production '
+                      'from iot.box_info box_info '
                       'left join iot.box_type_info on box_info.type = box_type_info.id '
                       'left join iot.box_order_relation box_order_relation on box_order_relation.deviceid = box_info.deviceid '
                       'left join iot.order_info order_info on order_info.trackid = box_order_relation.trackid '
                       'left join iot.carrier_info on order_info.carrierid = carrier_info.id '
-                      'group by box_info.deviceid, box_type_name, produce_area, manufacturer, carrier_name, date_of_production')
+                      'left join iot.produce_area_info produce_area_info on box_info.produce_area = produce_area_info.id '
+                      'left join iot.manufacturer_info manufacturer_info on box_info.manufacturer = manufacturer_info.id '
+                      'group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
+                      'carrier_name, date_of_production')
     ret_list = []
     for item in data:
         dicitem = {}
@@ -324,9 +377,43 @@ def status_summary(request):
     pass
 
 
+# 基础信息管理
 @csrf_exempt
 def basic_info_manage(request):
     pass
+
+
+# 云箱基础信息录入
+@csrf_exempt
+def basic_info_config(request):
+    try:
+        response_msg = 'internal error.'
+        data = json.loads(request.body)
+        container_id = to_str(data['containerId'])              # 云箱id
+        date_of_production = to_str(data['manufactureTime'])    # 生产日期
+        battery_info = to_str(data['batteryInfo'])              # 电源信息
+        manufacturer = to_str(data['factory'])                  # 生产厂家
+        produce_area = to_str(data['factoryLocation'])          # 生产地点
+        hardware_info = to_str(data['hardwareInfo'])            # 智能硬件信息
+        carrier = to_str(data['carrier'])                       # 承运人
+
+        sql = 'insert into iot.box_info(deviceid, type, date_of_production, manufacturer, produce_area, ' \
+              'hardware, battery, carrier) ' \
+              'VALUES (\'' + container_id + '\', 1, \'' + date_of_production + '\',' + manufacturer + ',' \
+              + produce_area + ',' + hardware_info + ',' + battery_info + ',' + carrier + ')'
+
+        flag = container_exists(container_id)
+        if not flag:
+            # 云箱id不存在就保存
+            save_to_db(sql)
+            response_msg = 'save successfully.'
+        else:
+            response_msg = 'save failed, container id already exists.'
+
+    except Exception, e:
+        log.error(e.message)
+    finally:
+        return JsonResponse(response_msg, safe=False, status=status.HTTP_200_OK)
 
 
 @csrf_exempt
@@ -351,8 +438,8 @@ def options_to_show(request):
                     final_response['containerType'] = strip_tuple(container_type_list, 0)
                 if item == 'currentStatus':
                     status_list = []
-                    status_list.append(to_str('在途'))
-                    status_list.append(to_str('抵达'))
+                    status_list.append(to_str(IN_TRANSPORT))
+                    status_list.append(to_str(ANCHORED))
                     final_response['currentStatus'] = status_list
                 if item == 'location':
                     location_list = query_list('select location from iot.site_info')
@@ -361,10 +448,10 @@ def options_to_show(request):
                     carrier_list = query_list('select carrier_name from iot.carrier_info')
                     final_response['carrier'] = strip_tuple(carrier_list, 0)
                 if item == 'factory':
-                    factory_list = query_list('select manufacturer from iot.box_info')
+                    factory_list = query_list('select name from iot.manufacturer_info')
                     final_response['factory'] = strip_tuple(factory_list, 0)
                 if item == 'factoryLocation':
-                    location_list = query_list('select produce_area from iot.box_info')
+                    location_list = query_list('select address from iot.produce_area_info')
                     final_response['factoryLocation'] = strip_tuple(location_list, 0)
                 if item == 'batteryInfo':
                     batteryinfo_list = query_list('select battery_detail from iot.battery_info')
@@ -432,3 +519,15 @@ def get_utc(str_to_trans):
         return to_str(str_current_utc)
     else:
         return str_to_trans
+
+
+# 判断指定的云箱id是否已经存在
+def container_exists(container_id):
+    sql = 'select count(1) as cnt from iot.box_info where deviceid = \'' + container_id + '\''
+    result = query_list(sql)
+
+    if result[0][0] > 0:
+        return True
+    else:
+        return False
+
