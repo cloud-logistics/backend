@@ -76,7 +76,18 @@ CREATE TABLE iot.box_type_info
 (
     id integer NOT NULL DEFAULT nextval('iot.box_type_info_id_seq'::regclass),
     box_type_name text COLLATE pg_catalog."default",
-    box_type_detail text COLLATE pg_catalog."default"
+    box_type_detail text COLLATE pg_catalog."default",
+    interval_time INTEGER,
+    temperature_threshold_min INTEGER,
+    temperature_threshold_max INTEGER,
+    humidity_threshold_min INTEGER,
+    humidity_threshold_max INTEGER,
+    collision_threshold_min INTEGER,
+    collision_threshold_max INTEGER,
+    battery_threshold_min INTEGER,
+    battery_threshold_max INTEGER,
+    operation_threshold_max INTEGER,
+    operation_threshold_min INTEGER
 )
 WITH (
     OIDS = FALSE

@@ -473,6 +473,76 @@ def options_to_show(request):
     else:
         return JsonResponse(req_param, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@csrf_exempt
+def safe_param_to_set(request):
+    final_response = {}
+    req_param_str_utf8 = to_str(request.body)
+    req_param = json.loads(req_param_str_utf8)
+    append_sql = lambda x,y : x + y + ','
+    final_append_sql = lambda x, y: x + y
+    sql_template = '''update iot.box_type_info set %s'''
+    column_string = ''
+    if req_param:
+        container_type_list = query_list('select id from iot.box_type_info')
+        final_type_list = strip_tuple(container_type_list, 0)
+        log.info("safe_param_to_set: final_type_list = %s" % final_type_list)
+        log.info("safe_param_to_set: containerType = %s" % req_param['containerType'])
+        if int(req_param['containerType']) in final_type_list:
+            insert_key_list = req_param.keys()
+            if 'intervalTime' in insert_key_list:
+                # column_string = column_string + 'intervalTime' + ','
+                interval_value_list = query_list("select interval_time_min from iot.interval_time_info where id = '%s'"
+                                        % req_param['intervalTime'])
+                log.info("interval_value_list = %s" % interval_value_list)
+                interval_time_list = strip_tuple(interval_value_list, 0)
+                column_string = append_sql(column_string, "interval_time=%s" % interval_time_list[0])
+            if 'temperature' in insert_key_list:
+                if 'min' in req_param['temperature'].keys():
+                    column_string = append_sql(column_string,
+                                               "temperature_threshold_min=%s" % req_param['temperature']['min'])
+                if 'max' in req_param['temperature'].keys():
+                    column_string = append_sql(column_string,
+                                               "temperature_threshold_max=%s" % req_param['temperature']['max'])
+            if 'humidity' in insert_key_list:
+                if 'min' in req_param['humidity'].keys():
+                    column_string = append_sql(column_string,
+                                               "humidity_threshold_min=%s" % req_param['humidity']['min'])
+                if 'max' in req_param['humidity'].keys():
+                    column_string = append_sql(column_string,
+                                               "humidity_threshold_max=%s" % req_param['humidity']['max'])
+            if 'collision' in insert_key_list:
+                if 'min' in req_param['collision'].keys():
+                    column_string = append_sql(column_string,
+                                               "collision_threshold_min=%s" % req_param['collision']['min'])
+                if 'max' in req_param['collision'].keys():
+                    column_string = append_sql(column_string,
+                                               "collision_threshold_max=%s" % req_param['collision']['max'])
+            if 'battery' in insert_key_list:
+                if 'min' in req_param['battery'].keys():
+                    column_string = append_sql(column_string,
+                                               "battery_threshold_min=%s" % req_param['battery']['min'])
+                if 'max' in req_param['battery'].keys():
+                    column_string = append_sql(column_string,
+                                               "battery_threshold_max=%s" % req_param['battery']['max'])
+            if 'operation' in insert_key_list:
+                if 'min' in req_param['operation'].keys():
+                    column_string = append_sql(column_string,
+                                               "operation_threshold_min=%s" % req_param['operation']['min'])
+                if 'max' in req_param['operation'].keys():
+                    column_string = final_append_sql(column_string,
+                                               "operation_threshold_max=%s" % req_param['operation']['max'])
+            log.info(sql_template % column_string)
+            try:
+                save_to_db(sql_template % column_string)
+            except Exception, e:
+                log.error(e)
+                return JsonResponse(final_response, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse(req_param, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return JsonResponse(req_param, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 def to_str(unicode_or_str):
     if isinstance(unicode_or_str, unicode):
