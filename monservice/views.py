@@ -425,47 +425,47 @@ def options_to_show(request):
         if req_param['requiredOptions']:
             for item in req_param['requiredOptions']:
                 if item == 'alertLevel':
-                    alert_level_list = query_list('select level from iot.alert_level_info')
-                    final_response['alertLevel'] = strip_tuple(alert_level_list, 0)
+                    alert_level_list = query_list('select id,level from iot.alert_level_info')
+                    final_response['alertLevel'] = strip_tuple(alert_level_list)
                 if item == 'alertCode':
-                    alert_code_list = query_list('select errcode from iot.alert_code_info')
-                    final_response['alertCode'] = strip_tuple(alert_code_list, 0)
+                    alert_code_list = query_list('select id,errcode from iot.alert_code_info')
+                    final_response['alertCode'] = strip_tuple(alert_code_list)
                 if item == 'alertType':
-                    alert_type_list = query_list('select type from iot.alert_type_info')
-                    final_response['alertType'] = strip_tuple(alert_type_list, 0)
+                    alert_type_list = query_list('select id,type from iot.alert_type_info')
+                    final_response['alertType'] = strip_tuple(alert_type_list)
                 if item == 'containerType':
-                    container_type_list = query_list('select box_type_name from iot.box_type_info')
-                    final_response['containerType'] = strip_tuple(container_type_list, 0)
+                    container_type_list = query_list('select id,box_type_name from iot.box_type_info')
+                    final_response['containerType'] = strip_tuple(container_type_list)
                 if item == 'currentStatus':
                     status_list = []
                     status_list.append(to_str(IN_TRANSPORT))
                     status_list.append(to_str(ANCHORED))
                     final_response['currentStatus'] = status_list
                 if item == 'location':
-                    location_list = query_list('select location from iot.site_info')
-                    final_response['location'] = strip_tuple(location_list, 0)
+                    location_list = query_list('select id,location from iot.site_info')
+                    final_response['location'] = strip_tuple(location_list)
                 if item == 'carrier':
-                    carrier_list = query_list('select carrier_name from iot.carrier_info')
-                    final_response['carrier'] = strip_tuple(carrier_list, 0)
+                    carrier_list = query_list('select id,carrier_name from iot.carrier_info')
+                    final_response['carrier'] = strip_tuple(carrier_list)
                 if item == 'factory':
-                    factory_list = query_list('select name from iot.manufacturer_info')
-                    final_response['factory'] = strip_tuple(factory_list, 0)
+                    factory_list = query_list('select id,name from iot.manufacturer_info')
+                    final_response['factory'] = strip_tuple(factory_list)
                 if item == 'factoryLocation':
-                    location_list = query_list('select address from iot.produce_area_info')
-                    final_response['factoryLocation'] = strip_tuple(location_list, 0)
+                    location_list = query_list('select id,address from iot.produce_area_info')
+                    final_response['factoryLocation'] = strip_tuple(location_list)
                 if item == 'batteryInfo':
-                    batteryinfo_list = query_list('select battery_detail from iot.battery_info')
-                    final_response['batteryInfo'] = strip_tuple(batteryinfo_list, 0)
+                    batteryinfo_list = query_list('select id,battery_detail from iot.battery_info')
+                    final_response['batteryInfo'] = strip_tuple(batteryinfo_list)
                 if item == 'maintenanceLocation':
-                    location_list = query_list('select location from iot.maintenance_info')
-                    final_response['maintenanceLocation'] = strip_tuple(location_list, 0)
+                    location_list = query_list('select id,location from iot.maintenance_info')
+                    final_response['maintenanceLocation'] = strip_tuple(location_list)
                 if item == 'intervalTime':
-                    interval_time_list = query_list('select interval_time_min from iot.interval_time_info')
+                    interval_time_list = query_list('select id,interval_time_min from iot.interval_time_info')
                     # interval time type is integer
-                    final_response['intervalTime'] = strip_tuple(interval_time_list, 0)
+                    final_response['intervalTime'] = strip_tuple(interval_time_list)
                 if item == 'hardwareInfo':
-                    hardware_info_list = query_list('select hardware_detail from iot.hardware_info')
-                    final_response['hardwareInfo'] = strip_tuple(hardware_info_list, 0)
+                    hardware_info_list = query_list('select id,hardware_detail from iot.hardware_info')
+                    final_response['hardwareInfo'] = strip_tuple(hardware_info_list)
             log.debug(json.dumps(final_response))
             return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
         else:
@@ -560,15 +560,11 @@ def cal_position(value):
     return float(hour + '.' + minute)
 
 
-def strip_tuple(todo_list, index):
+def strip_tuple(todo_list):
     strip_list = []
     if isinstance(todo_list, type([])):
         for query_item in todo_list:
-            if index < len(query_item):
-                if isinstance(query_item[index], type(" ")):
-                    strip_list.append(to_str(query_item[index]))
-                else:
-                    strip_list.append(query_item[index])
+            strip_list.append({'id': query_item[0], 'value': query_item[1]})
     return strip_list
 
 
