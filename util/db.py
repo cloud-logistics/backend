@@ -1,10 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import json
-
 from psycopg2.pool import ThreadedConnectionPool
-
+from cloudbox import settings
 import logger
 
 # logging
@@ -12,14 +10,15 @@ log = logger.get_logger('db')
 
 
 def get_conn_pool():
+    conn_params = settings.DATABASES['default']
     pool = ThreadedConnectionPool(
         minconn=5,
         maxconn=20,
-        database="cloudbox",
-        user="postgres",
-        password="postgres",
-        host="127.0.0.1",
-        port="5432"
+        database=conn_params['NAME'],
+        user=conn_params['USER'],
+        password=conn_params['PASSWORD'],
+        host=conn_params['HOST'],
+        port=conn_params['PORT']
     )
     return pool
 
