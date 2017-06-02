@@ -399,8 +399,8 @@ def basic_info_config(request):
 
         sql = 'insert into iot.box_info(deviceid, type, date_of_production, manufacturer, produce_area, ' \
               'hardware, battery, carrier) ' \
-              'VALUES (\'' + container_id + '\', 1, \'' + date_of_production + '\',' + manufacturer + ',' \
-              + produce_area + ',' + hardware_info + ',' + battery_info + ',' + carrier + ')'
+              'VALUES (\'' + container_id + '\', 1, \'' + date_of_production + '\',' + str(manufacturer) + ',' \
+              + str(produce_area) + ',' + str(hardware_info) + ',' + str(battery_info) + ',' + str(carrier) + ')'
 
         flag = container_exists(container_id)
         if not flag:
