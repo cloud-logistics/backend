@@ -474,7 +474,7 @@ def options_to_show(request):
         return JsonResponse(req_param, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @csrf_exempt
-def safe_param_to_set(request):
+def security_config(request):
     final_response = {}
     req_param_str_utf8 = to_str(request.body)
     req_param = json.loads(req_param_str_utf8)
