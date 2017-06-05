@@ -216,7 +216,8 @@ ALTER TABLE iot.alert_type_info OWNER to postgres;
 CREATE TABLE iot.alert_code_info
 (
   id integer NOT NULL DEFAULT nextval('iot."alert_code_info_seq"'::regclass),
-  errcode integer
+  errcode integer,
+  description text COLLATE pg_catalog."default"
 )
 WITH (
     OIDS = FALSE
