@@ -280,7 +280,43 @@ def realtime_position(request):
 
 @csrf_exempt
 def alarm_monitor(request):
-    pass
+    data = query_list('select alarm_info.deviceid,alert_level_info.level,alarm_info.timestamp,'
+                      'alert_code_info.description,alarm_info.code,alarm_info.status,'
+                      'carrier_info.carrier_name,alarm_info.longitude,alarm_info.latitude,'
+                      'alarm_info.speed,alarm_info.temperature,alarm_info.humidity,'
+                      'alarm_info.num_of_collide,alarm_info.num_of_door_open,'
+                      'alarm_info.battery,alarm_info.robert_operation_status '
+                      'from iot.alarm_info alarm_info '
+                      'left join iot.alert_level_info alert_level_info on alarm_info.level = alert_level_info.id '
+                      'left join iot.alert_code_info alert_code_info on alarm_info.code = alert_code_info.errcode '
+                      'left join iot.carrier_info carrier_info on carrier_info.id = carrier')
+    ret_data = []
+
+    for record in data:
+        deviceid = record[0]
+        level = record[1]
+        timestamp = record[2]
+        error_description = record[3]
+        error_code = record[4]
+        ship_status = record[5]
+        carrier_name = record[6]
+        longitude = cal_position(record[7])
+        latitude = cal_position(record[8])
+        speed = record[9]
+        temperature = record[10]
+        humidity = record[11]
+        num_of_collide = record[12]
+        num_of_door_open = record[13]
+        battery = record[14]
+        robert_operation_status = record[15]
+        ret_data.append({'containerId': deviceid, 'alertTime': timestamp, 'alertLevel': level,
+                         'alertType': error_description, 'alertCode': error_code, 'status': ship_status,
+                         'carrier': carrier_name, 'position': {'lng': float(longitude), 'lat': float(latitude)},
+                         'speed': float(speed), 'temperature': float(temperature), 'humidity': float(humidity),
+                         'num_of_collide': float(num_of_collide), 'num_of_door_open': float(num_of_door_open),
+                         'battery': float(battery), 'robertOperationStatus': robert_operation_status})
+
+    return JsonResponse(ret_data, safe=False, status=status.HTTP_200_OK)
 
 
 # 基础信息查询
