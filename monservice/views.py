@@ -10,7 +10,8 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from util.db import query_list, save_to_db
 from util import logger
-
+import base64
+import traceback
 
 # Create your views here.
 
@@ -380,7 +381,82 @@ def history_path(request):
 
 @csrf_exempt
 def history_message(request):
-    pass
+    param = to_str(request.body)
+    param_dic = {}
+    final_response = {}
+    json_record_list = []
+    container_id_final = ""
+    container_type_final = ""
+    query_start_time = 0
+    query_end_time = 0
+    if param:
+        try:
+            param_dic = json.loads(param)
+            if key_exists('containerId', param_dic):
+                container_id = param_dic['containerId']
+                if key_exists('containerType', param_dic):
+                    container_type = int(param_dic['containerType'])
+                    sql = "select deviceid from iot.box_info where type = %s " % container_type
+                    deviceid_tuple_list = query_list(sql)
+                    deviceid_list = []
+                    for item in deviceid_tuple_list:
+                        if item[0]:
+                            deviceid_list.append(item[0])
+                    if container_id in deviceid_list:
+                        container_id_final = container_id
+                    #
+                    sql_query_box_type_info = "select box_type_name from iot.box_type_info where id=%s " % container_type
+                    box_type_name_tuple_list = query_list(sql_query_box_type_info)
+                    for item in box_type_name_tuple_list:
+                        if item[0]:
+                            container_type_final = item[0]
+
+                else:
+                    container_id_final = container_id
+            if key_exists('startTime', param_dic) and key_exists('endTime', param_dic):
+                query_start_time_str = param_dic['startTime']
+                query_end_time_str = param_dic['endTime']
+                if len(query_start_time_str) > 10:
+                    query_start_time = int(query_start_time_str) / 1000
+                else:
+                    query_start_time = int(query_start_time_str)
+                if len(query_end_time_str) > 10:
+                    query_end_time = int(query_end_time_str) / 1000
+                else:
+                    query_end_time = int(query_end_time_str)
+            history_sql_template = "select deviceid, timestamp, temperature, humidity, longitude, latitude, speed, collide, light, legacy" \
+                                   " from iot.sensor_data where deviceid = '%s' and timestamp >= %d and timestamp < %d limit 100"
+            query_result_tuple_list = query_list(history_sql_template % (container_id_final, query_start_time, query_end_time))
+            log.debug("query_result_tuple_list:%s" % query_result_tuple_list)
+            for query_tuple in query_result_tuple_list:
+                detail_message_dict = {}
+                each_record_dicteach_record_dict = {}
+                detail_message_dict['device_id'] = query_tuple[0]
+                detail_message_dict['utc'] = query_tuple[1]
+                detail_message_dict['temp'] = query_tuple[2]
+                detail_message_dict['humi'] = query_tuple[3]
+                detail_message_dict['longitude'] = query_tuple[4]
+                detail_message_dict['latitude'] = query_tuple[5]
+                detail_message_dict['speed'] = query_tuple[6]
+                detail_message_dict['collide'] = query_tuple[7]
+                detail_message_dict['light'] = query_tuple[8]
+                detail_message_dict['legacy'] = query_tuple[9]
+                detail_message_str = base64.b64encode(json.dumps(detail_message_dict))
+                each_record_dicteach_record_dict['record'] = detail_message_str
+                each_record_dicteach_record_dict['containerId'] = container_id_final
+                each_record_dicteach_record_dict['containerType'] = container_type_final
+                each_record_dicteach_record_dict['time'] = detail_message_dict['utc']
+                each_record_dicteach_record_dict['messageType'] = to_str("标准报文")
+                json_record_list.append(each_record_dicteach_record_dict)
+            #final
+            final_response['result'] = json_record_list
+            log.debug(json.dumps(final_response))
+            return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
+        except Exception, e:
+            log.error(repr(traceback.print_exc()))
+            return JsonResponse(final_response, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return JsonResponse(final_response, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @csrf_exempt
@@ -605,6 +681,17 @@ def container_exists(container_id):
 
     if result[0][0] > 0:
         return True
+    else:
+        return False
+
+
+# 判断字符串是否是字典中的key
+def key_exists(key, dictionary):
+    if isinstance(dictionary, type({})):
+        if key in dictionary.keys():
+            return True
+        else:
+            return False
     else:
         return False
 
