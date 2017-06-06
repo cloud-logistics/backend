@@ -278,6 +278,7 @@ def realtime_position(request):
     return JsonResponse(ret_data, safe=False, status=status.HTTP_200_OK)
 
 
+# 报警监控
 @csrf_exempt
 def alarm_monitor(request):
     data = query_list('select alarm_info.deviceid,alert_level_info.level,alarm_info.timestamp,'
@@ -289,13 +290,13 @@ def alarm_monitor(request):
                       'from iot.alarm_info alarm_info '
                       'left join iot.alert_level_info alert_level_info on alarm_info.level = alert_level_info.id '
                       'left join iot.alert_code_info alert_code_info on alarm_info.code = alert_code_info.errcode '
-                      'left join iot.carrier_info carrier_info on carrier_info.id = carrier')
+                      'left join iot.carrier_info carrier_info on carrier_info.id = carrier order by timestamp desc')
     ret_data = []
 
     for record in data:
         deviceid = record[0]
         level = record[1]
-        timestamp = record[2]
+        timestamp = record[2] * 1000        # 前端显示需要精确到毫秒
         error_description = record[3]
         error_code = record[4]
         ship_status = record[5]
@@ -310,13 +311,13 @@ def alarm_monitor(request):
         battery = record[14]
         robert_operation_status = record[15]
         ret_data.append({'containerId': deviceid, 'alertTime': timestamp, 'alertLevel': level,
-                         'alertType': error_description, 'alertCode': error_code, 'status': ship_status,
+                         'alertType': error_description, 'alertCode': str(error_code), 'status': ship_status,
                          'carrier': carrier_name, 'position': {'lng': float(longitude), 'lat': float(latitude)},
                          'speed': float(speed), 'temperature': float(temperature), 'humidity': float(humidity),
                          'num_of_collide': float(num_of_collide), 'num_of_door_open': float(num_of_door_open),
                          'battery': float(battery), 'robertOperationStatus': robert_operation_status})
 
-    return JsonResponse(ret_data, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse({'alerts': ret_data}, safe=False, status=status.HTTP_200_OK)
 
 
 # 基础信息查询
