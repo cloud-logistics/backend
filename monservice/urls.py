@@ -16,7 +16,7 @@ urlpatterns = [
     url(r'^alerts$', views.alarm_monitor),                        # 报警监控
     url(r'^options$', views.options_to_show),                     # 报警监控
     url(r'^basicInfo$', views.basic_info),                        # 基础信息查询
-    url(r'^historyMsg$', views.history_message),                  # 历史报文
+    url(r'^containerReportHistory$', views.history_message),      # 历史报文
     url(r'^statusSummary$', views.status_summary),                # 云箱状态汇总
     url(r'^securityConfig$', views.security_config),              # 云箱安全参数设置
     url(r'^basicInfoManage$', views.basic_info_manage),           # 基础信息管理
