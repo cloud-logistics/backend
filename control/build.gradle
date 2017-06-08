@@ -30,11 +30,21 @@ dependencies {
 
 jar {
     baseName = 'control'
-    version = '1.0'
     manifest {
         attributes(
                 'Manifest-Version': version,
                 'Main-Class': 'com.hnair.iot.service.CloudBoxEventManager'
         )
     }
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',
+                'Implementation-Version': version,
+                'Main-Class': 'com.hnair.iot.service.CloudBoxEventManager'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }
