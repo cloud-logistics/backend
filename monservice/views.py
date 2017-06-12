@@ -12,8 +12,18 @@ from util.db import query_list, save_to_db
 from util import logger
 import base64
 import traceback
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from models import ContainerRentInfo
+from serializers import ContainerRentInfoSerializer
 
-# Create your views here.
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
+from rest_framework_jwt.settings import api_settings
+
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 
 log = logger.get_logger('monservice.view.py')
 file_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + 'mock_data.json'
@@ -668,6 +678,52 @@ def security_config(request):
         return JsonResponse(req_param, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def mycontainers(request):
+    if request.user.has_perm('view_containerrentinfo'):
+        ret_dict = {}
+        ret = ContainerRentInfo.objects.all()
+        serializer = ContainerRentInfoSerializer(ret, many=True)
+        # print repr(serializer.data)
+        ret_dict['results'] = serializer.data
+        log.info(ret_dict)
+        return JsonResponse(ret_dict, safe=False, status=status.HTTP_200_OK)
+    else:
+        return JsonResponse({}, safe=False, status=status.HTTP_403_FORBIDDEN)
+
+
+@api_view(['GET'])
+def containers_on_release(request):
+    pass
+
+
+@api_view(['GET'])
+def containers_available(request):
+    pass
+
+
+@api_view(['POST'])
+def verify_user(request):
+    req_param_str_utf8 = to_str(request.body)
+    req_param = json.loads(req_param_str_utf8)
+    user = authenticate(username=req_param['username'], password=req_param['password'])
+    ret_dict ={}
+    if user is not None:
+        u = User.objects.get(username=req_param['username'])
+        if u.has_perm('view_containerrentinfo'):
+            ret_dict['role'] = 'carrier'
+        else:
+            ret_dict['role'] = 'admin'
+        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+        jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+        payload = jwt_payload_handler(u)
+        token = jwt_encode_handler(payload)
+        ret_dict['token'] = token
+        return JsonResponse(ret_dict, safe=False, status=status.HTTP_200_OK)
+
+
 def to_str(unicode_or_str):
     if isinstance(unicode_or_str, unicode):
         value = unicode_or_str.encode('UTF-8')
@@ -731,4 +787,3 @@ def key_exists(key, dictionary):
             return False
     else:
         return False
-
