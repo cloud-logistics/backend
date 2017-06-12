@@ -712,7 +712,7 @@ def verify_user(request):
     ret_dict ={}
     if user is not None:
         u = User.objects.get(username=req_param['username'])
-        if u.has_perm('view_containerrentinfo'):
+        if u.has_perm('monservice.view_containerrentinfo'):
             ret_dict['role'] = 'carrier'
         else:
             ret_dict['role'] = 'admin'
