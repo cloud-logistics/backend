@@ -5,24 +5,24 @@ import json
 import os
 import time
 import datetime
+import base64
+import traceback
+import redis
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from util.db import query_list, save_to_db
 from util import logger
-import base64
-import traceback
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from models import ContainerRentInfo
 from serializers import ContainerRentInfoSerializer
-
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework_jwt.settings import api_settings
-
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+
 
 
 log = logger.get_logger('monservice.view.py')
@@ -724,6 +724,22 @@ def verify_user(request):
         return JsonResponse(ret_dict, safe=False, status=status.HTTP_200_OK)
 
 
+# 向终端发送command
+@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+@permission_classes((IsAuthenticated,))
+@api_view(['POST'])
+def send_command(request):
+    action = json.loads(request.body)['action']
+    id = json.loads(request.body)['containerId']
+    id = "9ccb696844bdcb880efb7fc18c5361a6221de9ad"
+    conn = redis.Redis(host="127.0.0.1", port=6379, db=0)
+    conn.rpush('command_list',
+               "{\"service\":\"command\",\"action\": \"" + action + "\",\"result\":\"123\",\"id\":\"" + id + "\"}")
+    conn.save()
+    return JsonResponse({"code": "200"}, safe=False, status=status.HTTP_200_OK)
+
+
+# 将unicode转换utf-8编码
 def to_str(unicode_or_str):
     if isinstance(unicode_or_str, unicode):
         value = unicode_or_str.encode('UTF-8')
