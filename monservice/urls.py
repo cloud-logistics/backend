@@ -7,7 +7,8 @@ from rest_framework_jwt.views import verify_jwt_token
 from monservice import views
 
 urlpatterns = [
-    url(r'^auth$', obtain_jwt_token),
+    # url(r'^auth$', obtain_jwt_token),
+    url(r'^auth$', views.verify_user),
     url(r'^containers$', views.containers_overview),
     url(r'^satellites$', views.satellites_overview),
     url(r'^realtimeInfo$', views.realtime_message),               # 实时报文
@@ -21,5 +22,8 @@ urlpatterns = [
     url(r'^securityConfig$', views.security_config),              # 云箱安全参数设置
     url(r'^basicInfoManage$', views.basic_info_manage),           # 基础信息管理
     url(r'^basicInfoConfig$', views.basic_info_config),           # 云箱基础信息录入
+    url(r'^mycontainers$', views.mycontainers),                   # 承运方页面
+    url(r'^containersonlease$', views.containers_on_release),     # 承运方在租页面
+    url(r'^availablecontainers$', views.containers_available),    # 承运方可用云箱
 
 ]
