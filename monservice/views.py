@@ -22,7 +22,9 @@ from rest_framework_jwt.settings import api_settings
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-
+import urllib
+import urllib2
+import json
 
 
 log = logger.get_logger('monservice.view.py')
@@ -279,11 +281,17 @@ def realtime_position(request):
     else:
         cur_latitude = ZERO
         cur_longitude = ZERO
-
+    start_location_name = gps_info_trans(ori_latitude + ',' + ori_longitude)
+    end_location_name = gps_info_trans(dst_latitude + ',' + dst_longitude)
+    cur_location_name = gps_info_trans(cur_latitude + ',' + cur_longitude)
     ret_data = {'containerInfo': {'containerId': clientid, 'carrier': carrier},
                 'startPosition': {'lng': ori_longitude, 'lat': ori_latitude},
+                'startLocationName': start_location_name,
                 'currentPosition': {'lng': cur_longitude, 'lat': cur_latitude},
-                'endPosition': {'lng': dst_longitude, 'lat': dst_latitude}}
+                'currentLocationName': cur_location_name,
+                'endPosition': {'lng': dst_longitude, 'lat': dst_latitude},
+                'endLocationName': end_location_name
+                }
 
     return JsonResponse(ret_data, safe=False, status=status.HTTP_200_OK)
 
@@ -407,10 +415,14 @@ def history_path(request):
                         start_dic['time'] = item[2]
                         if item[0] in site_info_dic.keys():
                             start_dic['position'] = site_info_dic[item[0]]
+                            start_dic['localtionName'] = gps_info_trans(str(start_dic['position']['lat']) +
+                                                                        ',' + str(start_dic['position']['lng']))
                         end_dic = {}
                         end_dic['time'] = item[3]
                         if item[1] in site_info_dic.keys():
                             end_dic['position'] = site_info_dic[item[1]]
+                            end_dic['localtionName'] = gps_info_trans(str(end_dic['position']['lat']) +
+                                                                        ',' + str(end_dic['position']['lng']))
                         container_dic = {}
                         container_dic['containerId'] = param_dic['containerId']
                         container_dic['start'] = start_dic
@@ -803,3 +815,24 @@ def key_exists(key, dictionary):
             return False
     else:
         return False
+
+
+#geocode
+def gps_info_trans(gpsinfo):
+    '''
+    :param gpsinfo: lat,lng for exmaple 39.92,116.46
+    :return str:
+    '''
+    ret_str = ''
+    values = {}
+    values['latlng'] = "39.92,116.46"
+    values['key'] = "AIzaSyDD2vDhoHdl8eJAIyWPv0Jw7jeO6VtlRF8"
+    data = urllib.urlencode(values)
+    url = "https://ditu.google.cn/maps/api/geocode/json"
+    geturl = url + "?" + data
+    request = urllib2.Request(geturl)
+    response = urllib2.urlopen(request)
+    ret_dic = json.loads(response.read())
+    if ret_dic['status'] == 'OK':
+        ret_str = ret_dic['results'][0]['formatted_address']
+    return ret_str
