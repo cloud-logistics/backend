@@ -69,14 +69,43 @@ def realtime_message(request):
         log.error(e.message)
 
     if id == '':
-        mock_json = '{"boxStatus": {"num_of_collide": {"status": "正常", "value": 32}, ' \
-                    '"num_of_door_open": {"status": "正常", "value": 47}}, ' \
-                    '"currentStatus": "在运", "carrier": "中集智能", "containerId": "TEST", ' \
-                    '"containerType": "标准箱", "position": {"lat": 36.07, "lng": 120.33}, ' \
-                    '"humidity": {"status": "正常", "value": 81.3}, "speed": 80.45, ' \
-                    '"battery": {"status": "正常", "value": 0.8}, ' \
-                    '"temperature": {"status": "正常", "value": 2.3}}' \
-                    '"locationName":%s' % gps_info_trans("36.07,120.33")
+        mock_json = '''
+        {
+            "boxStatus": {
+                "num_of_collide": {
+                    "status": "正常",
+                    "value": 32
+                },
+                "num_of_door_open": {
+                    "status": "正常",
+                    "value": 47
+                }
+            },
+            "currentStatus": "在运",
+            "carrier": "中集智能",
+            "containerId": "TEST",
+            "containerType": "标准箱",
+            "position": {
+                "lat": 36.07,
+                "lng": 120.33
+            },
+            "humidity": {
+                "status": "正常",
+                "value": 81.3
+            },
+            "speed": 80.45,
+            "battery": {
+                "status": "正常",
+                "value": 0.8
+            },
+            "temperature": {
+                "status": "正常",
+                "value": 2.3
+            },
+            "locationName": "菲律宾"
+        }
+
+        '''
         return JsonResponse(json.loads(mock_json), safe=False, status=status.HTTP_200_OK)
 
     # 获取承运方
