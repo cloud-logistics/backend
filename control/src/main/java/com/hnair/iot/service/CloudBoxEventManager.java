@@ -134,7 +134,7 @@ public class CloudBoxEventManager {
                 LOG.info("event:" + event);
                 String id = event.getId();
                 if (!derviceGroup.equals(id)) {
-                    ecf.sendEvent(event, senderId);
+                    //ecf.sendEvent(event, senderId);
                 }
             }
 
