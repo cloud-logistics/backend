@@ -35,6 +35,7 @@ STATUS_NORMAL = '正常'
 STATUS_ABNORMAL = '异常'
 IN_TRANSPORT = '在运'
 ANCHORED = '停靠'
+REDIS_MAP_KEY = 'gpsmap'
 
 
 @csrf_exempt
@@ -448,14 +449,14 @@ def history_path(request):
                             start_dic['position'] = site_info_dic[item[0]]
                             start_gps_info = "%s,%s" % (start_dic['position']['lat'], start_dic['position']['lng'])
                             log.info("start_position gpsinfo is %s" % start_gps_info)
-                            start_dic['localtionName'] = gps_info_trans(start_gps_info)
+                            start_dic['locationName'] = gps_info_trans(start_gps_info)
                         end_dic = {}
                         end_dic['time'] = item[3]
                         if item[1] in site_info_dic.keys():
                             end_dic['position'] = site_info_dic[item[1]]
                             end_gps_info = "%s,%s" % (end_dic['position']['lat'], end_dic['position']['lng'])
                             log.info("end_position gpsinfo is %s" % end_gps_info)
-                            end_dic['localtionName'] = gps_info_trans(end_gps_info)
+                            end_dic['locationName'] = gps_info_trans(end_gps_info)
                         container_dic = {}
                         container_dic['containerId'] = param_dic['containerId']
                         container_dic['start'] = start_dic
@@ -863,13 +864,21 @@ def gps_info_trans(gpsinfo):
     data = urllib.urlencode(values)
     url = "https://ditu.google.cn/maps/api/geocode/json"
     geturl = url + "?" + data
-    try:
-        request = urllib2.Request(geturl)
-        response = urllib2.urlopen(request)
-        ret_dic = json.loads(response.read())
-        if ret_dic['status'] == 'OK':
-            ret_str = ret_dic['results'][0]['formatted_address']
-    except Exception, e:
-        log.error(repr(traceback.print_exc()))
-        log.error("geturl is %s" % geturl)
+    conn = redis.Redis(host="127.0.0.1", port=6379, db=0)
+    if conn.hexists(REDIS_MAP_KEY, gpsinfo):
+        ret_str = conn.hget(REDIS_MAP_KEY, gpsinfo)
+    else:
+        try:
+            request = urllib2.Request(geturl)
+            response = urllib2.urlopen(request)
+            ret_dic = json.loads(response.read())
+            log.info("req url: %s" % geturl)
+            if ret_dic['status'] == 'OK':
+                ret_str = ret_dic['results'][0]['formatted_address']
+                conn.hset(REDIS_MAP_KEY, gpsinfo, ret_str)
+            else:
+                log.info("req response: %s" % ret_dic)
+        except Exception, e:
+            log.error(repr(traceback.print_exc()))
+            log.error("geturl is %s" % geturl)
     return ret_str
