@@ -41,7 +41,9 @@ def input_data(request):
 def parse(msg):
     body = json.loads(str(msg))
     s = body['data']
+    meta = body['meta']
     deviceid = str(s['device_id'])
+    endpointid = str(meta['endpointId'])
     legacy = str(s['legacy'])
     data_list = []
 
@@ -59,7 +61,7 @@ def parse(msg):
         data_list = data_list + [{'timestamp': timestamp, 'deviceid': deviceid,
                                   'temperature': temperature, 'humidity': humidity,
                                   'latitude': latitude, 'longitude': longitude,
-                                  'speed': speed, 'collide': collide, 'light': light}]
+                                  'speed': speed, 'collide': collide, 'light': light, 'endpointid': endpointid}]
 
     else:
         # legacy字段不为空时，数据格式以$开始，多个字段以#分割，例如：
@@ -83,7 +85,7 @@ def parse(msg):
                             [{'timestamp': timestamp, 'deviceid': deviceid,
                               'temperature': temperature, 'humidity': humidity,
                               'latitude': latitude, 'longitude': longitude,
-                              'speed': speed, 'collide': collide, 'light': light}]
+                              'speed': speed, 'collide': collide, 'light': light, 'endpointid': endpointid}]
 
             else:
                 log.error('legacy format error, legacy: ' + legacy)
@@ -93,7 +95,7 @@ def parse(msg):
 
 def build_sql(data_list):
     sql = 'insert into iot.sensor_data(timestamp, deviceid, temperature, humidity, latitude, longitude, ' \
-          'speed, collide, light) values '
+          'speed, collide, light, endpointid) values '
     size = data_list.__len__()
 
     for i in range(size):
@@ -106,7 +108,8 @@ def build_sql(data_list):
             str(data['longitude']) + '\',\'' + \
             str(data['speed']) + '\',\'' + \
             str(data['collide']) + '\',\'' + \
-            str(data['light']) + '\')'
+            str(data['light']) + '\',\'' + \
+            str(data['endpointid']) + '\')'
         if i != size - 1:
             sql = sql + ','
 

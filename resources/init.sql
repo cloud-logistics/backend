@@ -126,6 +126,7 @@ CREATE TABLE iot.sensor_data
     collide text COLLATE pg_catalog."default",
     light text COLLATE pg_catalog."default",
     legacy text COLLATE pg_catalog."default",
+    endpointid text COLLATE pg_catalog."default",
     CONSTRAINT sensor_data_pkey PRIMARY KEY (id)
 )
 WITH (
@@ -327,7 +328,9 @@ CREATE TABLE iot.alarm_info
     num_of_collide text COLLATE pg_catalog."default",
     num_of_door_open text COLLATE pg_catalog."default",
     battery text COLLATE pg_catalog."default",
-    robert_operation_status text COLLATE pg_catalog."default"
+    robert_operation_status text COLLATE pg_catalog."default",
+    alarm_status integer,
+    endpointid text COLLATE pg_catalog."default"
 )
 WITH (
     OIDS = FALSE
@@ -350,4 +353,5 @@ insert into iot.alert_code_info (errcode,description) values(2002,'湿度过低'
 insert into iot.alert_code_info (errcode,description) values(3001,'碰撞次数过多');
 insert into iot.alert_code_info (errcode,description) values(4001,'电量过低');
 insert into iot.alert_code_info (errcode,description) values(5001,'开关门次数过多');
+insert into iot.alert_code_info (errcode,description) values(6001,'失联');
 
