@@ -75,7 +75,8 @@ def realtime_message(request):
                     '"containerType": "标准箱", "position": {"lat": 36.07, "lng": 120.33}, ' \
                     '"humidity": {"status": "正常", "value": 81.3}, "speed": 80.45, ' \
                     '"battery": {"status": "正常", "value": 0.8}, ' \
-                    '"temperature": {"status": "正常", "value": 2.3}}'
+                    '"temperature": {"status": "正常", "value": 2.3}}' \
+                    '"locationName":%s' % gps_info_trans("36.07,120.33")
         return JsonResponse(json.loads(mock_json), safe=False, status=status.HTTP_200_OK)
 
     # 获取承运方
@@ -221,7 +222,7 @@ def realtime_message(request):
                 'temperature': {'value': float(temperature), 'status': temperature_status},
                 'humidity': {'value': float(humidity), 'status': humidity_status},
                 'battery': {'value': float(battery), 'status': battery_status},
-                'boxStatus': {'num_of_collide': {'value': int(collide),'status': collide_status},
+                'boxStatus': {'num_of_collide': {'value': int(collide), 'status': collide_status},
                               'num_of_door_open': {'value': int(num_of_door_open), 'status': door_open_status}}}
     return JsonResponse(ret_data, safe=False, status=status.HTTP_200_OK)
 
@@ -281,9 +282,9 @@ def realtime_position(request):
     else:
         cur_latitude = ZERO
         cur_longitude = ZERO
-    start_location_name = gps_info_trans(ori_latitude + ',' + ori_longitude)
-    end_location_name = gps_info_trans(dst_latitude + ',' + dst_longitude)
-    cur_location_name = gps_info_trans(cur_latitude + ',' + cur_longitude)
+    start_location_name = gps_info_trans("%s,%s" % (ori_latitude, ori_longitude))
+    end_location_name = gps_info_trans("%s,%s" % (dst_latitude, dst_longitude))
+    cur_location_name = gps_info_trans("%s,%s" % (cur_latitude, cur_longitude))
     ret_data = {'containerInfo': {'containerId': clientid, 'carrier': carrier},
                 'startPosition': {'lng': ori_longitude, 'lat': ori_latitude},
                 'startLocationName': start_location_name,
@@ -328,13 +329,14 @@ def alarm_monitor(request):
         num_of_door_open = record[13]
         battery = record[14]
         robert_operation_status = record[15]
+        location_name = gps_info_trans("%s,%s" % (latitude, longitude))
         ret_data.append({'containerId': deviceid, 'alertTime': timestamp, 'alertLevel': level,
                          'alertType': error_description, 'alertCode': str(error_code), 'status': ship_status,
                          'carrier': carrier_name, 'position': {'lng': float(longitude), 'lat': float(latitude)},
                          'speed': float(speed), 'temperature': float(temperature), 'humidity': float(humidity),
                          'num_of_collide': float(num_of_collide), 'num_of_door_open': float(num_of_door_open),
-                         'battery': float(battery), 'robertOperationStatus': robert_operation_status})
-
+                         'battery': float(battery), 'robertOperationStatus': robert_operation_status,
+                         'locationName': location_name})
     return JsonResponse({'alerts': ret_data}, safe=False, status=status.HTTP_200_OK)
 
 
@@ -825,14 +827,18 @@ def gps_info_trans(gpsinfo):
     '''
     ret_str = ''
     values = {}
-    values['latlng'] = "39.92,116.46"
+    values['latlng'] = gpsinfo
     values['key'] = "AIzaSyDD2vDhoHdl8eJAIyWPv0Jw7jeO6VtlRF8"
     data = urllib.urlencode(values)
     url = "https://ditu.google.cn/maps/api/geocode/json"
     geturl = url + "?" + data
-    request = urllib2.Request(geturl)
-    response = urllib2.urlopen(request)
-    ret_dic = json.loads(response.read())
-    if ret_dic['status'] == 'OK':
-        ret_str = ret_dic['results'][0]['formatted_address']
+    try:
+        request = urllib2.Request(geturl)
+        response = urllib2.urlopen(request)
+        ret_dic = json.loads(response.read())
+        if ret_dic['status'] == 'OK':
+            ret_str = ret_dic['results'][0]['formatted_address']
+    except Exception, e:
+        log.error(repr(traceback.print_exc()))
+        log.error("geturl is %s" % geturl)
     return ret_str
