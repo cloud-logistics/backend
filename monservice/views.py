@@ -446,14 +446,16 @@ def history_path(request):
                         start_dic['time'] = item[2]
                         if item[0] in site_info_dic.keys():
                             start_dic['position'] = site_info_dic[item[0]]
-                            start_dic['localtionName'] = gps_info_trans(str(start_dic['position']['lat']) +
-                                                                        ',' + str(start_dic['position']['lng']))
+                            start_gps_info = "%s,%s" % (start_dic['position']['lat'], start_dic['position']['lng'])
+                            log.info("start_position gpsinfo is %s" % start_gps_info)
+                            start_dic['localtionName'] = gps_info_trans(start_gps_info)
                         end_dic = {}
                         end_dic['time'] = item[3]
                         if item[1] in site_info_dic.keys():
                             end_dic['position'] = site_info_dic[item[1]]
-                            end_dic['localtionName'] = gps_info_trans(str(end_dic['position']['lat']) +
-                                                                        ',' + str(end_dic['position']['lng']))
+                            end_gps_info = "%s,%s" % (end_dic['position']['lat'], end_dic['position']['lng'])
+                            log.info("end_position gpsinfo is %s" % end_gps_info)
+                            end_dic['localtionName'] = gps_info_trans(end_gps_info)
                         container_dic = {}
                         container_dic['containerId'] = param_dic['containerId']
                         container_dic['start'] = start_dic
