@@ -309,8 +309,7 @@ CREATE OR REPLACE FUNCTION iot.cal_missing_alarm() RETURNS void AS $$
       ELSE
         /* 计算后标志是未告警，查看告警表中是否有告警，如果有则将告警清除 */
         IF v_alarm_status = 1 THEN
-          UPDATE iot.alarm_info SET alarm_status = 0,
-            timestamp = data_record.timestamp,
+          UPDATE iot.alarm_info SET timestamp = data_record.timestamp,
             level = 2,
             longitude = v_longitude,
             latitude = v_latitude,
