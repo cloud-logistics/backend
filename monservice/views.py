@@ -730,13 +730,28 @@ def security_config(request):
 @permission_classes((IsAuthenticated,))
 def mycontainers(request):
     if request.user.has_perm('view_containerrentinfo'):
-        ret_dict = {}
+        container_dict = {}
         ret = ContainerRentInfo.objects.all()
         serializer = ContainerRentInfoSerializer(ret, many=True)
         # print repr(serializer.data)
-        ret_dict['results'] = serializer.data
-        log.info(ret_dict)
-        return JsonResponse(ret_dict, safe=False, status=status.HTTP_200_OK)
+        ret_list = serializer.data
+        final_response = {}
+        container_info_list = []
+        for item in ret_list:
+            container_dict['containerId'] = item['deviceid']
+            container_dict['leaseStartTime'] = "%s000" % item['starttime']
+            container_dict['leaseEndTime'] = "%s000" % item['endtime']
+            gps_dic = get_current_gpsinfo(item['deviceid'])
+            container_dict['position'] = gps_dic
+            query_ret = query_list('SELECT carrier_name FROM iot.carrier_info where id = %s' % item['carrier'])
+            if query_ret:
+                container_dict['carrier'] = query_ret[0][0]
+            else:
+                container_dict['carrier'] = "未知厂商"
+            container_dict['locationName'] = gps_info_trans("%s,%s" % (gps_dic['lat'], gps_dic['lng']))
+            container_info_list.append(container_dict)
+        final_response['mycontainers'] = container_info_list
+        return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
     else:
         return JsonResponse({}, safe=False, status=status.HTTP_403_FORBIDDEN)
 
@@ -883,3 +898,15 @@ def gps_info_trans(gpsinfo):
             log.error(repr(traceback.print_exc()))
             log.error("geturl is %s" % geturl)
     return ret_str
+
+
+def get_current_gpsinfo(container_id):
+    ret = {}
+    result = query_list("select latitude,longitude from iot.sensor_data where deviceid='%s' order by id desc limit 1" % container_id)
+    if result is None:
+        ret['lng'] = 0
+        ret['lat'] = 0
+    else:
+        ret['lng'] = float(result[0][1])
+        ret['lat'] = float(result[0][0])
+    return ret
