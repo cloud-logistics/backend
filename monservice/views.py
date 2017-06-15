@@ -731,9 +731,10 @@ def security_config(request):
 def mycontainers(request):
     if request.user.has_perm('view_containerrentinfo'):
         container_dict = {}
-        ret = ContainerRentInfo.objects.all()
+        ret = ContainerRentInfo.objects.filter(owner=request.user)
         serializer = ContainerRentInfoSerializer(ret, many=True)
         # print repr(serializer.data)
+        log.info("mycontainer req user is %s" % request.user)
         ret_list = serializer.data
         final_response = {}
         container_info_list = []
@@ -757,13 +758,38 @@ def mycontainers(request):
 
 
 @api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def containers_on_release(request):
     pass
 
 
 @api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def containers_available(request):
-    pass
+    if request.user.has_perm('view_containerrentinfo'):
+        container_dict = {}
+        ret = ContainerRentInfo.objects.filter(rentstatus=0)
+        serializer = ContainerRentInfoSerializer(ret, many=True)
+        ret_list = serializer.data
+        final_response = {}
+        container_info_list = []
+        for item in ret_list:
+            container_dict['containerId'] = item['deviceid']
+            gps_dic = get_current_gpsinfo(item['deviceid'])
+            container_dict['position'] = gps_dic
+            query_ret = query_list('SELECT box_type_name FROM iot.box_type_info where id = %s' % item['type'])
+            if query_ret:
+                container_dict['containerType'] = query_ret[0][0]
+            else:
+                container_dict['containerType'] = "标准云箱"
+            container_dict['locationName'] = gps_info_trans("%s,%s" % (gps_dic['lat'], gps_dic['lng']))
+            container_info_list.append(container_dict)
+        final_response['availablecontainers'] = container_info_list
+        return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
+    else:
+        return JsonResponse({}, safe=False, status=status.HTTP_403_FORBIDDEN)
 
 
 @api_view(['POST'])
