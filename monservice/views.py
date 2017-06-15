@@ -103,7 +103,7 @@ def realtime_message(request):
                 "status": "正常",
                 "value": 2.3
             },
-            "locationName": "菲律宾"
+            "locationName": "中国山东省青岛市市南区烟雨楼宾馆（苏州路）"
         }
 
         '''
