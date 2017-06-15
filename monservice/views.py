@@ -339,7 +339,8 @@ def alarm_monitor(request):
                       'from iot.alarm_info alarm_info '
                       'left join iot.alert_level_info alert_level_info on alarm_info.level = alert_level_info.id '
                       'left join iot.alert_code_info alert_code_info on alarm_info.code = alert_code_info.errcode '
-                      'left join iot.carrier_info carrier_info on carrier_info.id = carrier order by timestamp desc')
+                      'left join iot.carrier_info carrier_info on carrier_info.id = carrier '
+                      'where alarm_info.alarm_status = 1 order by timestamp desc')
     ret_data = []
 
     for record in data:
