@@ -330,3 +330,52 @@ CREATE OR REPLACE FUNCTION iot.cal_missing_alarm() RETURNS void AS $$
 
   END;
 $$ LANGUAGE 'plpgsql';
+
+
+
+/***
+根据给定指标名称，查询改指标24小时范围内指标值
+调用示例: SELECT * FROM iot.fn_indicator_history(1497369600,1497456000,'temperature','ESP32_AI_001') AS (value DECIMAL, hour INTEGER);
+ */
+CREATE OR REPLACE FUNCTION iot.fn_indicator_history(start_time INTEGER, end_time INTEGER, indicator TEXT, deviceid TEXT) RETURNS SETOF RECORD AS $$
+  DECLARE
+    v_start_time                         INTEGER;
+    v_end_time                           INTEGER;
+    v_indicator                          TEXT;
+    v_seconds_per_hour                   INTEGER;
+    v_record                             RECORD;
+    v_deviceid                           TEXT;
+    v_sql                                TEXT;
+    v_hours                              INTEGER;
+    v_i                                  INTEGER;
+
+  BEGIN
+    v_start_time := $1;
+    v_end_time := $2;
+    v_indicator := $3;
+    v_deviceid := $4;
+    v_seconds_per_hour := 3600;
+    v_hours := 24;
+    v_i := 0;
+
+    v_sql = 'SELECT CAST(AVG(' || v_indicator || ') AS DECIMAL(20, 2)),hour FROM(SELECT CASE';
+
+    FOR i IN 0..v_hours-1 LOOP
+      v_sql := v_sql || ' WHEN timestamp >= ' || v_start_time || ' + ' || v_seconds_per_hour || ' * ' || i ||
+                          ' AND timestamp < ' || v_start_time || ' + ' || v_seconds_per_hour || ' * ' || i+1 || ' THEN ' || i || ' ';
+    END LOOP;
+
+    v_sql := v_sql || 'END AS hour,CAST(' || v_indicator ||
+      ' AS NUMERIC) FROM iot.sensor_data sensor_data WHERE timestamp >= ' || v_start_time ||' AND timestamp < ' || v_end_time ||
+      ' AND sensor_data.deviceid = ''' || v_deviceid || ''') A GROUP BY hour ORDER BY hour ASC';
+
+    RAISE WARNING 'to print:%',v_sql;
+
+    FOR v_record IN EXECUTE v_sql LOOP
+      RETURN NEXT v_record;
+    END LOOP;
+
+    RETURN;
+
+  END;
+$$ LANGUAGE 'plpgsql';

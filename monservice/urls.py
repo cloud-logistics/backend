@@ -26,5 +26,6 @@ urlpatterns = [
     url(r'^containersonlease$', views.containers_on_release),     # 承运方在租页面
     url(r'^availablecontainers$', views.containers_available),    # 承运方可用云箱
     url(r'^command$', views.send_command),                        # 向终端发送command
+    url(r'^containerHistoryStatus$', views.indicator_history),    # 实时报文指标历史曲线
 
 ]

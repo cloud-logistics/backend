@@ -335,7 +335,7 @@ def alarm_monitor(request):
                       'carrier_info.carrier_name,alarm_info.longitude,alarm_info.latitude,'
                       'alarm_info.speed,alarm_info.temperature,alarm_info.humidity,'
                       'alarm_info.num_of_collide,alarm_info.num_of_door_open,'
-                      'alarm_info.battery,alarm_info.robert_operation_status '
+                      'alarm_info.battery,alarm_info.robert_operation_status,alarm_info.endpointid '
                       'from iot.alarm_info alarm_info '
                       'left join iot.alert_level_info alert_level_info on alarm_info.level = alert_level_info.id '
                       'left join iot.alert_code_info alert_code_info on alarm_info.code = alert_code_info.errcode '
@@ -360,6 +360,7 @@ def alarm_monitor(request):
         num_of_door_open = record[13]
         battery = record[14]
         robert_operation_status = record[15]
+        endpointid = record[16]
         location_name = gps_info_trans("%s,%s" % (latitude, longitude))
         ret_data.append({'containerId': deviceid, 'alertTime': timestamp, 'alertLevel': level,
                          'alertType': error_description, 'alertCode': str(error_code), 'status': ship_status,
@@ -367,7 +368,7 @@ def alarm_monitor(request):
                          'speed': float(speed), 'temperature': float(temperature), 'humidity': float(humidity),
                          'num_of_collide': float(num_of_collide), 'num_of_door_open': float(num_of_door_open),
                          'battery': float(battery), 'robertOperationStatus': robert_operation_status,
-                         'locationName': location_name})
+                         'locationName': location_name, "endpointId": endpointid})
     return JsonResponse({'alerts': ret_data}, safe=False, status=status.HTTP_200_OK)
 
 
@@ -818,13 +819,55 @@ def verify_user(request):
 @api_view(['POST'])
 def send_command(request):
     action = json.loads(request.body)['action']
-    id = json.loads(request.body)['containerId']
-    id = "9ccb696844bdcb880efb7fc18c5361a6221de9ad"
+    id = json.loads(request.body)['endpointId']
     conn = redis.Redis(host="127.0.0.1", port=6379, db=0)
     conn.rpush('command_list',
-               "{\"service\":\"command\",\"action\": \"" + action + "\",\"result\":\"123\",\"id\":\"" + id + "\"}")
+               "{\"service\":\"command\",\"action\": \"" + action + "\",\"result\":\"\",\"id\":\"" + id + "\"}")
     conn.save()
     return JsonResponse({"code": "200"}, safe=False, status=status.HTTP_200_OK)
+
+
+# 实时报文温度、湿度曲线
+@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+@permission_classes((IsAuthenticated,))
+@api_view(['POST'])
+def indicator_history(request):
+    try:
+        id = json.loads(request.body)['containerId']
+        indicator = json.loads(request.body)['requiredParam']
+        if indicator == 'battery':
+            indicator = 'temperature'   # 电量没有上报数据，暂时用温度代替
+
+        end_time_str = str(time.strftime('%Y-%m-%d %H', time.localtime(int(time.time())))) + ':00:00'
+        end_time = int(time.mktime(time.strptime(end_time_str, '%Y-%m-%d %H:%M:%S')))
+        start_time = end_time - 3600 * 24
+
+        data_list = query_list('SELECT * FROM iot.fn_indicator_history('+ str(start_time) +',' +
+                  str(end_time) + ',\'' + indicator + '\',\'' + id + '\') AS (value DECIMAL, hour INTEGER)')
+        data_dic = {}
+        value_arr = []
+
+        # 将list转换为字典
+        for i in range(len(data_list)):
+            data_dic.update({data_list[i][1]: data_list[i][0]})
+
+        for j in range(24):
+            y = data_dic.get(j)
+            if y is None:
+                y = 0
+
+            x1 = time.localtime(start_time + j * 3600)
+            x2 = time.localtime(start_time + (j + 1) * 3600)
+            time_x1 = time.strftime('%H:%M', x1)
+            time_x2 = time.strftime('%H:%M', x2)
+            value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(y)})
+
+    except Exception, e:
+        log.error(e.message)
+    if json.loads(request.body)['requiredParam'] == 'battery':
+        return JsonResponse({'battery': value_arr}, safe=False, status=status.HTTP_200_OK)
+    else:
+        return JsonResponse({indicator: value_arr}, safe=False, status=status.HTTP_200_OK)
 
 
 # 将unicode转换utf-8编码
