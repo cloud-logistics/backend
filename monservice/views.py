@@ -827,17 +827,6 @@ def send_command(request):
     return JsonResponse({"code": "200"}, safe=False, status=status.HTTP_200_OK)
 
 
-<<<<<<< HEAD
-@api_view(['POST'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def analysis_result(request):
-    if request.user.has_perm('view_containerrentinfo'):
-        return JsonResponse({}, safe=False, status=status.HTTP_403_FORBIDDEN)
-    else:
-        response = get_analysis_report()
-        return JsonResponse(response, safe=False, status=status.HTTP_200_OK)
-=======
 # 实时报文温度、湿度曲线
 @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -879,7 +868,17 @@ def indicator_history(request):
         return JsonResponse({'battery': value_arr}, safe=False, status=status.HTTP_200_OK)
     else:
         return JsonResponse({indicator: value_arr}, safe=False, status=status.HTTP_200_OK)
->>>>>>> 6ca880af65d02c4c101a7d14e3e49defb8bc8359
+
+
+@api_view(['POST'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def analysis_result(request):
+    if request.user.has_perm('view_containerrentinfo'):
+        return JsonResponse({}, safe=False, status=status.HTTP_403_FORBIDDEN)
+    else:
+        response = get_analysis_report()
+        return JsonResponse(response, safe=False, status=status.HTTP_200_OK)
 
 
 # 将unicode转换utf-8编码
