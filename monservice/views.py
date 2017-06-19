@@ -555,9 +555,75 @@ def history_message(request):
         return JsonResponse(final_response, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@csrf_exempt
+# 云箱状态汇总
+@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+@permission_classes((IsAuthenticated,))
+@api_view(['POST'])
 def status_summary(request):
-    pass
+    try:
+        id = json.loads(request.body)['containerId']
+    except Exception, e:
+        id = ''
+        log.error(e.message)
+
+    sql = 'select box_info.deviceid,C.timestamp,carrier_info.carrier_name,C.longitude,C.latitude,' \
+          'C.speed,C.temperature,C.humidity,C.collide ' \
+          'from iot.box_info box_info ' \
+          'left join iot.box_order_relation box_order_relation ' \
+          'on box_info.deviceid = box_order_relation.deviceid '
+
+    if id is not None and id != '':
+        sql = sql + ' and box_info.deviceid = \'' + id + '\' '
+
+    sql = sql + 'inner join iot.order_info order_info ' \
+                'on box_order_relation.trackid=order_info.trackid ' \
+                'inner join iot.carrier_info carrier_info ' \
+                'on carrier_info.id = order_info.carrierid ' \
+                'left join ( select B.* from ' \
+                '(select max(timestamp) as timestamp ,deviceid from iot.sensor_data '
+
+    if id is not None and id != '':
+        sql = sql + 'where deviceid = \'' + id + '\' '
+
+    sql = sql + 'group by deviceid) A left join iot.sensor_data B ' \
+                'on A.timestamp = B.timestamp and A.deviceid = B.deviceid '
+
+    if id is not None and id != '':
+        sql = sql + 'where B.deviceid = \'' + id + '\''
+
+    sql = sql + ') C on C.deviceid=box_info.deviceid'
+
+    data = query_list(sql)
+
+    ret_data = []
+
+    for item in data:
+        deviceid = item[0]
+        timestamp = item[1]
+        carrier_name = item[2]
+        longitude = cal_position(item[3])
+        latitude = cal_position(item[4])
+        speed = float(item[5])
+        temperature = float(item[6])
+        humidity = float(item[7])
+        collide = float(item[8])
+
+        # 判断箱子在运还是停靠
+        if carrier_name is not None:
+            shipping_status = IN_TRANSPORT
+        else:
+            shipping_status = ANCHORED
+
+        location_name = gps_info_trans("%s,%s" % (latitude, longitude))
+
+        element = {'containerId': deviceid, 'currentStatus': shipping_status, 'position':
+            {'lng': longitude, 'lat': latitude}, 'locationName': location_name, 'carrier': carrier_name,
+                   'speed': speed, 'temperature': temperature, 'humidity': humidity, 'num_of_collide': collide,
+                   'num_of_door_open': 40, 'robot_operation_status': '装箱', 'battery': 0.6}
+
+        ret_data.append(element)
+
+    return JsonResponse({"boxStatus": ret_data}, safe=False, status=status.HTTP_200_OK)
 
 
 # 基础信息管理
