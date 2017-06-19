@@ -8,7 +8,7 @@ def get_logger(module_name):
 
     # 创建一个logger
     logger = logging.getLogger(str(module_name))
-    logger.setLevel(logging.WARN)
+    logger.setLevel(logging.DEBUG)
 
     # 创建一个handler，用于写入日志文件
     fh = logging.FileHandler('runlog.log')
