@@ -25,6 +25,7 @@ from rest_framework.permissions import IsAuthenticated
 import urllib
 import urllib2
 import json
+import random
 
 
 log = logger.get_logger('monservice.view.py')
@@ -998,34 +999,68 @@ def get_analysis_report():
     final_response['profit_margin'] = 0.68
     final_response['carrier_orders'] = 3402000
     final_response['use_of_containers'] = 5927000
-    final_response['transportation_category'] = {"airline": 0.3, "highway": 0.2, "ocean": 0.4, "other": 0.1}
-    final_response['goods_category'] = {"fish": 0.3, "beaf": 0.2, "chip": 0.3, "gold": 0.2}
-    final_response['history_revenue'] = [{"time": "1月", "value": 3000}, {"time": "2月", "value": 2000},
-                                         {"time": "3月", "value": 7000}, {"time": "4月", "value": 3000},
-                                         {"time": "5月", "value": 3000}, {"time": "6月", "value": 3000},
-                                         {"time": "7月", "value": 3000}, {"time": "8月", "value": 3000},
-                                         {"time": "9月", "value": 3000}, {"time": "10月", "value": 6000},
-                                         {"time": "11月", "value": 2000}, {"time": "12月", "value": 4000}
+    ret1, ret2, ret3, ret4 = gen_random_param_list()
+    final_response['transportation_category'] = {"airline": ret1, "highway": ret2, "ocean": ret3, "other": ret4}
+    ret1, ret2, ret3, ret4 = gen_random_param_list()
+    final_response['goods_category'] = {"fish": ret1, "beaf": ret2, "chip": ret3, "gold": ret4}
+    final_response['history_revenue'] = [{"time": "1月", "value": random.randint(1000, 2000)},
+                                         {"time": "2月", "value": random.randint(2000, 3000)},
+                                         {"time": "3月", "value": random.randint(3000, 4000)},
+                                         {"time": "4月", "value": random.randint(4000, 5000)},
+                                         {"time": "5月", "value": random.randint(5000, 6000)},
+                                         {"time": "6月", "value": random.randint(7000, 8000)},
+                                         {"time": "7月", "value": random.randint(8000, 9000)},
+                                         {"time": "8月", "value": random.randint(9000, 10000)},
+                                         {"time": "9月", "value": random.randint(10000, 11000)},
+                                         {"time": "10月", "value": random.randint(12000, 13000)},
+                                         {"time": "11月", "value": random.randint(13000, 14000)},
+                                         {"time": "12月", "value": random.randint(15000, 16000)}
                                          ]
-    final_response['history_profit_margin'] = [{"time": "1月", "value": 0.4}, {"time": "2月", "value": 0.3},
-                                               {"time": "3月", "value": 0.7}, {"time": "4月", "value": 0.3},
-                                               {"time": "5月", "value": 0.4}, {"time": "6月", "value": 0.5},
-                                               {"time": "7月", "value": 0.4}, {"time": "8月", "value": 0.3},
-                                               {"time": "9月", "value": 0.4}, {"time": "10月", "value": 0.4},
-                                               {"time": "11月", "value": 0.2}, {"time": "12月", "value": 0.4}
-                                               ]
-    final_response['history_orders'] = [{"time": "1月", "value": 3000}, {"time": "2月", "value": 2000},
-                                        {"time": "3月", "value": 7000}, {"time": "4月", "value": 3000},
-                                        {"time": "5月", "value": 3000}, {"time": "6月", "value": 3000},
-                                        {"time": "7月", "value": 3000}, {"time": "8月", "value": 3000},
-                                        {"time": "9月", "value": 3000}, {"time": "10月", "value": 6000},
-                                        {"time": "11月", "value": 2000}, {"time": "12月", "value": 4000}
+    final_response['history_profit_margin'] = [{"time": "1月", "value": random.uniform(0.1, 0.3)},
+                                               {"time": "2月", "value": random.uniform(0.2, 0.3)},
+                                               {"time": "3月", "value": random.uniform(0.3, 0.3)},
+                                               {"time": "4月", "value": random.uniform(0.3, 0.3)},
+                                               {"time": "5月", "value": random.uniform(0.4, 0.6)},
+                                               {"time": "6月", "value": random.uniform(0.5, 0.6)},
+                                               {"time": "7月", "value": random.uniform(0.5, 0.6)},
+                                               {"time": "8月", "value": random.uniform(0.6, 0.6)},
+                                               {"time": "9月", "value": random.uniform(0.7, 0.9)},
+                                               {"time": "10月", "value": random.uniform(0.7, 0.9)},
+                                               {"time": "11月", "value": random.uniform(0.8, 0.9)},
+                                               {"time": "12月", "value": random.uniform(0.8, 0.9)}
+                                              ]
+    final_response['history_orders'] = [{"time": "1月", "value": random.randint(1000, 2000)},
+                                         {"time": "2月", "value": random.randint(2000, 3000)},
+                                         {"time": "3月", "value": random.randint(3000, 4000)},
+                                         {"time": "4月", "value": random.randint(4000, 5000)},
+                                         {"time": "5月", "value": random.randint(5000, 6000)},
+                                         {"time": "6月", "value": random.randint(7000, 8000)},
+                                         {"time": "7月", "value": random.randint(8000, 9000)},
+                                         {"time": "8月", "value": random.randint(9000, 10000)},
+                                         {"time": "9月", "value": random.randint(10000, 11000)},
+                                         {"time": "10月", "value": random.randint(12000, 13000)},
+                                         {"time": "11月", "value": random.randint(13000, 14000)},
+                                         {"time": "12月", "value": random.randint(15000, 16000)}
                                         ]
-    final_response['history_use_of_containers'] = [{"time": "1月", "value": 3000}, {"time": "2月", "value": 2000},
-                                                   {"time": "3月", "value": 7000}, {"time": "4月", "value": 3000},
-                                                   {"time": "5月", "value": 3000}, {"time": "6月", "value": 3000},
-                                                   {"time": "7月", "value": 3000}, {"time": "8月", "value": 3000},
-                                                   {"time": "9月", "value": 3000}, {"time": "10月", "value": 6000},
-                                                   {"time": "11月", "value": 2000}, {"time": "12月", "value": 4000}
+    final_response['history_use_of_containers'] = [{"time": "1月", "value": random.randint(1000, 2000)},
+                                                   {"time": "2月", "value": random.randint(2000, 3000)},
+                                                   {"time": "3月", "value": random.randint(3000, 4000)},
+                                                   {"time": "4月", "value": random.randint(4000, 5000)},
+                                                   {"time": "5月", "value": random.randint(5000, 6000)},
+                                                   {"time": "6月", "value": random.randint(7000, 8000)},
+                                                   {"time": "7月", "value": random.randint(8000, 9000)},
+                                                   {"time": "8月", "value": random.randint(9000, 10000)},
+                                                   {"time": "9月", "value": random.randint(10000, 11000)},
+                                                   {"time": "10月", "value": random.randint(12000, 13000)},
+                                                   {"time": "11月", "value": random.randint(13000, 14000)},
+                                                   {"time": "12月", "value": random.randint(15000, 16000)}
                                                    ]
     return final_response
+
+
+def gen_random_param_list():
+    param1 = random.uniform(0.1, 0.3)
+    param2 = random.uniform(0.1, 0.3)
+    param3 = random.uniform(0.1, 0.3)
+    param4 = 1 - param1 - param2 - param3
+    return param1, param2, param3, param4
