@@ -119,6 +119,8 @@ class ContainerRentInfo(models.Model):
     endtime = models.TextField()
     carrier = models.IntegerField()
     type = models.IntegerField()
+    owner = models.TextField()
+    rentstatus = models.IntegerField()
 
     class Meta:
         permissions = (
