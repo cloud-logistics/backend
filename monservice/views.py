@@ -1080,57 +1080,58 @@ def get_analysis_report():
     final_response['transportation_category'] = {"airline": ret1, "highway": ret2, "ocean": ret3, "other": ret4}
     ret1, ret2, ret3, ret4 = gen_random_param_list()
     final_response['goods_category'] = {"fish": ret1, "beaf": ret2, "chip": ret3, "gold": ret4}
-    final_response['history_revenue'] = [{"time": "1月", "value": random.randint(1000, 2000)},
-                                         {"time": "2月", "value": random.randint(2000, 3000)},
-                                         {"time": "3月", "value": random.randint(3000, 4000)},
-                                         {"time": "4月", "value": random.randint(4000, 5000)},
-                                         {"time": "5月", "value": random.randint(5000, 6000)},
-                                         {"time": "6月", "value": random.randint(7000, 8000)},
-                                         {"time": "7月", "value": random.randint(8000, 9000)},
-                                         {"time": "8月", "value": random.randint(9000, 10000)},
-                                         {"time": "9月", "value": random.randint(10000, 11000)},
-                                         {"time": "10月", "value": random.randint(12000, 13000)},
-                                         {"time": "11月", "value": random.randint(13000, 14000)},
-                                         {"time": "12月", "value": random.randint(15000, 16000)}
+    x_axis_time_list = gen_x_axis_time_list()
+    final_response['history_revenue'] = [{"time": x_axis_time_list[0], "value": random.randint(1000, 2000)},
+                                         {"time": x_axis_time_list[1], "value": random.randint(2000, 3000)},
+                                         {"time": x_axis_time_list[2], "value": random.randint(3000, 4000)},
+                                         {"time": x_axis_time_list[3], "value": random.randint(4000, 5000)},
+                                         {"time": x_axis_time_list[4], "value": random.randint(5000, 6000)},
+                                         {"time": x_axis_time_list[5], "value": random.randint(7000, 8000)},
+                                         {"time": x_axis_time_list[6], "value": random.randint(8000, 9000)},
+                                         {"time": x_axis_time_list[7], "value": random.randint(9000, 10000)},
+                                         {"time": x_axis_time_list[8], "value": random.randint(10000, 11000)},
+                                         {"time": x_axis_time_list[9], "value": random.randint(12000, 13000)},
+                                         {"time": x_axis_time_list[10], "value": random.randint(13000, 14000)},
+                                         {"time": x_axis_time_list[11], "value": random.randint(15000, 16000)}
                                          ]
-    final_response['history_profit_margin'] = [{"time": "1月", "value": random.uniform(0.1, 0.3)},
-                                               {"time": "2月", "value": random.uniform(0.2, 0.3)},
-                                               {"time": "3月", "value": random.uniform(0.3, 0.3)},
-                                               {"time": "4月", "value": random.uniform(0.3, 0.3)},
-                                               {"time": "5月", "value": random.uniform(0.4, 0.6)},
-                                               {"time": "6月", "value": random.uniform(0.5, 0.6)},
-                                               {"time": "7月", "value": random.uniform(0.5, 0.6)},
-                                               {"time": "8月", "value": random.uniform(0.6, 0.6)},
-                                               {"time": "9月", "value": random.uniform(0.7, 0.9)},
-                                               {"time": "10月", "value": random.uniform(0.7, 0.9)},
-                                               {"time": "11月", "value": random.uniform(0.8, 0.9)},
-                                               {"time": "12月", "value": random.uniform(0.8, 0.9)}
+    final_response['history_profit_margin'] = [{"time": x_axis_time_list[0], "value": random.uniform(0.1, 0.3)},
+                                               {"time": x_axis_time_list[1], "value": random.uniform(0.2, 0.3)},
+                                               {"time": x_axis_time_list[2], "value": random.uniform(0.3, 0.3)},
+                                               {"time": x_axis_time_list[3], "value": random.uniform(0.3, 0.3)},
+                                               {"time": x_axis_time_list[4], "value": random.uniform(0.4, 0.6)},
+                                               {"time": x_axis_time_list[5], "value": random.uniform(0.5, 0.6)},
+                                               {"time": x_axis_time_list[6], "value": random.uniform(0.5, 0.6)},
+                                               {"time": x_axis_time_list[7], "value": random.uniform(0.6, 0.6)},
+                                               {"time": x_axis_time_list[8], "value": random.uniform(0.7, 0.9)},
+                                               {"time": x_axis_time_list[9], "value": random.uniform(0.7, 0.9)},
+                                               {"time": x_axis_time_list[10], "value": random.uniform(0.8, 0.9)},
+                                               {"time": x_axis_time_list[11], "value": random.uniform(0.8, 0.9)}
                                               ]
-    final_response['history_orders'] = [{"time": "1月", "value": random.randint(1000, 2000)},
-                                         {"time": "2月", "value": random.randint(2000, 3000)},
-                                         {"time": "3月", "value": random.randint(3000, 4000)},
-                                         {"time": "4月", "value": random.randint(4000, 5000)},
-                                         {"time": "5月", "value": random.randint(5000, 6000)},
-                                         {"time": "6月", "value": random.randint(7000, 8000)},
-                                         {"time": "7月", "value": random.randint(8000, 9000)},
-                                         {"time": "8月", "value": random.randint(9000, 10000)},
-                                         {"time": "9月", "value": random.randint(10000, 11000)},
-                                         {"time": "10月", "value": random.randint(12000, 13000)},
-                                         {"time": "11月", "value": random.randint(13000, 14000)},
-                                         {"time": "12月", "value": random.randint(15000, 16000)}
+    final_response['history_orders'] = [{"time": x_axis_time_list[0], "value": random.randint(1000, 2000)},
+                                         {"time": x_axis_time_list[1], "value": random.randint(2000, 3000)},
+                                         {"time": x_axis_time_list[2], "value": random.randint(3000, 4000)},
+                                         {"time": x_axis_time_list[3], "value": random.randint(4000, 5000)},
+                                         {"time": x_axis_time_list[4], "value": random.randint(5000, 6000)},
+                                         {"time": x_axis_time_list[5], "value": random.randint(7000, 8000)},
+                                         {"time": x_axis_time_list[6], "value": random.randint(8000, 9000)},
+                                         {"time": x_axis_time_list[7], "value": random.randint(9000, 10000)},
+                                         {"time": x_axis_time_list[8], "value": random.randint(10000, 11000)},
+                                         {"time": x_axis_time_list[9], "value": random.randint(12000, 13000)},
+                                         {"time": x_axis_time_list[10], "value": random.randint(13000, 14000)},
+                                         {"time": x_axis_time_list[11], "value": random.randint(15000, 16000)}
                                         ]
-    final_response['history_use_of_containers'] = [{"time": "1月", "value": random.randint(1000, 2000)},
-                                                   {"time": "2月", "value": random.randint(2000, 3000)},
-                                                   {"time": "3月", "value": random.randint(3000, 4000)},
-                                                   {"time": "4月", "value": random.randint(4000, 5000)},
-                                                   {"time": "5月", "value": random.randint(5000, 6000)},
-                                                   {"time": "6月", "value": random.randint(7000, 8000)},
-                                                   {"time": "7月", "value": random.randint(8000, 9000)},
-                                                   {"time": "8月", "value": random.randint(9000, 10000)},
-                                                   {"time": "9月", "value": random.randint(10000, 11000)},
-                                                   {"time": "10月", "value": random.randint(12000, 13000)},
-                                                   {"time": "11月", "value": random.randint(13000, 14000)},
-                                                   {"time": "12月", "value": random.randint(15000, 16000)}
+    final_response['history_use_of_containers'] = [{"time": x_axis_time_list[0], "value": random.randint(1000, 2000)},
+                                                   {"time": x_axis_time_list[1], "value": random.randint(2000, 3000)},
+                                                   {"time": x_axis_time_list[2], "value": random.randint(3000, 4000)},
+                                                   {"time": x_axis_time_list[3], "value": random.randint(4000, 5000)},
+                                                   {"time": x_axis_time_list[4], "value": random.randint(5000, 6000)},
+                                                   {"time": x_axis_time_list[5], "value": random.randint(7000, 8000)},
+                                                   {"time": x_axis_time_list[6], "value": random.randint(8000, 9000)},
+                                                   {"time": x_axis_time_list[7], "value": random.randint(9000, 10000)},
+                                                   {"time": x_axis_time_list[8], "value": random.randint(10000, 11000)},
+                                                   {"time": x_axis_time_list[9], "value": random.randint(12000, 13000)},
+                                                   {"time": x_axis_time_list[10], "value": random.randint(13000, 14000)},
+                                                   {"time": x_axis_time_list[11], "value": random.randint(15000, 16000)}
                                                    ]
     return final_response
 
@@ -1141,6 +1142,24 @@ def gen_random_param_list():
     param3 = random.uniform(0.1, 0.3)
     param4 = 1 - param1 - param2 - param3
     return param1, param2, param3, param4
+
+
+#以月为单位，返回前1年的时间轴
+def gen_x_axis_time_list():
+    ret_time_list=[]
+    cur_month = datetime.date.today().month
+    cur_year = datetime.date.today().year
+    print cur_month
+    print cur_year
+    if cur_month != 1:
+        for num_last in range(cur_month, 13):
+            ret_time_list.append("%s/%s" % (cur_year - 1, num_last))
+        for num in range(1, cur_month):
+            ret_time_list.append("%s/%s" % (cur_year, num))
+    else:
+        for num in range(1, 13):
+            ret_time_list.append("%s/%s" % (cur_year - 1, num))
+    return ret_time_list
 
 
 def get_operation_overview():
@@ -1159,30 +1178,31 @@ def get_operation_overview():
     final_response['container_num'] = container_num_int
     final_response['container_on_lease'] = random.randint(1000, container_num_int)
     final_response['container_on_transportation'] = container_num_int - final_response['container_on_lease']
-    final_response['container_on_lease_history'] = [{"time": "1月", "value": random.randint(1000, 2000)},
-                                         {"time": "2月", "value": random.randint(2000, 3000)},
-                                         {"time": "3月", "value": random.randint(3000, 4000)},
-                                         {"time": "4月", "value": random.randint(4000, 5000)},
-                                         {"time": "5月", "value": random.randint(5000, 6000)},
-                                         {"time": "6月", "value": random.randint(7000, 8000)},
-                                         {"time": "7月", "value": random.randint(8000, 9000)},
-                                         {"time": "8月", "value": random.randint(9000, 10000)},
-                                         {"time": "9月", "value": random.randint(10000, 11000)},
-                                         {"time": "10月", "value": random.randint(12000, 13000)},
-                                         {"time": "11月", "value": random.randint(13000, 14000)},
-                                         {"time": "12月", "value": random.randint(15000, 16000)}
+    x_axis_time_list = gen_x_axis_time_list()
+    final_response['container_on_lease_history'] = [{"time": x_axis_time_list[0], "value": random.randint(1000, 2000)},
+                                         {"time": x_axis_time_list[1], "value": random.randint(2000, 3000)},
+                                         {"time": x_axis_time_list[2], "value": random.randint(3000, 4000)},
+                                         {"time": x_axis_time_list[3], "value": random.randint(4000, 5000)},
+                                         {"time": x_axis_time_list[4], "value": random.randint(5000, 6000)},
+                                         {"time": x_axis_time_list[5], "value": random.randint(7000, 8000)},
+                                         {"time": x_axis_time_list[6], "value": random.randint(8000, 9000)},
+                                         {"time": x_axis_time_list[7], "value": random.randint(9000, 10000)},
+                                         {"time": x_axis_time_list[8], "value": random.randint(10000, 11000)},
+                                         {"time": x_axis_time_list[9], "value": random.randint(12000, 13000)},
+                                         {"time": x_axis_time_list[10], "value": random.randint(13000, 14000)},
+                                         {"time": x_axis_time_list[11], "value": random.randint(15000, 16000)}
                                          ]
-    final_response['container_on_transportation_history'] = [{"time": "1月", "value": random.randint(1000, 2000)},
-                                         {"time": "2月", "value": random.randint(2000, 3000)},
-                                         {"time": "3月", "value": random.randint(3000, 4000)},
-                                         {"time": "4月", "value": random.randint(4000, 5000)},
-                                         {"time": "5月", "value": random.randint(5000, 6000)},
-                                         {"time": "6月", "value": random.randint(7000, 8000)},
-                                         {"time": "7月", "value": random.randint(8000, 9000)},
-                                         {"time": "8月", "value": random.randint(9000, 10000)},
-                                         {"time": "9月", "value": random.randint(10000, 11000)},
-                                         {"time": "10月", "value": random.randint(12000, 13000)},
-                                         {"time": "11月", "value": random.randint(13000, 14000)},
-                                         {"time": "12月", "value": random.randint(15000, 16000)}
+    final_response['container_on_transportation_history'] = [{"time": x_axis_time_list[0], "value": random.randint(1000, 2000)},
+                                         {"time": x_axis_time_list[1], "value": random.randint(2000, 3000)},
+                                         {"time": x_axis_time_list[2], "value": random.randint(3000, 4000)},
+                                         {"time": x_axis_time_list[3], "value": random.randint(4000, 5000)},
+                                         {"time": x_axis_time_list[4], "value": random.randint(5000, 6000)},
+                                         {"time": x_axis_time_list[5], "value": random.randint(7000, 8000)},
+                                         {"time": x_axis_time_list[6], "value": random.randint(8000, 9000)},
+                                         {"time": x_axis_time_list[7], "value": random.randint(9000, 10000)},
+                                         {"time": x_axis_time_list[8], "value": random.randint(10000, 11000)},
+                                         {"time": x_axis_time_list[9], "value": random.randint(12000, 13000)},
+                                         {"time": x_axis_time_list[10], "value": random.randint(13000, 14000)},
+                                         {"time": x_axis_time_list[11], "value": random.randint(15000, 16000)}
                                         ]
     return final_response
