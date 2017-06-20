@@ -948,7 +948,7 @@ def analysis_result(request):
         return JsonResponse(response, safe=False, status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def operation_overview(request):
