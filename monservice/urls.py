@@ -28,4 +28,5 @@ urlpatterns = [
     url(r'^containerHistoryStatus$', views.indicator_history),    # 实时报文指标历史曲线
     url(r'^analysisresult$', views.analysis_result),              # 分析报告
     url(r'^boxStatus$', views.status_summary),                    # 云箱状态汇总
+    url(r'^operationoverview$', views.operation_overview),            # 运营状态概览
 ]

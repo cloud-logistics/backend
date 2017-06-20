@@ -948,6 +948,17 @@ def analysis_result(request):
         return JsonResponse(response, safe=False, status=status.HTTP_200_OK)
 
 
+@api_view(['POST'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def operation_overview(request):
+    if request.user.has_perm('view_containerrentinfo'):
+        return JsonResponse({}, safe=False, status=status.HTTP_403_FORBIDDEN)
+    else:
+        response = get_operation_overview()
+        return JsonResponse(response, safe=False, status=status.HTTP_200_OK)
+
+
 # 将unicode转换utf-8编码
 def to_str(unicode_or_str):
     if isinstance(unicode_or_str, unicode):
@@ -1130,3 +1141,48 @@ def gen_random_param_list():
     param3 = random.uniform(0.1, 0.3)
     param4 = 1 - param1 - param2 - param3
     return param1, param2, param3, param4
+
+
+def get_operation_overview():
+    final_response = {}
+    final_response['container_location'] = {"China": random.randint(2000, 4000),
+                                            "USA": random.randint(2000, 4000),
+                                            "Europe": random.randint(1500, 3000),
+                                            "India": random.randint(1500, 3000),
+                                            "Japan": random.randint(1000, 2000),
+                                            "Canada": random.randint(500, 1000),
+                                            "other": random.randint(500, 1000)
+                                            }
+    container_num_int = 0
+    for item in final_response['container_location'].values():
+        container_num_int = container_num_int + item
+    final_response['container_num'] = container_num_int
+    final_response['container_on_lease'] = random.randint(1000, container_num_int)
+    final_response['container_on_transportation'] = container_num_int - final_response['container_on_lease']
+    final_response['container_on_lease_history'] = [{"time": "1月", "value": random.randint(1000, 2000)},
+                                         {"time": "2月", "value": random.randint(2000, 3000)},
+                                         {"time": "3月", "value": random.randint(3000, 4000)},
+                                         {"time": "4月", "value": random.randint(4000, 5000)},
+                                         {"time": "5月", "value": random.randint(5000, 6000)},
+                                         {"time": "6月", "value": random.randint(7000, 8000)},
+                                         {"time": "7月", "value": random.randint(8000, 9000)},
+                                         {"time": "8月", "value": random.randint(9000, 10000)},
+                                         {"time": "9月", "value": random.randint(10000, 11000)},
+                                         {"time": "10月", "value": random.randint(12000, 13000)},
+                                         {"time": "11月", "value": random.randint(13000, 14000)},
+                                         {"time": "12月", "value": random.randint(15000, 16000)}
+                                         ]
+    final_response['container_on_transportation_history'] = [{"time": "1月", "value": random.randint(1000, 2000)},
+                                         {"time": "2月", "value": random.randint(2000, 3000)},
+                                         {"time": "3月", "value": random.randint(3000, 4000)},
+                                         {"time": "4月", "value": random.randint(4000, 5000)},
+                                         {"time": "5月", "value": random.randint(5000, 6000)},
+                                         {"time": "6月", "value": random.randint(7000, 8000)},
+                                         {"time": "7月", "value": random.randint(8000, 9000)},
+                                         {"time": "8月", "value": random.randint(9000, 10000)},
+                                         {"time": "9月", "value": random.randint(10000, 11000)},
+                                         {"time": "10月", "value": random.randint(12000, 13000)},
+                                         {"time": "11月", "value": random.randint(13000, 14000)},
+                                         {"time": "12月", "value": random.randint(15000, 16000)}
+                                        ]
+    return final_response
