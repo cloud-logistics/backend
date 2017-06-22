@@ -155,7 +155,7 @@ def realtime_message(request):
         box_type = NOT_APPLICABLE
 
     # 获取传感器数据
-    sensor_data = query_list('select temperature,humidity,longitude,latitude,speed,collide '
+    sensor_data = query_list('select temperature,humidity,longitude,latitude,speed,collide,light '
                              'from iot.sensor_data where deviceid = \'' + id + '\' order by timestamp desc limit 1')
     if len(sensor_data) > 0:
         temperature = sensor_data[0][0]
@@ -164,6 +164,7 @@ def realtime_message(request):
         latitude = cal_position(sensor_data[0][3])
         speed = sensor_data[0][4]
         collide = sensor_data[0][5]
+        num_of_door_open = sensor_data[0][6]
     else:
         temperature = ZERO
         humidity = ZERO
@@ -171,6 +172,7 @@ def realtime_message(request):
         latitude = ZERO
         speed = ZERO
         collide = ZERO
+        num_of_door_open = ZERO
 
     # 获取箱子阈值
     threshold_data = query_list('select temperature_threshold_max,temperature_threshold_min,'
@@ -239,7 +241,6 @@ def realtime_message(request):
         collide_status = STATUS_ABNORMAL
 
     # 计算开门次数是否在正常范围
-    num_of_door_open = 54   # 后续需要修改为真实值
     if operation_threshold_min <= int(num_of_door_open) <= operation_threshold_max:
         door_open_status = STATUS_NORMAL
     else:
@@ -567,7 +568,7 @@ def status_summary(request):
         log.error(e.message)
 
     sql = 'select box_info.deviceid,C.timestamp,carrier_info.carrier_name,C.longitude,C.latitude,' \
-          'C.speed,C.temperature,C.humidity,C.collide ' \
+          'C.speed,C.temperature,C.humidity,C.collide,C.light ' \
           'from iot.box_info box_info ' \
           'left join iot.box_order_relation box_order_relation ' \
           'on box_info.deviceid = box_order_relation.deviceid '
@@ -607,6 +608,7 @@ def status_summary(request):
         temperature = float(item[6])
         humidity = float(item[7])
         collide = float(item[8])
+        num_of_door_open = int(item[9])
 
         # 判断箱子在运还是停靠
         if carrier_name is not None:
@@ -619,7 +621,7 @@ def status_summary(request):
         element = {'containerId': deviceid, 'currentStatus': shipping_status, 'position':
             {'lng': longitude, 'lat': latitude}, 'locationName': location_name, 'carrier': carrier_name,
                    'speed': speed, 'temperature': temperature, 'humidity': humidity, 'num_of_collide': collide,
-                   'num_of_door_open': 40, 'robot_operation_status': '装箱', 'battery': 0.6}
+                   'num_of_door_open': num_of_door_open, 'robot_operation_status': '装箱', 'battery': 0.6}
 
         ret_data.append(element)
 

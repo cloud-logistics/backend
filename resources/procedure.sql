@@ -68,7 +68,7 @@
         NEW.temperature || ''',''' ||
         NEW.humidity || ''',''' ||
         NEW.collide || ''',''' ||
-        '1'  || ''',''' ||
+        NEW.light  || ''',''' ||
         '0.8' || ''',''' ||
         '装货' || ''','  ||
         1 || ',''' ||
@@ -86,7 +86,7 @@
                     'temperature = ''' ||  NEW.temperature || ''',' ||
                     'humidity = ''' || NEW.humidity || ''',' ||
                     'num_of_collide = ''' || NEW.collide || ''',' ||
-                    'num_of_door_open = ''1' || ''',' ||
+                    'num_of_door_open = ''' || NEW.light || ''',' ||
                     'battery = ''0.8' || ''',' ||
                     'robert_operation_status = ''装货' || ''',' ||
                     'alarm_status = %alarm_status' ||
@@ -124,6 +124,8 @@
         /* 计算后标志是未告警，查看告警表中是否有告警，如果有则将告警清除 */
         v_sql_final := REPLACE(v_sql_update, '%code', '1001');
         v_sql_final := REPLACE(v_sql_final, '%id', '' || v_id);
+
+        /* RAISE WARNING 'to print1:%',v_sql_final; */
         EXECUTE REPLACE(v_sql_final, '%alarm_status', '0');
       END IF;
     END IF;
@@ -191,9 +193,34 @@
     END IF;
 
 
-    /* 电量告警计算，目前传感器未发送相关数据，后续补充*/
+    /* 开关箱次数告警计算 */
+    /* 获取箱子在告警表中的最后一条状态 */
+    SELECT id,alarm_status from iot.alarm_info
+    WHERE code >= 5000 AND code < 6000 AND deviceid = NEW.deviceid
+    ORDER BY timestamp DESC LIMIT 1 INTO v_id ,v_alarm_status;
 
-    /* 开关箱次数告警计算，目前传感器未发送相关数据，后续补充*/
+    IF CAST(NEW.light AS NUMERIC) > v_operation_threshold_max THEN
+      IF v_id IS NULL OR v_alarm_status = 0 THEN   /* 无历史告警或告警已经消除 */
+        /* RAISE WARNING 'to print2:%',v_sql_insert; */
+        EXECUTE REPLACE(v_sql_insert, '%code', '5001');    /* 开门次数过多 */
+      ELSE
+        IF v_alarm_status = 1 THEN   /* 有历史告警且处于告警状态，则更新其数据状态 */
+          v_sql_final := REPLACE(v_sql_update, '%code', '5001');
+          v_sql_final := REPLACE(v_sql_final, '%id', '' || v_id);
+          EXECUTE REPLACE(v_sql_final, '%alarm_status', '1');
+        END IF;
+      END IF;
+    ELSE
+      IF v_alarm_status = 1 THEN
+        /* 计算后标志是未告警，查看告警表中是否有告警，如果有则将告警清除 */
+        v_sql_final := REPLACE(v_sql_update, '%code', '5001');
+        v_sql_final := REPLACE(v_sql_final, '%id', '' || v_id);
+        EXECUTE REPLACE(v_sql_final, '%alarm_status', '0');
+      END IF;
+    END IF;
+
+
+    /* 电量告警计算，目前传感器未发送相关数据，后续补充*/
 
     RETURN NEW;
 
