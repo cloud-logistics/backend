@@ -33,7 +33,7 @@ jar {
     manifest {
         attributes(
                 'Manifest-Version': version,
-                'Main-Class': 'com.hnair.iot.service.CloudBoxEventManager'
+                'Main-Class': 'com.hnair.iot.service.SendCommand'
         )
     }
 }
@@ -42,7 +42,7 @@ task fatJar(type: Jar) {
     manifest {
         attributes 'Implementation-Title': 'Gradle Jar File Example',
                 'Implementation-Version': version,
-                'Main-Class': 'com.hnair.iot.service.CloudBoxEventManager'
+                'Main-Class': 'com.hnair.iot.service.SendCommand'
     }
     baseName = project.name + '-all'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }

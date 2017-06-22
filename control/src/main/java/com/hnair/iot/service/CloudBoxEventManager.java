@@ -26,6 +26,8 @@ import java.util.concurrent.CountDownLatch;
 import redis.clients.jedis.Jedis;
 import static java.lang.Thread.sleep;
 import org.json.JSONObject;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 /**
  * Created by yuchunshen on 07/06/2017.
@@ -37,8 +39,6 @@ public class CloudBoxEventManager {
     private ExhibitionEventFamily ecf;
     private DeviceProfile profile = new DeviceProfile();
     private String derviceGroup = "68967072625541302123";
-    private static String userId;
-    private static String userAccessToken;
     private static String deviceName;
 
     static {
@@ -48,8 +48,6 @@ public class CloudBoxEventManager {
             ClassLoader clsLoader = CloudBoxEventManager.class.getClassLoader();
             InputStreamReader in = new InputStreamReader(clsLoader.getResourceAsStream(filename), "UTF-8");
             pro.load(in);
-            userId = pro.getProperty("iot.cloudbox.agent.user.id");
-            userAccessToken = pro.getProperty("iot.cloudbox.agent.user.access.token");
             deviceName = pro.getProperty("iot.cloudbox.agent.device.name");
             in.close();
         } catch (Exception e) {
@@ -207,31 +205,5 @@ public class CloudBoxEventManager {
             ecf.sendEvent(command, id);
 
         LOG.info("send command id: " + id);
-    }
-
-
-    public static void main(String[] args) throws IOException, InterruptedException {
-        CloudBoxEventManager manager = new CloudBoxEventManager();
-        manager.start();
-        manager.attachToUser(userId, userAccessToken);
-
-        Jedis jedis = new Jedis("127.0.0.1");
-        String key = "command_list";
-
-        while (true){
-            sleep(10 * 1000);          //每隔10秒请求一次
-            try {
-                Long len = jedis.llen(key);
-                if (len > 0){
-                    for (int i=0;i<len;i++){
-                        String value = jedis.lpop(key);
-                        manager.sendByCtrlResult(value);
-                    }
-                }
-            }
-           catch (Exception e){
-               LOG.error("send command error, msg: " + e.getMessage());
-           }
-        }
     }
 }

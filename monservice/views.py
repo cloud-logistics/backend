@@ -888,8 +888,9 @@ def send_command(request):
     action = json.loads(request.body)['action']
     id = json.loads(request.body)['endpointId']
     conn = redis.Redis(host="127.0.0.1", port=6379, db=0)
-    conn.rpush('command_list',
-               "{\"service\":\"command\",\"action\": \"" + action + "\",\"result\":\"\",\"id\":\"" + id + "\"}")
+    command = "{\"service\":\"command\",\"action\": \"" + action + "\",\"result\":\"\",\"id\":\"" + id + "\"}"
+    conn.publish("commandChannel", command)
+
     conn.save()
     return JsonResponse({"code": "200"}, safe=False, status=status.HTTP_200_OK)
 
