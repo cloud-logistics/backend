@@ -1068,8 +1068,8 @@ def get_current_gpsinfo(container_id):
         ret['lng'] = 0
         ret['lat'] = 0
     else:
-        ret['lng'] = float(result[0][1])
-        ret['lat'] = float(result[0][0])
+        ret['lng'] = float(cal_position(result[0][1]))
+        ret['lat'] = float(cal_position(result[0][0]))
     return ret
 
 
