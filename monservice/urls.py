@@ -29,4 +29,5 @@ urlpatterns = [
     url(r'^analysisresult$', views.analysis_result),              # 分析报告
     url(r'^boxStatus$', views.status_summary),                    # 云箱状态汇总
     url(r'^operationoverview$', views.operation_overview),        # 运营状态概览
+    url(r'^rent', views.rent),                                    # 我要租赁
 ]

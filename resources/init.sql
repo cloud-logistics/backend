@@ -53,6 +53,9 @@ ALTER SEQUENCE iot.produce_area_info_id_seq OWNER TO postgres;
 CREATE SEQUENCE iot.alarm_info_id_seq INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
 ALTER SEQUENCE iot.alarm_info_id_seq OWNER TO postgres;
 
+CREATE SEQUENCE iot.monservice_containerrentinfo_id_seq INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
+ALTER SEQUENCE iot.monservice_containerrentinfo_id_seq OWNER TO postgres;
+
 
 CREATE TABLE iot.box_info
 (
@@ -338,6 +341,27 @@ WITH (
 TABLESPACE pg_default;
 
 ALTER TABLE iot.alarm_info
+    OWNER to postgres;
+
+
+CREATE TABLE iot.monservice_containerrentinfo
+(
+    id integer NOT NULL DEFAULT nextval('iot.monservice_containerrentinfo_id_seq'::regclass),
+    deviceid text COLLATE pg_catalog."default" NOT NULL,
+    starttime text COLLATE pg_catalog."default" NOT NULL,
+    endtime text COLLATE pg_catalog."default" NOT NULL,
+    carrier integer NOT NULL,
+    type integer NOT NULL,
+    owner text COLLATE pg_catalog."default" NOT NULL,
+    rentstatus integer NOT NULL,
+    CONSTRAINT monservice_containerrentinfo_pkey PRIMARY KEY (id)
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE iot.monservice_containerrentinfo
     OWNER to postgres;
 
 

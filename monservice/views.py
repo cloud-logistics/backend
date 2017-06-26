@@ -795,36 +795,31 @@ def security_config(request):
         return JsonResponse(req_param, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# 我的云箱
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def mycontainers(request):
-    if request.user.has_perm('view_containerrentinfo'):
+    user = request.user
+    data = query_list('select deviceid,starttime,endtime,carrier_info.carrier_name '
+                       'from iot.monservice_containerrentinfo rentinfo '
+                       'left join iot.carrier_info carrier_info on rentinfo.carrier = carrier_info.id '
+                       'where owner = \'' + str(user) + '\' and rentstatus = 1 ')
+    log.info("mycontainer req user is %s" % request.user)
+    final_response = {}
+    container_info_list = []
+    for item in data:
         container_dict = {}
-        ret = ContainerRentInfo.objects.filter(owner=request.user)
-        serializer = ContainerRentInfoSerializer(ret, many=True)
-        # print repr(serializer.data)
-        log.info("mycontainer req user is %s" % request.user)
-        ret_list = serializer.data
-        final_response = {}
-        container_info_list = []
-        for item in ret_list:
-            container_dict['containerId'] = item['deviceid']
-            container_dict['leaseStartTime'] = "%s000" % item['starttime']
-            container_dict['leaseEndTime'] = "%s000" % item['endtime']
-            gps_dic = get_current_gpsinfo(item['deviceid'])
-            container_dict['position'] = gps_dic
-            query_ret = query_list('SELECT carrier_name FROM iot.carrier_info where id = %s' % item['carrier'])
-            if query_ret:
-                container_dict['carrier'] = query_ret[0][0]
-            else:
-                container_dict['carrier'] = "未知厂商"
-            container_dict['locationName'] = gps_info_trans("%s,%s" % (gps_dic['lat'], gps_dic['lng']))
-            container_info_list.append(container_dict)
-        final_response['mycontainers'] = container_info_list
-        return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
-    else:
-        return JsonResponse({}, safe=False, status=status.HTTP_403_FORBIDDEN)
+        container_dict['containerId'] = item[0]
+        container_dict['leaseStartTime'] = "%s000" % item[1]
+        container_dict['leaseEndTime'] = "%s000" % item[2]
+        gps_dic = get_current_gpsinfo(item[0])
+        container_dict['position'] = gps_dic
+        container_dict['carrier'] = item[3]
+        container_dict['locationName'] = gps_info_trans("%s,%s" % (gps_dic['lat'], gps_dic['lng']))
+        container_info_list.append(container_dict)
+    final_response['mycontainers'] = container_info_list
+    return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -834,32 +829,55 @@ def containers_on_release(request):
     pass
 
 
+#可租赁云箱
 @api_view(['GET'])
+def containers_available(request):
+    container_info_list = []
+    final_response = {}
+    data = query_list('select A.deviceid,box_type_info.box_type_name from '
+                      '(select box_info.deviceid,box_info.type from iot.box_info box_info where box_info.deviceid not in '
+                      '(select deviceid from iot.monservice_containerrentinfo where rentstatus = 1)) A '
+                      'left join iot.box_type_info box_type_info on A.type = box_type_info.id order by deviceid asc')
+
+    for item in data:
+        container_dict = {}
+        container_dict['containerId'] = item[0]
+        gps_dic = get_current_gpsinfo(item[0])
+        container_dict['position'] = gps_dic
+        container_dict['containerType'] = item[1]
+        container_dict['locationName'] = gps_info_trans("%s,%s" % (gps_dic['lat'], gps_dic['lng']))
+        container_info_list.append(container_dict)
+
+    final_response['availablecontainers'] = container_info_list
+    return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
+
+
+# 我要租赁云箱
+@api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
 @permission_classes((IsAuthenticated,))
-def containers_available(request):
-    if request.user.has_perm('view_containerrentinfo'):
-        container_dict = {}
-        ret = ContainerRentInfo.objects.filter(rentstatus=0)
-        serializer = ContainerRentInfoSerializer(ret, many=True)
-        ret_list = serializer.data
-        final_response = {}
-        container_info_list = []
-        for item in ret_list:
-            container_dict['containerId'] = item['deviceid']
-            gps_dic = get_current_gpsinfo(item['deviceid'])
-            container_dict['position'] = gps_dic
-            query_ret = query_list('SELECT box_type_name FROM iot.box_type_info where id = %s' % item['type'])
-            if query_ret:
-                container_dict['containerType'] = query_ret[0][0]
-            else:
-                container_dict['containerType'] = "标准云箱"
-            container_dict['locationName'] = gps_info_trans("%s,%s" % (gps_dic['lat'], gps_dic['lng']))
-            container_info_list.append(container_dict)
-        final_response['availablecontainers'] = container_info_list
-        return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
+def rent(request):
+    user = str(request.user)
+    body = json.loads(request.body)
+    container_type = to_str(body['containerType'])
+    start_time = to_str(body['startTime'])
+    end_time = to_str(body['endTime'])
+    data = query_list('select A.deviceid,box_type_info.box_type_name,box_type_info.id from '
+                      '(select box_info.deviceid,box_info.type from iot.box_info box_info '
+                      'where box_info.deviceid not in '
+                      '(select deviceid from iot.monservice_containerrentinfo where rentstatus = 1)) A '
+                      'left join iot.box_type_info box_type_info on A.type = box_type_info.id '
+                      'where box_type_info.id = ' + container_type)
+
+    if len(data) > 0:
+        container_id = data[0][0]
+        save_to_db('insert into iot.monservice_containerrentinfo(deviceid,' 
+                   'starttime,endtime,carrier,type,owner,rentstatus)VALUES (' 
+                   '\'' + container_id + '\',' + start_time + ',' + end_time + ',' 
+                   '1, ' + container_type + ',\'' + user + '\',1)')
+        return JsonResponse({'status': 'OK', 'containerId': container_id}, safe=False, status=status.HTTP_200_OK)
     else:
-        return JsonResponse({}, safe=False, status=status.HTTP_403_FORBIDDEN)
+        return JsonResponse({'status': 'NA'}, safe=False, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -1064,7 +1082,7 @@ def gps_info_trans(gpsinfo):
 def get_current_gpsinfo(container_id):
     ret = {}
     result = query_list("select latitude,longitude from iot.sensor_data where deviceid='%s' order by id desc limit 1" % container_id)
-    if result is None:
+    if result is None or len(result) == 0:
         ret['lng'] = 0
         ret['lat'] = 0
     else:
