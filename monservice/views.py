@@ -884,6 +884,25 @@ def rent(request):
         return JsonResponse({'status': 'NA'}, safe=False, status=status.HTTP_400_BAD_REQUEST)
 
 
+# 归还云箱
+@api_view(['POST'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def return_container(request):
+    user = str(request.user)
+    body = json.loads(request.body)
+    container_id = to_str(body['containerId'])
+
+    data = query_list('select count(1) as cnt from iot.monservice_containerrentinfo '
+                      'where rentstatus = 1 and deviceid = \'' + container_id + '\' and owner = \'' + user +'\'')
+    if data[0][0] > 0:
+        save_to_db('update iot.monservice_containerrentinfo set rentstatus = 0 '
+                   'where deviceid = \'' + container_id + '\' and owner = \'' + user + '\'')
+        return JsonResponse({'status': 'OK'}, safe=False, status=status.HTTP_200_OK)
+    else:
+        return JsonResponse({'status': 'NA'}, safe=False, status=status.HTTP_400_BAD_REQUEST)
+
+
 @api_view(['POST'])
 def verify_user(request):
     req_param_str_utf8 = to_str(request.body)

@@ -30,4 +30,6 @@ urlpatterns = [
     url(r'^boxStatus$', views.status_summary),                    # 云箱状态汇总
     url(r'^operationoverview$', views.operation_overview),        # 运营状态概览
     url(r'^requestlease', views.rent),                            # 我要租赁
+    url(r'^returncontainer', views.return_container),             # 归还云箱
+
 ]
