@@ -860,8 +860,12 @@ def rent(request):
     user = str(request.user)
     body = json.loads(request.body)
     container_type = to_str(body['containerType'])
-    start_time = to_str(body['startTime'])
-    end_time = to_str(body['endTime'])
+    if container_type == '标准云箱':
+        container_type = '1'
+    start_time = str(to_str(body['startTime']))
+    end_time = str(to_str(body['endTime']))
+    start_time = start_time[0:10]
+    end_time = end_time[0:10]
     data = query_list('select A.deviceid,box_type_info.box_type_name,box_type_info.id from '
                       '(select box_info.deviceid,box_info.type from iot.box_info box_info '
                       'where box_info.deviceid not in '
