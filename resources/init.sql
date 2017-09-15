@@ -56,6 +56,9 @@ ALTER SEQUENCE iot.alarm_info_id_seq OWNER TO postgres;
 CREATE SEQUENCE iot.monservice_containerrentinfo_id_seq INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
 ALTER SEQUENCE iot.monservice_containerrentinfo_id_seq OWNER TO postgres;
 
+CREATE SEQUENCE iot.path_detail_id_seq INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
+ALTER SEQUENCE iot.path_detail_id_seq OWNER TO postgres;
+
 
 CREATE TABLE iot.box_info
 (
@@ -67,7 +70,8 @@ CREATE TABLE iot.box_info
     produce_area integer,
     hardware integer,
     battery integer,
-    carrier integer
+    carrier integer,
+    tid character varying(50) COLLATE pg_catalog."default"
 
 )
 WITH (
@@ -184,7 +188,8 @@ CREATE TABLE iot.site_info
     id integer NOT NULL DEFAULT nextval('iot.site_info_id_seq'::regclass),
     location text COLLATE pg_catalog."default",
     latitude text COLLATE pg_catalog."default",
-    longitude text COLLATE pg_catalog."default"
+    longitude text COLLATE pg_catalog."default",
+    site_code character varying(50) COLLATE pg_catalog."default"
 )
 WITH (
     OIDS = FALSE
@@ -363,6 +368,38 @@ TABLESPACE pg_default;
 
 ALTER TABLE iot.monservice_containerrentinfo
     OWNER to postgres;
+
+
+CREATE TABLE iot.path_template
+(
+    template_id character varying(128) COLLATE pg_catalog."default",
+    s_site_code character varying(50) COLLATE pg_catalog."default",
+    d_site_code character varying(50) COLLATE pg_catalog."default"
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE iot.path_template
+    OWNER to postgres;
+
+
+CREATE TABLE iot.path_detail
+(
+    id integer NOT NULL DEFAULT nextval('iot.path_detail_id_seq'::regclass),
+    template_id character varying(128) COLLATE pg_catalog."default",
+    order_id integer,
+    site_code character varying(50) COLLATE pg_catalog."default"
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE iot.path_detail
+    OWNER to postgres;
+
 
 
 insert into iot.alert_level_info(level) values('通知');
