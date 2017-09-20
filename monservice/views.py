@@ -646,7 +646,8 @@ def basic_info_config(request):
         manufacturer = to_str(data['factory'])                  # 生产厂家
         produce_area = to_str(data['factoryLocation'])          # 生产地点
         hardware_info = to_str(data['hardwareInfo'])            # 智能硬件信息
-        carrier = to_str(data['carrier'])                       # 承运人
+        carrier = 1
+        # carrier = to_str(data['carrier'])                       # 承运人
 
         sql = 'insert into iot.box_info(deviceid, type, date_of_production, manufacturer, produce_area, ' \
               'hardware, battery, carrier) ' \
@@ -797,8 +798,8 @@ def security_config(request):
 
 # 我的云箱
 @api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-@permission_classes((IsAuthenticated,))
+# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+# @permission_classes((IsAuthenticated,))
 def mycontainers(request):
     user = request.user
     data = query_list('select deviceid,starttime,endtime,carrier_info.carrier_name '
@@ -854,8 +855,8 @@ def containers_available(request):
 
 # 我要租赁云箱
 @api_view(['POST'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-@permission_classes((IsAuthenticated,))
+# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+# @permission_classes((IsAuthenticated,))
 def rent(request):
     user = str(request.user)
     body = json.loads(request.body)
@@ -886,8 +887,8 @@ def rent(request):
 
 # 归还云箱
 @api_view(['POST'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-@permission_classes((IsAuthenticated,))
+# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+# @permission_classes((IsAuthenticated,))
 def return_container(request):
     user = str(request.user)
     body = json.loads(request.body)
@@ -982,23 +983,18 @@ def indicator_history(request):
 
 
 @api_view(['POST'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-@permission_classes((IsAuthenticated,))
+# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+# @permission_classes((IsAuthenticated,))
 def analysis_result(request):
-    if request.user.has_perm('view_containerrentinfo'):
-        return JsonResponse({}, safe=False, status=status.HTTP_403_FORBIDDEN)
-    else:
-        response = get_analysis_report()
-        return JsonResponse(response, safe=False, status=status.HTTP_200_OK)
+    # if request.user.has_perm('view_containerrentinfo'):
+    #     return JsonResponse({}, safe=False, status=status.HTTP_403_FORBIDDEN)
+    # else:
+    response = get_analysis_report()
+    return JsonResponse(response, safe=False, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-@permission_classes((IsAuthenticated,))
 def operation_overview(request):
-    if request.user.has_perm('view_containerrentinfo'):
-        return JsonResponse({}, safe=False, status=status.HTTP_403_FORBIDDEN)
-    else:
         response = get_operation_overview()
         return JsonResponse(response, safe=False, status=status.HTTP_200_OK)
 

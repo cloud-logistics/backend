@@ -231,14 +231,14 @@ def save_precintl_data(request):
             sql = build_precintl_sql(parameter)
             save_to_db(sql)
             log.info('insert data to database successfully')
-            return JsonResponse({'msg': 200}, status=status.HTTP_200_OK)
+            return JsonResponse(organize_result("True", "000000", "OK", '{}'), status=status.HTTP_200_OK)
         except Exception, e:
             log.error('save to db error, msg: ' + repr(e))
-            return JsonResponse({'msg': repr(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(organize_result("False", "999999", repr(e), '{}'), status=status.HTTP_400_BAD_REQUEST)
     else:
         msg = 'bad request method. please use POST/PUT.'
         log.error(msg)
-        return JsonResponse({'msg': msg}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(organize_result("False", "999999", msg, '{}'), status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 # 构建万引力数据插入数据库的sql
@@ -254,6 +254,11 @@ def build_precintl_sql(data):
                 str(data['speed']) + '\',\'' + \
                 str(data['collide']) + '\',\'' + \
                 str(data['light']) + '\')'
+    if str(data['deviceid']) == '' or str(data['temp']) == '' or str(data['humi']) == '' or \
+       str(data['latitude']) == '' or str(data['longitude']) == '' or str(data['speed']) == '' or \
+       str(data['collide']) == ''or str(data['light']) == '':
+        return 'select 1'
+
     return sql
 
 
