@@ -135,6 +135,8 @@ def nextsite(request):
     site_code = parameter['site_code']
     latitude = parameter['latitude']
     longitude = parameter['longitude']
+    # 货物进入或离开堆场状态
+    # status = parameter['status']
 
     # 获取该云箱的起始堆场和目的地堆场的编号
     sql_1 = 'select box_order_relation.deviceid, ' \
@@ -174,11 +176,14 @@ def nextsite(request):
                 'order by order_id asc'
         site_data = query_list(sql_2)
         next_site_code = cal_next_site(latitude, longitude, site_data)
+        # 获取云箱内货物的类型与优先级（目前写死测试数据，等订单相关内容确定后，再从数据库中补齐）
+        type = '0'  # 易碎物品类，编码见文档
+        priority = '1'  # 优先级：次日达
 
         if site_code == '':
-            t = {'S': s_site_code, 'D': d_site_code, 'N': next_site_code}
+            t = {'S': s_site_code, 'D': d_site_code, 'N': next_site_code, 'type': type, 'priority': priority}
         else:
-            t = {'N': next_site_code}
+            t = {'N': next_site_code, 'type': type, 'priority': priority}
         return JsonResponse(organize_result("True", "000000", "Success", t))
     else:
         # 该箱没有在途中
