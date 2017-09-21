@@ -245,7 +245,7 @@ def save_precintl_data(request):
 # 构建万引力数据插入数据库的sql
 def build_precintl_sql(data):
     sql = 'insert into iot.sensor_data(timestamp, deviceid, temperature, humidity, latitude, longitude, ' \
-          'speed, collide, light) values '
+          'speed, collide, light, endpointid) values '
     sql = sql + '(' + str(data['utc']) + ',\'' + \
                 str(data['deviceid']) + '\',\'' + \
                 str(data['temp']) + '\',\'' + \
@@ -254,7 +254,8 @@ def build_precintl_sql(data):
                 str(data['longitude']) + '\',\'' + \
                 str(data['speed']) + '\',\'' + \
                 str(data['collide']) + '\',\'' + \
-                str(data['light']) + '\')'
+                str(data['light']) + '\',\'' + \
+                str(data['deviceid']) + '\')'
     if str(data['deviceid']) == '' or str(data['temp']) == '' or str(data['humi']) == '' or \
        str(data['latitude']) == '' or str(data['longitude']) == '' or str(data['speed']) == '' or \
        str(data['collide']) == ''or str(data['light']) == '':
