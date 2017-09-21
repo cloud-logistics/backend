@@ -125,6 +125,7 @@ def build_sql(data_list):
 @csrf_exempt
 @api_view(['POST'])
 def nextsite(request):
+    log.debug('receive request body:' + request.body)
     token = request.META.get('HTTP_TOKEN')
     if token is None or token != 'a921a69a33ae461396167d112b813d90':
         return JsonResponse(organize_result("False", "999999", "Unauthorized", {}),
