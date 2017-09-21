@@ -276,7 +276,7 @@ def realtime_position(request):
         'left join iot.carrier_info carrier_info on carrier_info.id = order_info.carrierid '
         'left join iot.site_info site_info_src on site_info_src.id = order_info.srcid '
         'left join iot.site_info site_info_dst on site_info_dst.id = order_info.dstid '
-        'where box_info.deviceid = \'' + id + '\' '
+        'where box_info.deviceid = \'' + id + '\' and order_info.endtime > CAST(extract(epoch from now()) as text)'
         'group by box_info.deviceid,carrier_info.carrier_name, site_info_src.location, site_info_dst.location')
 
     if len(data) > 0:
@@ -683,7 +683,7 @@ def options_to_show(request):
                     alert_code_list = query_list('select id,errcode from iot.alert_code_info')
                     final_response['alertCode'] = strip_tuple(alert_code_list)
                 if item == 'alertType':
-                    alert_type_list = query_list('select id,type from iot.alert_type_info')
+                    alert_type_list = query_list('select id, description as type from iot.alert_code_info')
                     final_response['alertType'] = strip_tuple(alert_type_list)
                 if item == 'containerType':
                     container_type_list = query_list('select id,box_type_name from iot.box_type_info')
@@ -972,8 +972,10 @@ def indicator_history(request):
             x2 = time.localtime(start_time + (j + 1) * 3600)
             time_x1 = time.strftime('%H:%M', x1)
             time_x2 = time.strftime('%H:%M', x2)
-            value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(y)})
-
+            if json.loads(request.body)['requiredParam'] == 'battery':
+                value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(100 - 2*j)})
+            else:
+                value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(y)})
     except Exception, e:
         log.error(e.message)
     if json.loads(request.body)['requiredParam'] == 'battery':
