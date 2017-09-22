@@ -250,6 +250,7 @@ def realtime_message(request):
                 'containerType': box_type,
                 'currentStatus': shipping_status,
                 'carrier': carrier_name, 'position': {'lng': longitude, 'lat': latitude},
+                'locationName': gps_info_trans("%s,%s" % (latitude, longitude)),
                 'speed': float(speed),
                 'temperature': {'value': float(temperature), 'status': temperature_status},
                 'humidity': {'value': float(humidity), 'status': humidity_status},
