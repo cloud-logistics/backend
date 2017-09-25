@@ -1,0 +1,31 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+
+import math
+
+
+# 获取两点之间的距离
+def get_distance(start_latitude, start_longitude, end_latitude, end_longitude):
+    lat1 = (math.pi / 180) * float(start_latitude)
+    lat2 = (math.pi / 180) * float(end_latitude)
+    lon1 = (math.pi / 180) * float(start_longitude)
+    lon2 = (math.pi / 180) * float(end_longitude)
+    # 地球半径
+    r = 6371
+    d = math.acos(math.sin(lat1)*math.sin(lat2)+math.cos(lat1)*math.cos(lat2)*math.cos(lon2-lon1))*r
+    # 单位米
+    return d*1000
+
+
+# 计算速度
+def cal_speed(start_latitude, start_longitude, end_latitude, end_longitude, start_time, end_time):
+    distance = get_distance(start_latitude, start_longitude, end_latitude, end_longitude)
+    time_span = start_time - end_time
+    if time_span > 0:
+        speed = distance / time_span
+    else:
+        speed = 0
+
+    return speed
+
