@@ -593,7 +593,7 @@ def status_summary(request):
     if id is not None and id != '':
         sql = sql + 'where B.deviceid = \'' + id + '\''
 
-    sql = sql + ') C on C.deviceid=box_info.deviceid'
+    sql = sql + ') C on C.deviceid=box_info.deviceid where order_info.endtime > CAST(extract(epoch from now()) as text)'
 
     data = query_list(sql)
 
