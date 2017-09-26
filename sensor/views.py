@@ -15,6 +15,7 @@ from util import logger
 from operator import itemgetter
 from sensor.errcode import *
 from util.geo import get_distance
+from util.geo import cal_speed
 
 
 # logging
@@ -249,6 +250,12 @@ def save_precintl_data(request):
 
 # 构建万引力数据插入数据库的sql
 def build_precintl_sql(data):
+    deviceid = str(data['deviceid'])
+    lat = str(data['latitude'])
+    long = str(data['longitude'])
+    timestamp = str(data['utc'])
+    speed = get_speed(deviceid, lat, long, timestamp)
+
     sql = 'insert into iot.sensor_data(timestamp, deviceid, temperature, humidity, latitude, longitude, ' \
           'speed, collide, light, endpointid) values '
     sql = sql + '(' + str(data['utc']) + ',\'' + \
@@ -257,7 +264,7 @@ def build_precintl_sql(data):
                 str(data['humi']) + '\',\'' + \
                 str(data['latitude']) + '\',\'' + \
                 str(data['longitude']) + '\',\'' + \
-                str(data['speed']) + '\',\'' + \
+                str(speed) + '\',\'' + \
                 str(data['collide']) + '\',\'' + \
                 str(data['light']) + '\',\'' + \
                 str(data['deviceid']) + '\')'
@@ -277,8 +284,35 @@ def cal_position(value):
     return float(hour + '.' + minute)
 
 
+# 根据历史坐标计算平均速度
+def get_speed(deviceid, lat, long, ts):
+    last_data = query_list('select longitude,latitude,timestamp '
+                             'from iot.sensor_data where deviceid = \'' + deviceid + '\' and longitude <> \'0\' and latitude <> \'0\' order by timestamp desc limit 2')
 
-
+    if lat == '0' and long == '0':
+        if len(last_data) == 2:
+            start_latitude = last_data[0][1]
+            start_longitude = last_data[0][0]
+            end_latitude = last_data[1][1]
+            end_longitude = last_data[1][0]
+            start_time = last_data[0][2]
+            end_time = last_data[1][2]
+            speed = cal_speed(start_latitude, start_longitude, end_latitude, end_longitude, start_time, end_time)
+            return speed
+        else:
+            return 0
+    else:
+        if len(last_data) > 0:
+            start_latitude = lat
+            start_longitude = long
+            end_latitude = last_data[0][1]
+            end_longitude = last_data[0][0]
+            start_time = ts
+            end_time = last_data[0][2]
+            speed = cal_speed(start_latitude, start_longitude, end_latitude, end_longitude, start_time, end_time)
+            return speed
+        else:
+            return 0
 
 
 

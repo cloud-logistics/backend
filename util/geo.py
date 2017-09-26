@@ -21,11 +21,10 @@ def get_distance(start_latitude, start_longitude, end_latitude, end_longitude):
 # 计算速度(公里/小时)
 def cal_speed(start_latitude, start_longitude, end_latitude, end_longitude, start_time, end_time):
     distance = get_distance(start_latitude, start_longitude, end_latitude, end_longitude)
-    time_span = start_time - end_time
+    time_span = int(start_time) - int(end_time)
     if time_span > 0:
         speed = 3.6 * distance / time_span
+        return speed
     else:
-        speed = 0
-
-    return speed
+        return 0
 
