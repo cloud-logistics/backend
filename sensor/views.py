@@ -13,8 +13,8 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from util import logger
 from operator import itemgetter
-import math
 from sensor.errcode import *
+from util.geo import get_distance
 
 
 # logging
@@ -276,18 +276,6 @@ def cal_position(value):
 
     return float(hour + '.' + minute)
 
-
-# 获取两点之间的距离
-def get_distance(start_latitude, start_longitude, end_latitude, end_longitude):
-    lat1 = (math.pi / 180) * float(start_latitude)
-    lat2 = (math.pi / 180) * float(end_latitude)
-    lon1 = (math.pi / 180) * float(start_longitude)
-    lon2 = (math.pi / 180) * float(end_longitude)
-    # 地球半径
-    r = 6371
-    d = math.acos(math.sin(lat1)*math.sin(lat2)+math.cos(lat1)*math.cos(lat2)*math.cos(lon2-lon1))*r
-    # 单位米
-    return d*1000
 
 
 

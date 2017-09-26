@@ -13,6 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from util.db import query_list, save_to_db
 from util import logger
+from util.geo import cal_speed
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from models import ContainerRentInfo
 from serializers import ContainerRentInfoSerializer
@@ -155,8 +156,8 @@ def realtime_message(request):
         box_type = NOT_APPLICABLE
 
     # 获取传感器数据
-    sensor_data = query_list('select temperature,humidity,longitude,latitude,speed,collide,light '
-                             'from iot.sensor_data where deviceid = \'' + id + '\' order by timestamp desc limit 1')
+    sensor_data = query_list('select temperature,humidity,longitude,latitude,speed,collide,light,timestamp '
+                             'from iot.sensor_data where deviceid = \'' + id + '\' and longitude <> \'0\' and latitude <> \'0\' order by timestamp desc limit 2')
     if len(sensor_data) > 0:
         temperature = sensor_data[0][0]
         humidity = sensor_data[0][1]
@@ -165,6 +166,13 @@ def realtime_message(request):
         speed = sensor_data[0][4]
         collide = sensor_data[0][5]
         num_of_door_open = sensor_data[0][6]
+
+        if len(sensor_data) == 2:
+            longitude2 = cal_position(sensor_data[1][2])
+            latitude2 = cal_position(sensor_data[1][3])
+            start_time = sensor_data[0][7]
+            end_time = sensor_data[1][7]
+            speed = str(cal_speed(latitude, longitude, latitude2, longitude2, start_time, end_time))
     else:
         temperature = ZERO
         humidity = ZERO
