@@ -406,3 +406,60 @@ CREATE OR REPLACE FUNCTION iot.fn_indicator_history(start_time INTEGER, end_time
 
   END;
 $$ LANGUAGE 'plpgsql';
+
+
+
+/***
+根据给定起始和终点经纬度，计算两点间距离，单位米
+调用示例: SELECT iot.fn_cal_distance(34.259424,108.947030,34.259472,108.963106);
+ */
+CREATE OR REPLACE FUNCTION iot.fn_cal_distance(start_latitude NUMERIC, start_longitude NUMERIC, end_latitude NUMERIC, end_longitude NUMERIC) RETURNS NUMERIC AS $$
+ DECLARE
+   v_lat1          NUMERIC;
+   v_lat2          NUMERIC;
+	 v_lon1          NUMERIC;
+	 v_lon2          NUMERIC;
+	 v_r             INTEGER;
+	 v_d             NUMERIC;
+ BEGIN
+   start_latitude := $1;
+   start_longitude := $2;
+	 end_latitude := $3;
+	 end_longitude := $4;
+
+   v_lat1 := PI() / 180 * start_latitude;
+   v_lat2 := PI() / 180 * end_latitude;
+   v_lon1 := PI() / 180 * start_longitude;
+   v_lon2 := PI() / 180 * end_longitude;
+
+  	/* 地球半径 */
+	 v_r := 6371;
+	 v_d = ACOS(SIN(v_lat1) * SIN(v_lat2) + COS(v_lat1) * COS(v_lat2) * COS(v_lon2 - v_lon1)) * v_r;
+
+	 RETURN v_d * 1000;
+ END;
+$$ LANGUAGE 'plpgsql';
+
+
+
+/***
+将传感器数据的经度或纬度转换为小数点形式，Longitude: 116296046, //dddmmmmmm   Latitude: 39583032,  //ddmmmmmm
+ */
+CREATE OR REPLACE FUNCTION iot.fn_cal_postion(latitude_or_longitude TEXT) RETURNS TEXT AS $$
+DECLARE
+  v_integer       TEXT;
+  v_decimal       TEXT;
+  v_final         TEXT;
+ BEGIN
+  latitude_or_longitude := $1;
+  v_final := latitude_or_longitude;
+
+  IF LENGTH(latitude_or_longitude) > 6 THEN
+    SELECT SUBSTRING(latitude_or_longitude FROM 1 FOR LENGTH(latitude_or_longitude) - 6) INTO v_integer;
+    SELECT SUBSTRING(latitude_or_longitude FROM (LENGTH(latitude_or_longitude) - 5)) INTO v_decimal;
+    v_final := v_integer || '.' || v_decimal;
+  END IF;
+
+  RETURN v_final;
+ END;
+$$ LANGUAGE 'plpgsql';

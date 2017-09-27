@@ -255,6 +255,10 @@ def build_precintl_sql(data):
     long = str(data['longitude'])
     timestamp = str(data['utc'])
     speed = get_speed(deviceid, lat, long, timestamp)
+    if lat == '0' or long == '0':
+        location_data = get_location(deviceid, lat, long)
+        lat = location_data['lat']
+        long = location_data['long']
 
     sql = 'insert into iot.sensor_data(timestamp, deviceid, temperature, humidity, latitude, longitude, ' \
           'speed, collide, light, endpointid) values '
@@ -262,8 +266,8 @@ def build_precintl_sql(data):
                 str(data['deviceid']) + '\',\'' + \
                 str(data['temp']) + '\',\'' + \
                 str(data['humi']) + '\',\'' + \
-                str(data['latitude']) + '\',\'' + \
-                str(data['longitude']) + '\',\'' + \
+                str(lat) + '\',\'' + \
+                str(long) + '\',\'' + \
                 str(speed) + '\',\'' + \
                 str(data['collide']) + '\',\'' + \
                 str(data['light']) + '\',\'' + \
@@ -315,8 +319,16 @@ def get_speed(deviceid, lat, long, ts):
             return 0
 
 
+# 如果上报的经纬度是0，则以最后一次不是0的值替代
+def get_location(deviceid, lat, long):
+    last_lat = '0'
+    last_long = '0'
+    last_data = query_list('select latitude, longitude '
+                           'from iot.sensor_data where deviceid = \'' + deviceid + '\' and longitude <> \'0\' and latitude <> \'0\' order by timestamp desc limit 1')
 
+    if len(last_data) > 0:
+        last_lat = last_data[0][0]
+        last_long = last_data[0][1]
 
-
-
+    return {'lat': last_lat, 'long': last_long}
 

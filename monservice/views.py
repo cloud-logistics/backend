@@ -22,6 +22,7 @@ from rest_framework_jwt.settings import api_settings
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import JSONParser
 import urllib
 import urllib2
 import json
@@ -999,8 +1000,70 @@ def analysis_result(request):
 
 @api_view(['GET'])
 def operation_overview(request):
-        response = get_operation_overview()
-        return JsonResponse(response, safe=False, status=status.HTTP_200_OK)
+    response = get_operation_overview()
+    return JsonResponse(response, safe=False, status=status.HTTP_200_OK)
+
+
+# 云箱安全参数
+@api_view(['GET'])
+def get_security_config(request):
+    return_data = []
+    data = query_list('select id, box_type_name,box_type_detail,interval_time,'
+                      'temperature_threshold_min,temperature_threshold_max,'
+                      'humidity_threshold_min,humidity_threshold_max,'
+                      'collision_threshold_min,collision_threshold_max,'
+                      'battery_threshold_min,battery_threshold_max,'
+                      'operation_threshold_max,operation_threshold_min '
+                      'from iot.box_type_info')
+    for i in range(len(data)):
+        return_data.append({'id': data[i][0],
+                            'box_type_name': data[i][1],
+                            'box_type_detail': data[i][2],
+                            'interval_time': data[i][3],
+                            'temperature_threshold_min': data[i][4],
+                            'temperature_threshold_max': data[i][5],
+                            'humidity_threshold_min': data[i][6],
+                            'humidity_threshold_max': data[i][7],
+                            'collision_threshold_min': data[i][8],
+                            'collision_threshold_max': data[i][9],
+                            'battery_threshold_min': data[i][10],
+                            'battery_threshold_max': data[i][11],
+                            'operation_threshold_max': data[i][12],
+                            'operation_threshold_min': data[i][13]})
+
+    return JsonResponse(return_data, safe=False, status=status.HTTP_200_OK)
+
+
+# 可用集装箱列表
+@api_view(['POST'])
+def available_containers(request):
+    parameters = json.loads(request.body)
+    latitude = parameters['latitude']
+    longitude = parameters['longitude']
+    ret_list = []
+    data = query_list('select D.deviceid,D.id as type_id,E.latitude,E.longitude from '
+                      '(select A.deviceid,box_type_info.box_type_name,box_type_info.id from '
+                      '(select box_info.deviceid,box_info.type from iot.box_info box_info where box_info.deviceid not in '
+                      '(select deviceid from iot.monservice_containerrentinfo where rentstatus = 1)) A '
+                      'left join iot.box_type_info box_type_info on A.type = box_type_info.id) D '
+                      'inner join '
+                      '(select B.* from (select max(timestamp) as timestamp ,deviceid from iot.sensor_data group by deviceid) A '
+                      'left join iot.sensor_data B '
+                      'on A.timestamp = B.timestamp and A.deviceid = B.deviceid) E '
+                      'on D.deviceid = E.deviceid '
+                      'where iot.fn_cal_distance(cast(iot.fn_cal_postion(E.latitude) as numeric), '
+                      'cast(iot.fn_cal_postion(E.longitude) as numeric),' +
+                       latitude + ',' + longitude + ') <= 5000')
+    for i in range(len(data)):
+        deviceid = data[i][0]
+        type_id = data[i][1]
+        latitude = data[i][2]
+        longitude = data[i][3]
+        ret_list.append({'id': deviceid,
+                         'category': type_id,
+                         'lat': cal_position(latitude),
+                         'lng': cal_position(longitude)})
+    return JsonResponse(ret_list, safe=False, status=status.HTTP_200_OK)
 
 
 # 将unicode转换utf-8编码
@@ -1090,6 +1153,7 @@ def gps_info_trans(gpsinfo):
             request = urllib2.Request(geturl)
             response = urllib2.urlopen(request)
             ret_dic = json.loads(response.read())
+            log.info("req response: %s" % ret_dic)
             log.info("req url: %s" % geturl)
             if ret_dic['status'] == 'OK':
                 ret_str = ret_dic['results'][0]['formatted_address']

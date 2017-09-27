@@ -29,7 +29,10 @@ urlpatterns = [
     url(r'^analysisresult$', views.analysis_result),              # 分析报告
     url(r'^boxStatus$', views.status_summary),                    # 云箱状态汇总
     url(r'^operationoverview$', views.operation_overview),        # 运营状态概览
-    url(r'^requestlease', views.rent),                            # 我要租赁
-    url(r'^returncontainer', views.return_container),             # 归还云箱
+    url(r'^requestlease$', views.rent),                           # 我要租赁
+    url(r'^returncontainer$', views.return_container),            # 归还云箱
+    url(r'^getSecurityConfig$', views.get_security_config),       # 获取运行安全参数
+
+    url(r'^nearbyContainers$', views.available_containers),        # 可用云箱列表
 
 ]
