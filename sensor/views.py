@@ -301,7 +301,7 @@ def get_speed(deviceid, lat, long, ts):
             end_longitude = last_data[1][0]
             start_time = last_data[0][2]
             end_time = last_data[1][2]
-            speed = cal_speed(start_latitude, start_longitude, end_latitude, end_longitude, start_time, end_time)
+            speed = cal_speed(cal_position(start_latitude), cal_position(start_longitude), cal_position(end_latitude), cal_position(end_longitude), start_time, end_time)
             return speed
         else:
             return 0
@@ -313,7 +313,7 @@ def get_speed(deviceid, lat, long, ts):
             end_longitude = last_data[0][0]
             start_time = ts
             end_time = last_data[0][2]
-            speed = cal_speed(start_latitude, start_longitude, end_latitude, end_longitude, start_time, end_time)
+            speed = cal_speed(cal_position(start_latitude), cal_position(start_longitude), cal_position(end_latitude), cal_position(end_longitude), start_time, end_time)
             return speed
         else:
             return 0
