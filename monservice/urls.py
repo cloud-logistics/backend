@@ -33,6 +33,4 @@ urlpatterns = [
     url(r'^returncontainer$', views.return_container),            # 归还云箱
     url(r'^getSecurityConfig$', views.get_security_config),       # 获取运行安全参数
 
-    url(r'^nearbyContainers$', views.available_containers),        # 可用云箱列表
-
 ]

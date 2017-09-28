@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import json
 from util.db import save_to_db, query_list
+from util.geo import cal_position
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
@@ -278,14 +279,6 @@ def build_precintl_sql(data):
         return 'select 1'
 
     return sql
-
-
-# 将传感器数据的经度或纬度转换为小数点形式，Longitude: 116296046, //dddmmmmmm   Latitude: 39583032,  //ddmmmmmm
-def cal_position(value):
-    hour = value[:-6]
-    minute = value[len(hour):len(value)]
-
-    return float(hour + '.' + minute)
 
 
 # 根据历史坐标计算平均速度

@@ -12,6 +12,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from util.db import query_list, save_to_db
+from util.geo import cal_position
 from util import logger
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from models import ContainerRentInfo
@@ -1034,38 +1035,6 @@ def get_security_config(request):
     return JsonResponse(return_data, safe=False, status=status.HTTP_200_OK)
 
 
-# 可用集装箱列表
-@api_view(['POST'])
-def available_containers(request):
-    parameters = json.loads(request.body)
-    latitude = parameters['latitude']
-    longitude = parameters['longitude']
-    ret_list = []
-    data = query_list('select D.deviceid,D.id as type_id,E.latitude,E.longitude from '
-                      '(select A.deviceid,box_type_info.box_type_name,box_type_info.id from '
-                      '(select box_info.deviceid,box_info.type from iot.box_info box_info where box_info.deviceid not in '
-                      '(select deviceid from iot.monservice_containerrentinfo where rentstatus = 1)) A '
-                      'left join iot.box_type_info box_type_info on A.type = box_type_info.id) D '
-                      'inner join '
-                      '(select B.* from (select max(timestamp) as timestamp ,deviceid from iot.sensor_data group by deviceid) A '
-                      'left join iot.sensor_data B '
-                      'on A.timestamp = B.timestamp and A.deviceid = B.deviceid) E '
-                      'on D.deviceid = E.deviceid '
-                      'where iot.fn_cal_distance(cast(iot.fn_cal_postion(E.latitude) as numeric), '
-                      'cast(iot.fn_cal_postion(E.longitude) as numeric),' +
-                       latitude + ',' + longitude + ') <= 5000')
-    for i in range(len(data)):
-        deviceid = data[i][0]
-        type_id = data[i][1]
-        latitude = data[i][2]
-        longitude = data[i][3]
-        ret_list.append({'id': deviceid,
-                         'category': type_id,
-                         'lat': cal_position(latitude),
-                         'lng': cal_position(longitude)})
-    return JsonResponse(ret_list, safe=False, status=status.HTTP_200_OK)
-
-
 # 将unicode转换utf-8编码
 def to_str(unicode_or_str):
     if isinstance(unicode_or_str, unicode):
@@ -1073,14 +1042,6 @@ def to_str(unicode_or_str):
     else:
         value = unicode_or_str
     return value
-
-
-# 将传感器数据的经度或纬度转换为小数点形式，Longitude: 116296046, //dddmmmmmm   Latitude: 39583032,  //ddmmmmmm
-def cal_position(value):
-    hour = value[:-6]
-    minute = value[len(hour):len(value)]
-
-    return float(hour + '.' + minute)
 
 
 def strip_tuple(todo_list):

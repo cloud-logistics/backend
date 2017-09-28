@@ -21,6 +21,7 @@ from django.contrib import admin
 urlpatterns = [
     url(r'^api/v1/cloudbox/', include('sensor.urls')),
     url(r'^api/v1/cloudbox/', include('monservice.urls')),
+    url(r'^api/v1/cloudbox/', include('rentapp.urls')),
     url(r'^api/v1/cloudbox/admin/', include(admin.site.urls)),
     # url(r'^', include(router.urls)),
 
