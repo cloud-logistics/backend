@@ -3,6 +3,12 @@
 
 
 import math
+import json
+import urllib
+import urllib2
+from util import logger
+
+log = logger.get_logger(__name__)
 
 
 # 获取两点之间的距离
@@ -35,3 +41,26 @@ def cal_position(value):
     minute = value[len(hour):len(value)]
 
     return float(hour + '.' + minute)
+
+
+# 根据地点名称获取经纬度
+def get_lng_lat(address):
+    lng = 0
+    lat = 0
+    values = {}
+    values['address'] = address
+    values['key'] = "AIzaSyDD2vDhoHdl8eJAIyWPv0Jw7jeO6VtlRF8"
+    params = urllib.urlencode(values)
+    url = "https://ditu.google.cn/maps/api/geocode/json"
+    geturl = url + "?" + params
+    request = urllib2.Request(geturl)
+    response = urllib2.urlopen(request)
+    response_dic = json.loads(response.read())
+
+    if response_dic['status'] == 'OK':
+        lng = response_dic['results'][0]['geometry']['location']['lng']
+        lat = response_dic['results'][0]['geometry']['location']['lat']
+    else:
+        log.info("req response: %s" % response_dic)
+
+    return {'lng': lng, 'lat': lat}
