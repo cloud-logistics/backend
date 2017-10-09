@@ -107,28 +107,32 @@ def save_order(request):
     rent_money = parameter['rent_money']
     # 承运费用
     carry_money = parameter['carry_money']
+    final_sql = ''
 
     try:
-        with transaction.atomic():
-            available_container_list = get_available_containers(rent_box)
-            if len(list(available_container_list)) < rent_num:
-                return JsonResponse({'code': 'there are not enough boxes'}, safe=False, status=status.HTTP_400_BAD_REQUEST)
-            trackid = str(uuid.uuid1())
-            sql_1 = 'insert into iot.order_info(trackid,starttime,endtime,carrierid,start_address,destination_address,' \
-                    'rent_money,carry_money,create_time) VALUES (\'' + trackid + '\',' + str(rent_time) + ',' + str(rent_time+1) + ',' +\
-                    '1,\'' + start_address + '\',\'' + destination_address + '\',' + str(rent_money) + ',' + \
-                    str(carry_money) + ',' + str(time.time())[0:10] + ')'
-            save_to_db(sql_1)
-            for j in range(rent_num):
-                sql_2 = 'insert into iot.box_order_relation(trackid, deviceid) VALUES (\'' + trackid + '\',\'' + \
-                        available_container_list[j]['deviceid'] + '\')'
-                save_to_db(sql_2)
-            for k in range(rent_num):
-                 save_to_db('insert into iot.monservice_containerrentinfo(deviceid,'
-                            'starttime,endtime,carrier,type,owner,rentstatus)VALUES ('
-                            '\'' + available_container_list[k]['deviceid'] + '\',' +
-                            str(rent_time) + ',' + str(rent_time+1) + ','
-                            '1, ' + str(rent_box) + ',\'' + user + '\',1)')
+        available_container_list = get_available_containers(rent_box)
+        if len(list(available_container_list)) < rent_num:
+            return JsonResponse({'code': 'there are not enough boxes'}, safe=False, status=status.HTTP_400_BAD_REQUEST)
+        trackid = str(uuid.uuid1())
+        sql_1 = 'insert into iot.order_info(trackid,starttime,endtime,carrierid,start_address,destination_address,' \
+                'rent_money,carry_money,create_time,owner) VALUES (\'' + trackid + '\',' + str(rent_time) + ',' + str(rent_time+1) + ',' +\
+                '1,\'' + start_address + '\',\'' + destination_address + '\',' + str(rent_money) + ',' + \
+                str(carry_money) + ',' + str(time.time())[0:10] + ',\'' + user + '\');'
+        final_sql = final_sql + sql_1
+        # save_to_db(sql_1)
+        for j in range(rent_num):
+            sql_2 = 'insert into iot.box_order_relation(trackid, deviceid) VALUES (\'' + trackid + '\',\'' + \
+                    available_container_list[j]['deviceid'] + '\');'
+            # save_to_db(sql_2)
+            final_sql = final_sql + sql_2
+        for k in range(rent_num):
+            sql_3 = 'insert into iot.monservice_containerrentinfo(deviceid, ' \
+                    'starttime,endtime,carrier,type,owner,rentstatus)VALUES (' \
+                    '\'' + available_container_list[k]['deviceid'] + '\',' + \
+                    str(rent_time) + ',' + str(rent_time + 1) + ',' \
+                    '1, ' + str(rent_box) + ',\'' + user + '\',1);'
+            final_sql = final_sql + sql_3
+        save_to_db(final_sql)
     except Exception, e:
         log.error('save rent order error %s' % e.message)
     return JsonResponse({'trackid': trackid}, safe=False, status=status.HTTP_200_OK)
@@ -140,7 +144,7 @@ def my_orders(request):
     user = str(request.user)
     ret_data = []
     data = query_list('select count(1) as container_num, order_info.trackid, '
-                      'box_type_info.box_type_name '
+                      'box_type_info.box_type_name, box_type_info.id '
                       'from iot.order_info order_info '
                       'inner join iot.box_order_relation box_order_relation '
                       'on order_info.trackid = box_order_relation.trackid '
@@ -149,12 +153,14 @@ def my_orders(request):
                       'inner join iot.box_type_info box_type_info '
                       'on box_info.type = box_type_info.id '
                       'where owner = \'' + user + '\' '
-                      'group by box_type_info.box_type_name,order_info.trackid,order_info.create_time '
+                      'group by box_type_info.box_type_name, box_type_info.id, '
+                      'order_info.trackid,order_info.create_time '
                       'order by order_info.create_time desc')
     for i in range(len(data)):
         ret_data.append({'container_num': data[i][0],
                          'trackid': data[i][1],
-                         'box_type_name': data[i][2]})
+                         'box_type_name': data[i][2],
+                         'category': data[i][3]})
     return JsonResponse({'data': ret_data}, safe=False, status=status.HTTP_200_OK)
 
 

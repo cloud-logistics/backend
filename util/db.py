@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from psycopg2.pool import ThreadedConnectionPool
+import psycopg2
 from cloudbox import settings
 import logger
 
@@ -24,14 +25,20 @@ def get_conn_pool():
 
 
 def save_to_db(sql):
-    pool = get_conn_pool()
-    conn = pool.getconn()
-    cur = conn.cursor()
-    log.debug('sql: ' + sql)
-    cur.execute(sql)
-    cur.close()
-    conn.commit()
-    pool.putconn(conn)
+    try:
+        pool = get_conn_pool()
+        conn = pool.getconn()
+        cur = conn.cursor()
+        log.debug('sql: ' + sql)
+        cur.execute(sql)
+        cur.close()
+    except Exception, e:
+        log.error('save_to_db error,sql:' + sql)
+        conn.rollback()
+    finally:
+        if conn:
+            conn.commit()
+            pool.putconn(conn)
 
 
 def query_list(sql):
