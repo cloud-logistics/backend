@@ -115,9 +115,10 @@ def save_order(request):
             return JsonResponse({'code': 'there are not enough boxes'}, safe=False, status=status.HTTP_400_BAD_REQUEST)
         trackid = str(uuid.uuid1())
         sql_1 = 'insert into iot.order_info(trackid,starttime,endtime,carrierid,start_address,destination_address,' \
-                'rent_money,carry_money,create_time,owner) VALUES (\'' + trackid + '\',' + str(rent_time) + ',' + str(rent_time+1) + ',' +\
+                'rent_money,carry_money,create_time,owner,payment_flag) VALUES ' \
+                '(\'' + trackid + '\',' + str(rent_time) + ',' + str(rent_time+1) + ',' +\
                 '1,\'' + start_address + '\',\'' + destination_address + '\',' + str(rent_money) + ',' + \
-                str(carry_money) + ',' + str(time.time())[0:10] + ',\'' + user + '\');'
+                str(carry_money) + ',' + str(time.time())[0:10] + ',\'' + user + '\', 0);'
         final_sql = final_sql + sql_1
         # save_to_db(sql_1)
         for j in range(rent_num):
@@ -199,8 +200,14 @@ def order_status(request):
                      'current_lng': current_lng,
                      'current_lat': current_lat}
         # 获取历史流水list
-        create_time_data = query_list('select create_time from iot.order_info where trackid = \'' + trackid + '\'')
+        create_time_data = query_list('select create_time, payment_flag, unpacking_code, payment_time, '
+                                      'rent_money, carry_money from iot.order_info where trackid = \'' + trackid + '\'')
         create_time = create_time_data[0][0]
+        payment_flag = create_time_data[0][1]
+        unpacking_code = create_time_data[0][2]
+        payment_time = create_time_data[0][3]
+        rent_money = create_time_data[0][4]
+        carry_money = create_time_data[0][5]
         history_data.append({'time': to_str(create_time),
                              'description': '订单编号' + to_str(trackid)})
         history_data.append({'time': create_time + 300,
@@ -215,7 +222,13 @@ def order_status(request):
         if start_distance < total_distance and end_distance < total_distance:
             history_data.append({'time': create_time + 7300, 'description': '云箱运输中'})
         if end_distance < 5000:
-            history_data.append({'time': create_time + 8300, 'description': '云箱已到达'})
+            history_data.append({'time': '请支付后开箱', 'description': '云箱已到达', 'payment_flag': 0})
+        if payment_flag is not None and payment_flag == 1 and (unpacking_code is None or unpacking_code != ''):
+            history_data.append({'time': payment_time, 'description': '已支付 ¥' + str(rent_money + carry_money),
+                                 'payment_flag': 1})
+        if unpacking_code is not None and unpacking_code != '':
+            history_data.append({'time': payment_time + 7300,
+                                 'description': '订单已完成 (开箱密码' + to_str(unpacking_code) + ')'})
     return JsonResponse({'history': history_data, 'path': path_data}, safe=False, status=status.HTTP_200_OK)
 
 
@@ -225,10 +238,24 @@ def order_pay(request):
     parameter = json.loads(request.body)
     trackid = parameter['trackid']
     try:
+        sql_1 = 'update iot.order_info set payment_flag = 1, payment_time = ' + str(time.time())[0:10] + \
+                ' where trackid = \'' + trackid + '\' and payment_flag = 0;'
+        save_to_db(sql_1)
+    except Exception, e:
+        log.error(e.message)
+    return JsonResponse({'code': 200}, safe=False, status=status.HTTP_200_OK)
+
+
+# 获取开箱码
+@api_view(['POST'])
+def get_code(request):
+    parameter = json.loads(request.body)
+    trackid = parameter['trackid']
+    try:
         # 生成开箱码
         unpacking_code = str(random.randint(10000, 99999))
-        sql_1 = 'update iot.order_info set unpacking_code = \'' + unpacking_code + '\', payment_flag = 1 ' \
-                ' where trackid = \'' + trackid + '\' and payment_flag = 0;'
+        sql_1 = 'update iot.order_info set unpacking_code = \'' + unpacking_code + '\' ' \
+                ' where trackid = \'' + trackid + '\' and payment_flag = 1;'
         sql_2 = 'update iot.monservice_containerrentinfo set rentstatus = 0 ' \
                 ' where deviceid in (select deviceid from iot.box_order_relation where trackid = \'' + trackid + '\');'
         save_to_db(sql_1 + sql_2)
@@ -238,7 +265,6 @@ def order_pay(request):
     except Exception, e:
         log.error(e.message)
     return JsonResponse({'unpacking_code': unpacking_code}, safe=False, status=status.HTTP_200_OK)
-
 
 
 # 查询可用租用的箱子
