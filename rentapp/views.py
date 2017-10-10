@@ -2,15 +2,15 @@
 # -*- coding: utf-8 -*-
 
 from django.http import JsonResponse
-from django.db import transaction
 from rest_framework import status
 from util.db import query_list, save_to_db
-from util.geo import cal_position, get_lng_lat
+from util.geo import cal_position, get_lng_lat, get_distance
 from util import logger
 from rest_framework.decorators import api_view
 import json
 import uuid
 import time
+import random
 
 
 log = logger.get_logger(__name__)
@@ -169,7 +169,8 @@ def my_orders(request):
 def order_status(request):
     parameter = json.loads(request.body)
     trackid = parameter['trackid']
-    ret_data = {}
+    path_data = {}
+    history_data = []
     data = query_list('select start_address,destination_address, '
                       'box_order_relation.deviceid '
                       'from  iot.order_info order_info '
@@ -191,13 +192,53 @@ def order_status(request):
         else:
             current_lng = start_lnglat['lng']
             current_lat = start_lnglat['lat']
-        ret_data = {'start_lng': start_lnglat['lng'],
-                    'start_lat': start_lnglat['lat'],
-                    'destination_lng': destination_lnglat['lng'],
-                    'destination_lat': destination_lnglat['lat'],
-                    'current_lng': current_lng,
-                    'current_lat': current_lat}
-    return JsonResponse({'data': ret_data}, safe=False, status=status.HTTP_200_OK)
+        path_data = {'start_lng': start_lnglat['lng'],
+                     'start_lat': start_lnglat['lat'],
+                     'destination_lng': destination_lnglat['lng'],
+                     'destination_lat': destination_lnglat['lat'],
+                     'current_lng': current_lng,
+                     'current_lat': current_lat}
+        # 获取历史流水list
+        create_time_data = query_list('select create_time from iot.order_info where trackid = \'' + trackid + '\'')
+        create_time = create_time_data[0][0]
+        history_data.append({'time': to_str(create_time),
+                             'description': '订单编号' + to_str(trackid)})
+        history_data.append({'time': create_time + 300,
+                             'description': '您的订单已开始处理'})
+        history_data.append({'time': create_time + 3600,
+                             'description': '云箱已出库'})
+        total_distance = get_distance(start_lnglat['lat'], start_lnglat['lng'],
+                                      destination_lnglat['lat'], destination_lnglat['lng'])
+        start_distance = get_distance(current_lat, current_lng, start_lnglat['lat'], start_lnglat['lng'])
+        end_distance = get_distance(current_lat, current_lng, destination_lnglat['lat'], destination_lnglat['lng'])
+
+        if start_distance < total_distance and end_distance < total_distance:
+            history_data.append({'time': create_time + 7300, 'description': '云箱运输中'})
+        if end_distance < 5000:
+            history_data.append({'time': create_time + 8300, 'description': '云箱已到达'})
+    return JsonResponse({'history': history_data, 'path': path_data}, safe=False, status=status.HTTP_200_OK)
+
+
+# 支付
+@api_view(['POST'])
+def order_pay(request):
+    parameter = json.loads(request.body)
+    trackid = parameter['trackid']
+    try:
+        # 生成开箱码
+        unpacking_code = str(random.randint(10000, 99999))
+        sql_1 = 'update iot.order_info set unpacking_code = \'' + unpacking_code + '\', payment_flag = 1 ' \
+                ' where trackid = \'' + trackid + '\' and payment_flag = 0;'
+        sql_2 = 'update iot.monservice_containerrentinfo set rentstatus = 0 ' \
+                ' where deviceid in (select deviceid from iot.box_order_relation where trackid = \'' + trackid + '\');'
+        save_to_db(sql_1 + sql_2)
+        data = query_list('select unpacking_code from  iot.order_info where trackid = \'' + trackid + '\'')
+        if len(data) > 0:
+            unpacking_code = data[0][0]
+    except Exception, e:
+        log.error(e.message)
+    return JsonResponse({'unpacking_code': unpacking_code}, safe=False, status=status.HTTP_200_OK)
+
 
 
 # 查询可用租用的箱子

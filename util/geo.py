@@ -49,7 +49,7 @@ def get_lng_lat(address):
     lat = 0
     values = {}
     values['address'] = address
-    values['key'] = "AIzaSyDD2vDhoHdl8eJAIyWPv0Jw7jeO6VtlRF8"
+    values['key'] = "AIzaSyBeNmcjCubIBu3xusqOtQxqdn1EkXTk50M"
     params = urllib.urlencode(values)
     url = "https://ditu.google.cn/maps/api/geocode/json"
     geturl = url + "?" + params
