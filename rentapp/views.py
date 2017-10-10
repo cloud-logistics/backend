@@ -222,7 +222,11 @@ def order_status(request):
         if start_distance < total_distance and end_distance < total_distance:
             history_data.append({'time': create_time + 7300, 'description': '云箱运输中'})
         if end_distance < 5000:
-            history_data.append({'time': '请支付后开箱', 'description': '云箱已到达', 'payment_flag': 0})
+            if payment_flag is not None and payment_flag == 1:
+                operation = create_time + 7400
+            else:
+                operation = '请支付后开箱'
+            history_data.append({'time': operation, 'description': '云箱已到达', 'payment_flag': 0})
         if payment_flag is not None and payment_flag == 1 and (unpacking_code is None or unpacking_code != ''):
             history_data.append({'time': payment_time, 'description': '已支付 ¥' + str(rent_money + carry_money),
                                  'payment_flag': 1})
