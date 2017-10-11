@@ -145,7 +145,7 @@ def my_orders(request):
     user = str(request.user)
     ret_data = []
     data = query_list('select count(1) as container_num, order_info.trackid, '
-                      'box_type_info.box_type_name, box_type_info.id '
+                      'box_type_info.box_type_name, box_type_info.id, order_info.payment_flag '
                       'from iot.order_info order_info '
                       'inner join iot.box_order_relation box_order_relation '
                       'on order_info.trackid = box_order_relation.trackid '
@@ -155,13 +155,29 @@ def my_orders(request):
                       'on box_info.type = box_type_info.id '
                       'where owner = \'' + user + '\' '
                       'group by box_type_info.box_type_name, box_type_info.id, '
-                      'order_info.trackid,order_info.create_time '
+                      'order_info.trackid,order_info.create_time, order_info.payment_flag '
                       'order by order_info.create_time desc')
+    # 计算是否有告警
     for i in range(len(data)):
-        ret_data.append({'container_num': data[i][0],
-                         'trackid': data[i][1],
-                         'box_type_name': data[i][2],
-                         'category': data[i][3]})
+        trackid = data[i][1]
+        payment_flag = data[i][4]
+        alarm_status = 0
+        if payment_flag == 1:
+            alarm_data = query_list('select count(1) from iot.box_order_relation box_order_relation '
+                                    'inner join iot.alarm_info alarm_info '
+                                    'on box_order_relation.deviceid = alarm_info.deviceid ' 
+                                    'and trackid = \'' + to_str(trackid) + '\' '
+                                    'and alarm_status = 1')
+            if alarm_data[0][0] > 0:
+                alarm_status = 1
+        item = {'container_num': data[i][0],
+                'trackid': trackid,
+                'box_type_name': data[i][2],
+                'category': data[i][3],
+                'payment_flag': payment_flag,
+                'alarm_status': alarm_status}
+
+        ret_data.append(item)
     return JsonResponse({'data': ret_data}, safe=False, status=status.HTTP_200_OK)
 
 
