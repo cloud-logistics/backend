@@ -287,6 +287,66 @@ def get_code(request):
     return JsonResponse({'unpacking_code': unpacking_code}, safe=False, status=status.HTTP_200_OK)
 
 
+# 云箱详情总汇
+@api_view(['POST'])
+def status_summary(request):
+    parameter = json.loads(request.body)
+    trackid = parameter['trackid']
+    ret_data = []
+    alarm_data = query_list('select box_order_relation.deviceid,max(alarm_status) '
+                            ' from iot.box_order_relation box_order_relation ' 
+                            'left join iot.alarm_info alarm_info '
+                            'on box_order_relation.deviceid = alarm_info.deviceid ' 
+                            'and alarm_status = 1 '
+                            'where box_order_relation.trackid =  \'' + to_str(trackid) + '\' '
+                            'group by box_order_relation.deviceid')
+    for i in range(len(alarm_data)):
+        if alarm_data[i][1] is None:
+            alarm_status = 0
+        else:
+            alarm_status = 1
+        ret_data.append({'deviceid': alarm_data[i][0],
+                         'alarm_status': alarm_status})
+    return JsonResponse({'data': ret_data}, safe=False, status=status.HTTP_200_OK)
+
+
+# 订单详情
+@api_view(['POST'])
+def order_detail(request):
+    parameter = json.loads(request.body)
+    trackid = parameter['trackid']
+    ret_data = {}
+    order_data = query_list('select starttime,start_address,destination_address ,box_type_name, '
+                            'rent_money,carry_money,order_info.trackid,create_time '
+                            'from iot.order_info order_info '
+                            'inner join iot.box_order_relation box_order_relation ' 
+                            'on order_info.trackid = box_order_relation.trackid '
+                            'inner join iot.box_info box_info '
+                            'on box_order_relation.deviceid = box_info.deviceid '
+                            'inner join iot.box_type_info box_type_info '
+                            'on box_info.type = box_type_info.id '
+                            'where order_info.trackid = \'' + to_str(trackid) + '\' limit 1')
+    if len(order_data) > 0:
+        num_data = query_list('select count(1) from iot.box_order_relation where trackid = \'' + to_str(trackid) + '\'')
+        rent_num = num_data[0][0]
+        rent_time = order_data[0][0]
+        start_address = order_data[0][1]
+        destination_address = order_data[0][2]
+        box_type_name = order_data[0][3]
+        rent_money = order_data[0][4]
+        carry_money = order_data[0][5]
+        create_time = order_data[0][7]
+        ret_data = {'rent_num': rent_num,
+                    'rent_time': rent_time,
+                    'start_address': start_address,
+                    'destination_address': destination_address,
+                    'box_type_name': box_type_name,
+                    'rent_money': rent_money,
+                    'carry_money': carry_money,
+                    'create_time': create_time}
+    return JsonResponse({'data': ret_data}, safe=False, status=status.HTTP_200_OK)
+
+
 # 查询可用租用的箱子
 def get_available_containers(id):
     ret_list = []

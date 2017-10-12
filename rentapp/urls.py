@@ -14,5 +14,8 @@ urlpatterns = [
     url(r'^orderStatus$', views.order_status),                     # 订单状态
     url(r'^orderPay$', views.order_pay),                           # 订单支付
     url(r'^getCode$', views.get_code),                             # 获取开箱码
+    url(r'^statusSummary$', views.status_summary),                 # 云箱详情总汇
+    url(r'^orderDetail$', views.order_detail),                     # 订单详情
+
 
 ]
