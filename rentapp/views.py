@@ -347,6 +347,23 @@ def order_detail(request):
     return JsonResponse({'data': ret_data}, safe=False, status=status.HTTP_200_OK)
 
 
+# 获取承运费用
+@api_view(['POST'])
+def get_carry_money(request):
+    parameter = json.loads(request.body)
+    start_address = parameter['start_address']
+    destination_address = parameter['destination_address']
+    start_address_lng_lat = get_lng_lat(to_str(start_address))
+    destination_address_lng_lat = get_lng_lat(to_str(destination_address))
+    start_address_lng = start_address_lng_lat['lng']
+    start_address_lat = start_address_lng_lat['lat']
+    destination_address_lng = destination_address_lng_lat['lng']
+    destination_address_lat = destination_address_lng_lat['lat']
+    distance = get_distance(destination_address_lat, destination_address_lng, start_address_lat, start_address_lng)
+    price = distance * 0.001
+    return JsonResponse({'data': float('%.2f' % price)}, safe=False, status=status.HTTP_200_OK)
+
+
 # 查询可用租用的箱子
 def get_available_containers(id):
     ret_list = []

@@ -16,6 +16,7 @@ urlpatterns = [
     url(r'^getCode$', views.get_code),                             # 获取开箱码
     url(r'^statusSummary$', views.status_summary),                 # 云箱详情总汇
     url(r'^orderDetail$', views.order_detail),                     # 订单详情
+    url(r'^getCarryMoney$', views.get_carry_money),                # 获取承运费用
 
 
 ]
