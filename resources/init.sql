@@ -8,6 +8,9 @@ ALTER SEQUENCE iot.box_info_id_seq OWNER TO postgres;
 CREATE SEQUENCE iot.box_type_info_id_seq INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
 ALTER SEQUENCE iot.box_type_info_id_seq OWNER TO postgres;
 
+CREATE SEQUENCE iot.cargo_type_id_seq INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
+ALTER SEQUENCE iot.cargo_type_id_seq OWNER TO postgres;
+
 CREATE SEQUENCE iot.carrier_info_id_seq INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
 ALTER SEQUENCE iot.carrier_info_id_seq OWNER TO postgres;
 
@@ -97,7 +100,11 @@ CREATE TABLE iot.box_type_info
     battery_threshold_min INTEGER,
     battery_threshold_max INTEGER,
     operation_threshold_max INTEGER,
-    operation_threshold_min INTEGER
+    operation_threshold_min INTEGER,
+    price numeric(20, 2),
+    length numeric(20, 2),
+    width numeric(20, 2),
+    height numeric(20, 2)
 )
 WITH (
     OIDS = FALSE
@@ -105,6 +112,19 @@ WITH (
 TABLESPACE pg_default;
 
 ALTER TABLE iot.box_type_info OWNER to postgres;
+
+
+CREATE TABLE iot.cargo_type
+(
+    id integer NOT NULL DEFAULT nextval('iot.cargo_type_id_seq'::regclass),
+    type_name character varying(50) COLLATE pg_catalog."default"
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE iot.cargo_type OWNER to postgres;
 
 
 CREATE TABLE iot.carrier_info
@@ -173,7 +193,17 @@ CREATE TABLE iot.order_info
     trackid text COLLATE pg_catalog."default",
     starttime text COLLATE pg_catalog."default",
     endtime text COLLATE pg_catalog."default",
-    carrierid integer
+    carrierid integer,
+    start_address text COLLATE pg_catalog."default",
+    destination_address text COLLATE pg_catalog."default",
+    rent_money numeric(20, 2),
+    carry_money numeric(20, 2),
+    create_time integer,
+    contact text COLLATE pg_catalog."default",
+    owner character varying(20) COLLATE pg_catalog."default",
+    unpacking_code character varying(50) COLLATE pg_catalog."default",
+    payment_flag integer,
+    payment_time integer
 )
 WITH (
     OIDS = FALSE
