@@ -52,3 +52,17 @@ def query_list(sql):
     conn.commit()
     pool.putconn(conn)
     return rows
+
+
+# 防止sql注入查询
+def query_list_inject(sql, params):
+    pool = get_conn_pool()
+    conn = pool.getconn()
+    cur = conn.cursor()
+    log.debug('sql: ' + sql + ', params: ' + str(params))
+    cur.execute(sql, params)
+    rows = cur.fetchall()
+    cur.close()
+    conn.commit()
+    pool.putconn(conn)
+    return rows

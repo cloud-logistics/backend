@@ -3,7 +3,7 @@
 
 from django.http import JsonResponse
 from rest_framework import status
-from util.db import query_list, save_to_db
+from util.db import query_list, save_to_db, query_list_inject
 from util.geo import cal_position, get_lng_lat, get_distance
 from util import logger
 from rest_framework.decorators import api_view
@@ -362,6 +362,24 @@ def get_carry_money(request):
     distance = get_distance(destination_address_lat, destination_address_lng, start_address_lat, start_address_lng)
     price = distance * 0.001
     return JsonResponse({'data': float('%.2f' % price)}, safe=False, status=status.HTTP_200_OK)
+
+
+# 用户角色认证
+@api_view(['POST'])
+def app_auth(request):
+    parameter = json.loads(request.body)
+    username = parameter['username']
+    password = parameter['password']
+    try:
+        data = query_list_inject("select user_name,password,role from iot.app_user "
+                                 "where user_name = %s and password = %s", (username, password))
+    except Exception, e:
+        log.error(e.message)
+        return JsonResponse({'role': 'NA'}, safe=False, status=status.HTTP_400_BAD_REQUEST)
+    if len(data) > 0:
+        return JsonResponse({'role': data[0][2]}, safe=False, status=status.HTTP_200_OK)
+    else:
+        return JsonResponse({'role': 'NA'}, safe=False, status=status.HTTP_400_BAD_REQUEST)
 
 
 # 查询可用租用的箱子
