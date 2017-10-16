@@ -64,3 +64,29 @@ def get_lng_lat(address):
         log.info("req response: %s" % response_dic)
 
     return {'lng': lng, 'lat': lat}
+
+
+# 根据两个地点名称获取之间的距离
+def get_path_distance(origin, destination):
+    values = {}
+    values['language'] = 'zh-CN'
+    values['origin'] = origin
+    values['destination'] = destination
+    values['key'] = "AIzaSyBeNmcjCubIBu3xusqOtQxqdn1EkXTk50M"
+    params = urllib.urlencode(values)
+    url = "https://ditu.google.cn/maps/api/directions/json"
+    geturl = url + "?" + params
+    request = urllib2.Request(geturl)
+    response = urllib2.urlopen(request)
+    response_dic = json.loads(response.read())
+
+    if response_dic['status'] == 'OK':
+        distance = response_dic['routes'][0]['legs'][0]['distance']['value']
+    else:
+        log.info("req response: %s" % response_dic)
+        return 0
+    return distance
+
+
+
+

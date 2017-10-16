@@ -4,7 +4,7 @@
 from django.http import JsonResponse
 from rest_framework import status
 from util.db import query_list, save_to_db, query_list_inject
-from util.geo import cal_position, get_lng_lat, get_distance
+from util.geo import cal_position, get_lng_lat, get_distance, get_path_distance
 from util import logger
 from rest_framework.decorators import api_view
 import json
@@ -353,13 +353,7 @@ def get_carry_money(request):
     parameter = json.loads(request.body)
     start_address = parameter['start_address']
     destination_address = parameter['destination_address']
-    start_address_lng_lat = get_lng_lat(to_str(start_address))
-    destination_address_lng_lat = get_lng_lat(to_str(destination_address))
-    start_address_lng = start_address_lng_lat['lng']
-    start_address_lat = start_address_lng_lat['lat']
-    destination_address_lng = destination_address_lng_lat['lng']
-    destination_address_lat = destination_address_lng_lat['lat']
-    distance = get_distance(destination_address_lat, destination_address_lng, start_address_lat, start_address_lng)
+    distance = get_path_distance(to_str(start_address), to_str(destination_address))
     price = distance * 0.001
     return JsonResponse({'data': float('%.2f' % price)}, safe=False, status=status.HTTP_200_OK)
 
