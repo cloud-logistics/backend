@@ -6,6 +6,7 @@ from rentapp import views
 
 urlpatterns = [
 
+    url(r'^appAuth$', views.app_auth),                             # 用户角色认证
     url(r'^nearbyContainers$', views.available_containers),        # 可用云箱列表
     url(r'^containerCategories$', views.container_types),          # 箱子种类
     url(r'^cargoCategories$', views.cargo_types),                  # 货物种类
@@ -17,7 +18,7 @@ urlpatterns = [
     url(r'^statusSummary$', views.status_summary),                 # 云箱详情总汇
     url(r'^orderDetail$', views.order_detail),                     # 订单详情
     url(r'^getCarryMoney$', views.get_carry_money),                # 获取承运费用
-    url(r'^appAuth$', views.app_auth),                             # 用户角色认证
+    url(r'^getCarriageBill$', views.get_carriage_bill),            # 获取承运单
 
 
 ]

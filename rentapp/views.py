@@ -376,6 +376,35 @@ def app_auth(request):
         return JsonResponse({'role': 'NA'}, safe=False, status=status.HTTP_400_BAD_REQUEST)
 
 
+# 获取承运单
+@api_view(['GET'])
+def get_carriage_bill(request):
+    ret_data = []
+    sql = 'select count(box_order_relation.deviceid), box_type_info.box_type_name, ' \
+          'start_address,destination_address,create_time,rent_money,carry_money,order_info.trackid ' \
+          'from iot.order_info order_info ' \
+          'inner join iot.box_order_relation box_order_relation ' \
+          'on order_info.trackid = box_order_relation.trackid ' \
+          'inner join iot.box_info box_info ' \
+          'on box_info.deviceid = box_order_relation.deviceid ' \
+          'inner join iot.box_type_info box_type_info ' \
+          'on box_type_info.id = box_info.type ' \
+          'where create_time is not null and payment_flag = 0 and start_address <> \'\' ' \
+          'group by box_type_info.box_type_name,start_address,destination_address, ' \
+          'create_time,rent_money,carry_money,order_info.trackid order by create_time asc '
+    data = query_list(sql)
+    for i in range(len(data)):
+        ret_data.append({'device_num': data[i][0],
+                         'box_type_name': data[i][1],
+                         'start_address': data[i][2],
+                         'destination_address': data[i][3],
+                         'create_time': data[i][4],
+                         'rent_money': float(data[i][5]),
+                         'carry_money': float(data[i][6]),
+                         'trackid': data[i][7]})
+    return JsonResponse({'data': list(ret_data)}, safe=False, status=status.HTTP_200_OK)
+
+
 # 查询可用租用的箱子
 def get_available_containers(id):
     ret_list = []
