@@ -35,13 +35,13 @@ def input_data(request):
             sql = build_sql(data_list)
             save_to_db(sql)
             log.info('insert data to database successfully')
-            return JsonResponse(RESULT_200_OK, status=status.HTTP_200_OK)
+            return JsonResponse(RESULT_200_OK, status=status.HTTP_200_OK, safe=True)
         except Exception, e:
             log.error('save to db error, msg: ' + e.__str__())
-            return JsonResponse(RESULT_400_BAD_REQUEST, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(RESULT_400_BAD_REQUEST, status=status.HTTP_400_BAD_REQUEST, safe=True)
     else:
         log.error('bad request method. please use POST/PUT.')
-        return JsonResponse(RESULT_400_BAD_REQUEST, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(RESULT_400_BAD_REQUEST, status=status.HTTP_400_BAD_REQUEST, safe=True)
 
 
 # 解析数据
@@ -131,7 +131,7 @@ def nextsite(request):
     token = request.META.get('HTTP_TOKEN')
     if token is None or token != 'a921a69a33ae461396167d112b813d90':
         return JsonResponse(organize_result("False", "999999", "Unauthorized", {}),
-                            status=status.HTTP_401_UNAUTHORIZED)
+                            status=status.HTTP_401_UNAUTHORIZED, safe=True)
     parameter = JSONParser().parse(request)
     tid = parameter['tid']
     site_code = parameter['site_code']
@@ -186,10 +186,10 @@ def nextsite(request):
             t = {'S': s_site_code, 'D': d_site_code, 'N': next_site_code, 'type': type, 'priority': priority}
         else:
             t = {'N': next_site_code, 'type': type, 'priority': priority}
-        return JsonResponse(organize_result("True", "000000", "Success", t))
+        return JsonResponse(organize_result("True", "000000", "Success", t), safe=True)
     else:
         # 该箱没有在途中
-        return JsonResponse(organize_result("False", "999999", "Fail", 'Not on the way'))
+        return JsonResponse(organize_result("False", "999999", "Fail", 'Not on the way'), safe=True)
 
 
 # 给定经纬度，计算该点在航线list中下一站
@@ -231,7 +231,7 @@ def save_precintl_data(request):
     token = request.META.get('HTTP_TOKEN')
     if token is None or token != 'a921a69a33ae461396167d112b813d90':
         return JsonResponse(organize_result("False", "999999", "Unauthorized", {}),
-                            status=status.HTTP_401_UNAUTHORIZED)
+                            status=status.HTTP_401_UNAUTHORIZED, safe=True)
     if request.method == 'POST' or request.method == 'PUT':
         try:
             log.debug('receive request body:' + request.body)
@@ -239,14 +239,16 @@ def save_precintl_data(request):
             sql = build_precintl_sql(parameter)
             save_to_db(sql)
             log.info('insert data to database successfully')
-            return JsonResponse(organize_result("True", "000000", "OK", '{}'), status=status.HTTP_200_OK)
+            return JsonResponse(organize_result("True", "000000", "OK", '{}'), status=status.HTTP_200_OK, safe=True)
         except Exception, e:
             log.error('save to db error, msg: ' + repr(e))
-            return JsonResponse(organize_result("False", "999999", repr(e), '{}'), status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(organize_result("False", "999999", repr(e), '{}'),
+                                status=status.HTTP_400_BAD_REQUEST, safe=True)
     else:
         msg = 'bad request method. please use POST/PUT.'
         log.error(msg)
-        return JsonResponse(organize_result("False", "999999", msg, '{}'), status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return JsonResponse(organize_result("False", "999999", msg, '{}'),
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED, safe=True)
 
 
 # 构建万引力数据插入数据库的sql

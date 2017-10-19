@@ -45,7 +45,7 @@ def available_containers(request):
                          'category': type_id,
                          'position': {'lat': cal_position(latitude),
                                       'lng': cal_position(longitude)}})
-    return JsonResponse(ret_list, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse(ret_list, safe=True, status=status.HTTP_200_OK)
 
 
 # 箱子种类
@@ -73,7 +73,7 @@ def container_types(request):
                                 'length': length,
                                 'width': width,
                                 'height': height}})
-    return JsonResponse(ret_list, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse(ret_list, safe=True, status=status.HTTP_200_OK)
 
 
 # 货物种类
@@ -85,7 +85,7 @@ def cargo_types(request):
         id = data[i][0]
         type_name = data[i][1]
         ret_list.append({'id': id, 'name': type_name})
-    return JsonResponse(ret_list, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse(ret_list, safe=True, status=status.HTTP_200_OK)
 
 
 # 保存订单
@@ -112,7 +112,7 @@ def save_order(request):
     try:
         available_container_list = get_available_containers(rent_box)
         if len(list(available_container_list)) < rent_num:
-            return JsonResponse({'code': 'there are not enough boxes'}, safe=False, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'code': 'there are not enough boxes'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
         trackid = str(uuid.uuid1())
         sql_1 = 'insert into iot.order_info(trackid,starttime,endtime,carrierid,start_address,destination_address,' \
                 'rent_money,carry_money,create_time,owner,payment_flag) VALUES ' \
@@ -136,7 +136,7 @@ def save_order(request):
         save_to_db(final_sql)
     except Exception, e:
         log.error('save rent order error %s' % e.message)
-    return JsonResponse({'trackid': trackid}, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse({'trackid': trackid}, safe=True, status=status.HTTP_200_OK)
 
 
 # 我的订单
@@ -178,7 +178,7 @@ def my_orders(request):
                 'alarm_status': alarm_status}
 
         ret_data.append(item)
-    return JsonResponse({'data': ret_data}, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse({'data': ret_data}, safe=True, status=status.HTTP_200_OK)
 
 
 # 订单状态
@@ -249,7 +249,7 @@ def order_status(request):
         if unpacking_code is not None and unpacking_code != '':
             history_data.append({'time': payment_time + 7300,
                                  'description': '订单已完成 (开箱密码' + to_str(unpacking_code) + ')'})
-    return JsonResponse({'history': history_data, 'path': path_data}, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse({'history': history_data, 'path': path_data}, safe=True, status=status.HTTP_200_OK)
 
 
 # 支付
@@ -263,7 +263,7 @@ def order_pay(request):
         save_to_db(sql_1)
     except Exception, e:
         log.error(e.message)
-    return JsonResponse({'code': 200}, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse({'code': 200}, safe=True, status=status.HTTP_200_OK)
 
 
 # 获取开箱码
@@ -284,7 +284,7 @@ def get_code(request):
             unpacking_code = data[0][0]
     except Exception, e:
         log.error(e.message)
-    return JsonResponse({'unpacking_code': unpacking_code}, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse({'unpacking_code': unpacking_code}, safe=True, status=status.HTTP_200_OK)
 
 
 # 云箱详情总汇
@@ -307,7 +307,7 @@ def status_summary(request):
             alarm_status = 1
         ret_data.append({'deviceid': alarm_data[i][0],
                          'alarm_status': alarm_status})
-    return JsonResponse({'data': ret_data}, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse({'data': ret_data}, safe=True, status=status.HTTP_200_OK)
 
 
 # 订单详情
@@ -344,7 +344,7 @@ def order_detail(request):
                     'rent_money': rent_money,
                     'carry_money': carry_money,
                     'create_time': create_time}
-    return JsonResponse({'data': ret_data}, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse({'data': ret_data}, safe=True, status=status.HTTP_200_OK)
 
 
 # 获取承运费用
@@ -355,7 +355,7 @@ def get_carry_money(request):
     destination_address = parameter['destination_address']
     distance = get_path_distance(to_str(start_address), to_str(destination_address))
     price = distance * 0.001
-    return JsonResponse({'data': float('%.2f' % price)}, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse({'data': float('%.2f' % price)}, safe=True, status=status.HTTP_200_OK)
 
 
 # 用户角色认证
@@ -369,11 +369,11 @@ def app_auth(request):
                                  "where user_name = %s and password = %s", (username, password))
     except Exception, e:
         log.error(e.message)
-        return JsonResponse({'role': 'NA'}, safe=False, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'role': 'NA'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
     if len(data) > 0:
-        return JsonResponse({'role': data[0][2]}, safe=False, status=status.HTTP_200_OK)
+        return JsonResponse({'role': data[0][2]}, safe=True, status=status.HTTP_200_OK)
     else:
-        return JsonResponse({'role': 'NA'}, safe=False, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'role': 'NA'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
 
 # 获取承运单
@@ -402,7 +402,7 @@ def get_carriage_bill(request):
                          'rent_money': float(data[i][5]),
                          'carry_money': float(data[i][6]),
                          'trackid': data[i][7]})
-    return JsonResponse({'data': list(ret_data)}, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse({'data': list(ret_data)}, safe=True, status=status.HTTP_200_OK)
 
 
 # 查询可用租用的箱子

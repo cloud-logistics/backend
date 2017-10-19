@@ -46,10 +46,10 @@ def containers_overview(request):
     try:
         with open(str(file_path)) as f:
             load_dict = json.load(f)
-        return JsonResponse(load_dict, safe=False, status=status.HTTP_200_OK)
+        return JsonResponse(load_dict, safe=True, status=status.HTTP_200_OK)
     except Exception, e:
         log.error('containers_overview response error, msg: ' + e.__str__())
-        return JsonResponse('', safe=False ,status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse('', safe=True ,status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @csrf_exempt
@@ -57,10 +57,10 @@ def satellites_overview(request):
     try:
         with open(str(file_path)) as f:
             load_dict = json.load(f)
-        return JsonResponse(load_dict, safe=False, status=status.HTTP_200_OK)
+        return JsonResponse(load_dict, safe=True, status=status.HTTP_200_OK)
     except Exception, e:
         log.error('satellites_overview response error, msg: ' + e.__str__())
-        return JsonResponse('', safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse('', safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # 实时报文
@@ -110,7 +110,7 @@ def realtime_message(request):
         }
 
         '''
-        return JsonResponse(json.loads(mock_json), safe=False, status=status.HTTP_200_OK)
+        return JsonResponse(json.loads(mock_json), safe=True, status=status.HTTP_200_OK)
 
     # 获取承运方
     carrier_data = query_list('select carrier_info.carrier_name,order_info.srcid,order_info.dstid '
@@ -260,7 +260,7 @@ def realtime_message(request):
                 'battery': {'value': float(battery), 'status': battery_status},
                 'boxStatus': {'num_of_collide': {'value': int(collide), 'status': collide_status},
                               'num_of_door_open': {'value': int(num_of_door_open), 'status': door_open_status}}}
-    return JsonResponse(ret_data, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse(ret_data, safe=True, status=status.HTTP_200_OK)
 
 
 # 实时位置
@@ -330,7 +330,7 @@ def realtime_position(request):
                 'endLocationName': end_location_name
                 }
 
-    return JsonResponse(ret_data, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse(ret_data, safe=True, status=status.HTTP_200_OK)
 
 
 # 报警监控
@@ -375,7 +375,7 @@ def alarm_monitor(request):
                          'num_of_collide': float(num_of_collide), 'num_of_door_open': float(num_of_door_open),
                          'battery': float(battery), 'robertOperationStatus': robert_operation_status,
                          'locationName': location_name, "endpointId": endpointid})
-    return JsonResponse({'alerts': ret_data}, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse({'alerts': ret_data}, safe=True, status=status.HTTP_200_OK)
 
 
 # 基础信息查询
@@ -405,7 +405,7 @@ def basic_info(request):
 
     ret_dic = {'basicInfo': ret_list}
 
-    return JsonResponse(ret_dic, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse(ret_dic, safe=True, status=status.HTTP_200_OK)
 
 
 @csrf_exempt
@@ -475,9 +475,9 @@ def history_path(request):
         except Exception, e:
             log.error(e)
         finally:
-            return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
+            return JsonResponse(final_response, safe=True, status=status.HTTP_200_OK)
     else:
-        return JsonResponse(final_response, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse(final_response, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @csrf_exempt
@@ -552,12 +552,12 @@ def history_message(request):
             #final
             final_response['result'] = json_record_list
             log.debug(json.dumps(final_response))
-            return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
+            return JsonResponse(final_response, safe=True, status=status.HTTP_200_OK)
         except Exception, e:
             log.error(repr(traceback.print_exc()))
-            return JsonResponse(final_response, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse(final_response, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        return JsonResponse(final_response, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse(final_response, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # 云箱状态汇总
@@ -629,7 +629,7 @@ def status_summary(request):
 
         ret_data.append(element)
 
-    return JsonResponse({"boxStatus": ret_data}, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse({"boxStatus": ret_data}, safe=True, status=status.HTTP_200_OK)
 
 
 # 基础信息管理
@@ -669,7 +669,7 @@ def basic_info_config(request):
     except Exception, e:
         log.error(e.message)
     finally:
-        return JsonResponse(response_msg, safe=False, status=status.HTTP_200_OK)
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
 @csrf_exempt
@@ -723,11 +723,11 @@ def options_to_show(request):
                     hardware_info_list = query_list('select id,hardware_detail from iot.hardware_info')
                     final_response['hardwareInfo'] = strip_tuple(hardware_info_list)
             log.debug(json.dumps(final_response))
-            return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
+            return JsonResponse(final_response, safe=True, status=status.HTTP_200_OK)
         else:
-            return JsonResponse(req_param, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse(req_param, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        return JsonResponse(req_param, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse(req_param, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @csrf_exempt
 def security_config(request):
@@ -792,12 +792,12 @@ def security_config(request):
                 save_to_db(sql_template % column_string)
             except Exception, e:
                 log.error(e)
-                return JsonResponse(final_response, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
+                return JsonResponse(final_response, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse(final_response, safe=True, status=status.HTTP_200_OK)
         else:
-            return JsonResponse(req_param, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse(req_param, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        return JsonResponse(req_param, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse(req_param, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # 我的云箱
@@ -824,7 +824,7 @@ def mycontainers(request):
         container_dict['locationName'] = gps_info_trans("%s,%s" % (gps_dic['lat'], gps_dic['lng']))
         container_info_list.append(container_dict)
     final_response['mycontainers'] = container_info_list
-    return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse(final_response, safe=True, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -854,7 +854,7 @@ def containers_available(request):
         container_info_list.append(container_dict)
 
     final_response['availablecontainers'] = container_info_list
-    return JsonResponse(final_response, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse(final_response, safe=True, status=status.HTTP_200_OK)
 
 
 # 我要租赁云箱
@@ -884,9 +884,9 @@ def rent(request):
                    'starttime,endtime,carrier,type,owner,rentstatus)VALUES (' 
                    '\'' + container_id + '\',' + start_time + ',' + end_time + ',' 
                    '1, ' + container_type + ',\'' + user + '\',1)')
-        return JsonResponse({'status': 'OK', 'containerId': container_id}, safe=False, status=status.HTTP_200_OK)
+        return JsonResponse({'status': 'OK', 'containerId': container_id}, safe=True, status=status.HTTP_200_OK)
     else:
-        return JsonResponse({'status': 'NA'}, safe=False, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'status': 'NA'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
 
 # 归还云箱
@@ -903,9 +903,9 @@ def return_container(request):
     if data[0][0] > 0:
         save_to_db('update iot.monservice_containerrentinfo set rentstatus = 0 '
                    'where deviceid = \'' + container_id + '\' and owner = \'' + user + '\'')
-        return JsonResponse({'status': 'OK'}, safe=False, status=status.HTTP_200_OK)
+        return JsonResponse({'status': 'OK'}, safe=True, status=status.HTTP_200_OK)
     else:
-        return JsonResponse({'status': 'NA'}, safe=False, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'status': 'NA'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -925,7 +925,7 @@ def verify_user(request):
         payload = jwt_payload_handler(u)
         token = jwt_encode_handler(payload)
         ret_dict['token'] = token
-        return JsonResponse(ret_dict, safe=False, status=status.HTTP_200_OK)
+        return JsonResponse(ret_dict, safe=True, status=status.HTTP_200_OK)
 
 
 # 向终端发送command
@@ -940,7 +940,7 @@ def send_command(request):
     conn.publish("commandChannel", command)
 
     conn.save()
-    return JsonResponse({"code": "200"}, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse({"code": "200"}, safe=True, status=status.HTTP_200_OK)
 
 
 # 实时报文温度、湿度曲线
@@ -983,9 +983,9 @@ def indicator_history(request):
     except Exception, e:
         log.error(e.message)
     if json.loads(request.body)['requiredParam'] == 'battery':
-        return JsonResponse({'battery': value_arr}, safe=False, status=status.HTTP_200_OK)
+        return JsonResponse({'battery': value_arr}, safe=True, status=status.HTTP_200_OK)
     else:
-        return JsonResponse({indicator: value_arr}, safe=False, status=status.HTTP_200_OK)
+        return JsonResponse({indicator: value_arr}, safe=True, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -993,16 +993,16 @@ def indicator_history(request):
 # @permission_classes((IsAuthenticated,))
 def analysis_result(request):
     # if request.user.has_perm('view_containerrentinfo'):
-    #     return JsonResponse({}, safe=False, status=status.HTTP_403_FORBIDDEN)
+    #     return JsonResponse({}, safe=True, status=status.HTTP_403_FORBIDDEN)
     # else:
     response = get_analysis_report()
-    return JsonResponse(response, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse(response, safe=True, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
 def operation_overview(request):
     response = get_operation_overview()
-    return JsonResponse(response, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse(response, safe=True, status=status.HTTP_200_OK)
 
 
 # 云箱安全参数
@@ -1032,7 +1032,7 @@ def get_security_config(request):
                             'operation_threshold_max': data[i][12],
                             'operation_threshold_min': data[i][13]})
 
-    return JsonResponse(return_data, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse(return_data, safe=True, status=status.HTTP_200_OK)
 
 
 # 将unicode转换utf-8编码
@@ -1059,7 +1059,7 @@ def is_same_position(cur_longitude, cur_latitude, dst_longitude, dst_latitude):
     if abs(float(cur_longitude) - float(dst_longitude)) < threshold and abs(float(cur_latitude) - float(dst_latitude)) < threshold:
         return True
     else:
-        return False
+        return True
 
 
 def get_utc(str_to_trans):
@@ -1150,65 +1150,67 @@ def get_analysis_report():
     ret1, ret2, ret3, ret4 = gen_random_param_list()
     final_response['goods_category'] = {"fish": ret1, "beaf": ret2, "chip": ret3, "gold": ret4}
     x_axis_time_list = gen_x_axis_time_list()
-    final_response['history_revenue'] = [{"time": x_axis_time_list[0], "value": random.randint(1000, 2000)},
-                                         {"time": x_axis_time_list[1], "value": random.randint(2000, 3000)},
-                                         {"time": x_axis_time_list[2], "value": random.randint(3000, 4000)},
-                                         {"time": x_axis_time_list[3], "value": random.randint(4000, 5000)},
-                                         {"time": x_axis_time_list[4], "value": random.randint(5000, 6000)},
-                                         {"time": x_axis_time_list[5], "value": random.randint(7000, 8000)},
-                                         {"time": x_axis_time_list[6], "value": random.randint(8000, 9000)},
-                                         {"time": x_axis_time_list[7], "value": random.randint(9000, 10000)},
-                                         {"time": x_axis_time_list[8], "value": random.randint(10000, 11000)},
-                                         {"time": x_axis_time_list[9], "value": random.randint(12000, 13000)},
-                                         {"time": x_axis_time_list[10], "value": random.randint(13000, 14000)},
-                                         {"time": x_axis_time_list[11], "value": random.randint(15000, 16000)}
+    foo = random.SystemRandom()
+    final_response['history_revenue'] = [{"time": x_axis_time_list[0], "value": foo.randint(1000, 2000)},
+                                         {"time": x_axis_time_list[1], "value": foo.randint(2000, 3000)},
+                                         {"time": x_axis_time_list[2], "value": foo.randint(3000, 4000)},
+                                         {"time": x_axis_time_list[3], "value": foo.randint(4000, 5000)},
+                                         {"time": x_axis_time_list[4], "value": foo.randint(5000, 6000)},
+                                         {"time": x_axis_time_list[5], "value": foo.randint(7000, 8000)},
+                                         {"time": x_axis_time_list[6], "value": foo.randint(8000, 9000)},
+                                         {"time": x_axis_time_list[7], "value": foo.randint(9000, 10000)},
+                                         {"time": x_axis_time_list[8], "value": foo.randint(10000, 11000)},
+                                         {"time": x_axis_time_list[9], "value": foo.randint(12000, 13000)},
+                                         {"time": x_axis_time_list[10], "value": foo.randint(13000, 14000)},
+                                         {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
                                          ]
-    final_response['history_profit_margin'] = [{"time": x_axis_time_list[0], "value": random.uniform(0.1, 0.3)},
-                                               {"time": x_axis_time_list[1], "value": random.uniform(0.2, 0.3)},
-                                               {"time": x_axis_time_list[2], "value": random.uniform(0.3, 0.3)},
-                                               {"time": x_axis_time_list[3], "value": random.uniform(0.3, 0.3)},
-                                               {"time": x_axis_time_list[4], "value": random.uniform(0.4, 0.6)},
-                                               {"time": x_axis_time_list[5], "value": random.uniform(0.5, 0.6)},
-                                               {"time": x_axis_time_list[6], "value": random.uniform(0.5, 0.6)},
-                                               {"time": x_axis_time_list[7], "value": random.uniform(0.6, 0.6)},
-                                               {"time": x_axis_time_list[8], "value": random.uniform(0.7, 0.9)},
-                                               {"time": x_axis_time_list[9], "value": random.uniform(0.7, 0.9)},
-                                               {"time": x_axis_time_list[10], "value": random.uniform(0.8, 0.9)},
-                                               {"time": x_axis_time_list[11], "value": random.uniform(0.8, 0.9)}
+    final_response['history_profit_margin'] = [{"time": x_axis_time_list[0], "value": foo.uniform(0.1, 0.3)},
+                                               {"time": x_axis_time_list[1], "value": foo.uniform(0.2, 0.3)},
+                                               {"time": x_axis_time_list[2], "value": foo.uniform(0.3, 0.3)},
+                                               {"time": x_axis_time_list[3], "value": foo.uniform(0.3, 0.3)},
+                                               {"time": x_axis_time_list[4], "value": foo.uniform(0.4, 0.6)},
+                                               {"time": x_axis_time_list[5], "value": foo.uniform(0.5, 0.6)},
+                                               {"time": x_axis_time_list[6], "value": foo.uniform(0.5, 0.6)},
+                                               {"time": x_axis_time_list[7], "value": foo.uniform(0.6, 0.6)},
+                                               {"time": x_axis_time_list[8], "value": foo.uniform(0.7, 0.9)},
+                                               {"time": x_axis_time_list[9], "value": foo.uniform(0.7, 0.9)},
+                                               {"time": x_axis_time_list[10], "value": foo.uniform(0.8, 0.9)},
+                                               {"time": x_axis_time_list[11], "value": foo.uniform(0.8, 0.9)}
                                               ]
-    final_response['history_orders'] = [{"time": x_axis_time_list[0], "value": random.randint(1000, 2000)},
-                                         {"time": x_axis_time_list[1], "value": random.randint(2000, 3000)},
-                                         {"time": x_axis_time_list[2], "value": random.randint(3000, 4000)},
-                                         {"time": x_axis_time_list[3], "value": random.randint(4000, 5000)},
-                                         {"time": x_axis_time_list[4], "value": random.randint(5000, 6000)},
-                                         {"time": x_axis_time_list[5], "value": random.randint(7000, 8000)},
-                                         {"time": x_axis_time_list[6], "value": random.randint(8000, 9000)},
-                                         {"time": x_axis_time_list[7], "value": random.randint(9000, 10000)},
-                                         {"time": x_axis_time_list[8], "value": random.randint(10000, 11000)},
-                                         {"time": x_axis_time_list[9], "value": random.randint(12000, 13000)},
-                                         {"time": x_axis_time_list[10], "value": random.randint(13000, 14000)},
-                                         {"time": x_axis_time_list[11], "value": random.randint(15000, 16000)}
+    final_response['history_orders'] = [{"time": x_axis_time_list[0], "value": foo.randint(1000, 2000)},
+                                         {"time": x_axis_time_list[1], "value": foo.randint(2000, 3000)},
+                                         {"time": x_axis_time_list[2], "value": foo.randint(3000, 4000)},
+                                         {"time": x_axis_time_list[3], "value": foo.randint(4000, 5000)},
+                                         {"time": x_axis_time_list[4], "value": foo.randint(5000, 6000)},
+                                         {"time": x_axis_time_list[5], "value": foo.randint(7000, 8000)},
+                                         {"time": x_axis_time_list[6], "value": foo.randint(8000, 9000)},
+                                         {"time": x_axis_time_list[7], "value": foo.randint(9000, 10000)},
+                                         {"time": x_axis_time_list[8], "value": foo.randint(10000, 11000)},
+                                         {"time": x_axis_time_list[9], "value": foo.randint(12000, 13000)},
+                                         {"time": x_axis_time_list[10], "value": foo.randint(13000, 14000)},
+                                         {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
                                         ]
-    final_response['history_use_of_containers'] = [{"time": x_axis_time_list[0], "value": random.randint(1000, 2000)},
-                                                   {"time": x_axis_time_list[1], "value": random.randint(2000, 3000)},
-                                                   {"time": x_axis_time_list[2], "value": random.randint(3000, 4000)},
-                                                   {"time": x_axis_time_list[3], "value": random.randint(4000, 5000)},
-                                                   {"time": x_axis_time_list[4], "value": random.randint(5000, 6000)},
-                                                   {"time": x_axis_time_list[5], "value": random.randint(7000, 8000)},
-                                                   {"time": x_axis_time_list[6], "value": random.randint(8000, 9000)},
-                                                   {"time": x_axis_time_list[7], "value": random.randint(9000, 10000)},
-                                                   {"time": x_axis_time_list[8], "value": random.randint(10000, 11000)},
-                                                   {"time": x_axis_time_list[9], "value": random.randint(12000, 13000)},
-                                                   {"time": x_axis_time_list[10], "value": random.randint(13000, 14000)},
-                                                   {"time": x_axis_time_list[11], "value": random.randint(15000, 16000)}
+    final_response['history_use_of_containers'] = [{"time": x_axis_time_list[0], "value": foo.randint(1000, 2000)},
+                                                   {"time": x_axis_time_list[1], "value": foo.randint(2000, 3000)},
+                                                   {"time": x_axis_time_list[2], "value": foo.randint(3000, 4000)},
+                                                   {"time": x_axis_time_list[3], "value": foo.randint(4000, 5000)},
+                                                   {"time": x_axis_time_list[4], "value": foo.randint(5000, 6000)},
+                                                   {"time": x_axis_time_list[5], "value": foo.randint(7000, 8000)},
+                                                   {"time": x_axis_time_list[6], "value": foo.randint(8000, 9000)},
+                                                   {"time": x_axis_time_list[7], "value": foo.randint(9000, 10000)},
+                                                   {"time": x_axis_time_list[8], "value": foo.randint(10000, 11000)},
+                                                   {"time": x_axis_time_list[9], "value": foo.randint(12000, 13000)},
+                                                   {"time": x_axis_time_list[10], "value": foo.randint(13000, 14000)},
+                                                   {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
                                                    ]
     return final_response
 
 
 def gen_random_param_list():
-    param1 = random.uniform(0.1, 0.3)
-    param2 = random.uniform(0.1, 0.3)
-    param3 = random.uniform(0.1, 0.3)
+    foo = random.SystemRandom()
+    param1 = foo.uniform(0.1, 0.3)
+    param2 = foo.uniform(0.1, 0.3)
+    param3 = foo.uniform(0.1, 0.3)
     param4 = 1 - param1 - param2 - param3
     return param1, param2, param3, param4
 
@@ -1233,45 +1235,46 @@ def gen_x_axis_time_list():
 
 def get_operation_overview():
     final_response = {}
-    final_response['container_location'] = {"China": random.randint(2000, 4000),
-                                            "USA": random.randint(2000, 4000),
-                                            "Europe": random.randint(1500, 3000),
-                                            "India": random.randint(1500, 3000),
-                                            "Japan": random.randint(1000, 2000),
-                                            "Canada": random.randint(500, 1000),
-                                            "other": random.randint(500, 1000)
+    foo = random.SystemRandom()
+    final_response['container_location'] = {"China": foo.randint(2000, 4000),
+                                            "USA": foo.randint(2000, 4000),
+                                            "Europe": foo.randint(1500, 3000),
+                                            "India": foo.randint(1500, 3000),
+                                            "Japan": foo.randint(1000, 2000),
+                                            "Canada": foo.randint(500, 1000),
+                                            "other": foo.randint(500, 1000)
                                             }
     container_num_int = 0
     for item in final_response['container_location'].values():
         container_num_int = container_num_int + item
     final_response['container_num'] = container_num_int
-    final_response['container_on_lease'] = random.randint(1000, container_num_int)
+    final_response['container_on_lease'] = foo.randint(1000, container_num_int)
     final_response['container_on_transportation'] = container_num_int - final_response['container_on_lease']
     x_axis_time_list = gen_x_axis_time_list()
-    final_response['container_on_lease_history'] = [{"time": x_axis_time_list[0], "value": random.randint(1000, 2000)},
-                                         {"time": x_axis_time_list[1], "value": random.randint(2000, 3000)},
-                                         {"time": x_axis_time_list[2], "value": random.randint(3000, 4000)},
-                                         {"time": x_axis_time_list[3], "value": random.randint(4000, 5000)},
-                                         {"time": x_axis_time_list[4], "value": random.randint(5000, 6000)},
-                                         {"time": x_axis_time_list[5], "value": random.randint(7000, 8000)},
-                                         {"time": x_axis_time_list[6], "value": random.randint(8000, 9000)},
-                                         {"time": x_axis_time_list[7], "value": random.randint(9000, 10000)},
-                                         {"time": x_axis_time_list[8], "value": random.randint(10000, 11000)},
-                                         {"time": x_axis_time_list[9], "value": random.randint(12000, 13000)},
-                                         {"time": x_axis_time_list[10], "value": random.randint(13000, 14000)},
-                                         {"time": x_axis_time_list[11], "value": random.randint(15000, 16000)}
+    final_response['container_on_lease_history'] = [{"time": x_axis_time_list[0], "value": foo.randint(1000, 2000)},
+                                         {"time": x_axis_time_list[1], "value": foo.randint(2000, 3000)},
+                                         {"time": x_axis_time_list[2], "value": foo.randint(3000, 4000)},
+                                         {"time": x_axis_time_list[3], "value": foo.randint(4000, 5000)},
+                                         {"time": x_axis_time_list[4], "value": foo.randint(5000, 6000)},
+                                         {"time": x_axis_time_list[5], "value": foo.randint(7000, 8000)},
+                                         {"time": x_axis_time_list[6], "value": foo.randint(8000, 9000)},
+                                         {"time": x_axis_time_list[7], "value": foo.randint(9000, 10000)},
+                                         {"time": x_axis_time_list[8], "value": foo.randint(10000, 11000)},
+                                         {"time": x_axis_time_list[9], "value": foo.randint(12000, 13000)},
+                                         {"time": x_axis_time_list[10], "value": foo.randint(13000, 14000)},
+                                         {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
                                          ]
-    final_response['container_on_transportation_history'] = [{"time": x_axis_time_list[0], "value": random.randint(1000, 2000)},
-                                         {"time": x_axis_time_list[1], "value": random.randint(2000, 3000)},
-                                         {"time": x_axis_time_list[2], "value": random.randint(3000, 4000)},
-                                         {"time": x_axis_time_list[3], "value": random.randint(4000, 5000)},
-                                         {"time": x_axis_time_list[4], "value": random.randint(5000, 6000)},
-                                         {"time": x_axis_time_list[5], "value": random.randint(7000, 8000)},
-                                         {"time": x_axis_time_list[6], "value": random.randint(8000, 9000)},
-                                         {"time": x_axis_time_list[7], "value": random.randint(9000, 10000)},
-                                         {"time": x_axis_time_list[8], "value": random.randint(10000, 11000)},
-                                         {"time": x_axis_time_list[9], "value": random.randint(12000, 13000)},
-                                         {"time": x_axis_time_list[10], "value": random.randint(13000, 14000)},
-                                         {"time": x_axis_time_list[11], "value": random.randint(15000, 16000)}
+    final_response['container_on_transportation_history'] = [{"time": x_axis_time_list[0], "value": foo.randint(1000, 2000)},
+                                         {"time": x_axis_time_list[1], "value": foo.randint(2000, 3000)},
+                                         {"time": x_axis_time_list[2], "value": foo.randint(3000, 4000)},
+                                         {"time": x_axis_time_list[3], "value": foo.randint(4000, 5000)},
+                                         {"time": x_axis_time_list[4], "value": foo.randint(5000, 6000)},
+                                         {"time": x_axis_time_list[5], "value": foo.randint(7000, 8000)},
+                                         {"time": x_axis_time_list[6], "value": foo.randint(8000, 9000)},
+                                         {"time": x_axis_time_list[7], "value": foo.randint(9000, 10000)},
+                                         {"time": x_axis_time_list[8], "value": foo.randint(10000, 11000)},
+                                         {"time": x_axis_time_list[9], "value": foo.randint(12000, 13000)},
+                                         {"time": x_axis_time_list[10], "value": foo.randint(13000, 14000)},
+                                         {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
                                         ]
     return final_response
