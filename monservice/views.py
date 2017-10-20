@@ -381,6 +381,11 @@ def alarm_monitor(request):
 # 基础信息查询
 @csrf_exempt
 def basic_info(request):
+    try:
+        id = json.loads(request.body)['containerId']
+    except Exception, e:
+        id = NOT_APPLICABLE
+        log.error(e.message)
     data = query_list('select box_info.deviceid, box_type_info.box_type_name, produce_area_info.address, '
                       'manufacturer_info.name, carrier_info.carrier_name, date_of_production '
                       'from iot.box_info box_info '
@@ -390,6 +395,7 @@ def basic_info(request):
                       'left join iot.carrier_info on order_info.carrierid = carrier_info.id '
                       'left join iot.produce_area_info produce_area_info on box_info.produce_area = produce_area_info.id '
                       'left join iot.manufacturer_info manufacturer_info on box_info.manufacturer = manufacturer_info.id '
+                      'where box_info.deviceid = \'' + id + '\' or \'' + id + '\' = \'\' '
                       'group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
                       'carrier_name, date_of_production')
     ret_list = []
