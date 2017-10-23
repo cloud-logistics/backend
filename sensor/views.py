@@ -49,7 +49,7 @@ def parse(msg):
     body = json.loads(str(msg))
     s = body['data']
     meta = body['meta']
-    deviceid = str(s['device_id'])
+    deviceid = str(s['deviceid'])
     endpointid = str(meta['endpointId'])
     legacy = str(s['legacy'])
     data_list = []
