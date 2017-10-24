@@ -62,18 +62,18 @@ class EnterpriseUser(models.Model):
     group = models.ForeignKey(AuthUserGroup, related_name='enterprise_user_fk')
 
 
-# class UserAppointment(models.Model):
-#     appointment_id = models.CharField(max_length=48, primary_key=True)
-#     user_id = models.ForeignKey(EnterpriseUser, related_name='user_appointment_fk')
-#     appointment_time = models.DateTimeField(auto_now_add=True)
-
-
-class AppointmentDetail(models.Model):
+class UserAppointment(models.Model):
     appointment_id = models.CharField(max_length=48, primary_key=True)
     user_id = models.ForeignKey(EnterpriseUser, related_name='user_appointment_fk')
     appointment_time = models.DateTimeField(default=datetime.datetime.today())
+
+
+class AppointmentDetail(models.Model):
+    detail_id = models.CharField(max_length=48, primary_key=True)
+    appointment_id = models.ForeignKey(UserAppointment, related_name='appointment_detail_id_fk')
     box_type = models.ForeignKey(BoxTypeInfo, related_name='appointment_detail_box_type_fk')
     box_num = models.IntegerField(default=0)
+    site_id = models.ForeignKey(SiteInfo)
 
 
 class UserLeaseInfo(models.Model):
@@ -81,10 +81,11 @@ class UserLeaseInfo(models.Model):
     user_id = models.ForeignKey(EnterpriseUser, related_name='user_lease_info_enterprise_user_fk')
     lease_start_time = models.DateTimeField()
     lease_end_time = models.DateTimeField()
-    lease_admin = models.ForeignKey(RentalServiceAdmin, related_name='user_lease_info_rental_service_admin_fk')
+    lease_admin_off = models.CharField(max_length=48)
+    lease_admin_on = models.CharField(max_length=48)
     box_id = models.ForeignKey(BoxInfo, related_name='user_lease_info_box_info_fk')
-    site_id = models.ForeignKey(SiteInfo, related_name='user_lease_info_site_info_fk')
-    appointment_id = models.ForeignKey(AppointmentDetail, related_name='user_lease_info_appointment_detail_fk')
+    off_site_id = models.IntegerField()
+    on_site_id = models.IntegerField()
     rent = models.BigIntegerField(default=0)
 
 
@@ -92,7 +93,6 @@ class UserRentDay(models.Model):
     user_rent_day_id = models.AutoField(primary_key=True)
     user_id = models.ForeignKey(EnterpriseUser, related_name='user_rent_day_enterprise_user_fk')
     enterprise_id = models.ForeignKey(EnterpriseInfo, related_name='user_rent_day_enterprise_info_fk')
-    appointment_id = models.ForeignKey(AppointmentDetail, related_name='user_rent_day_appointment_detail_fk')
     date = models.DateField()
     rent = models.BigIntegerField(default=0)
 
@@ -101,7 +101,6 @@ class UserRentMonth(models.Model):
     user_rent_month_id = models.AutoField(primary_key=True)
     user_id = models.ForeignKey(EnterpriseUser, related_name='user_rent_month_enterprise_user_fk')
     enterprise_id = models.ForeignKey(EnterpriseInfo, related_name='user_rent_month_enterprise_info_fk')
-    appointment_id = models.ForeignKey(AppointmentDetail, related_name='user_rent_month_appointment_detail_fk')
     month = models.DateField()
     rent = models.BigIntegerField(default=0)
 
