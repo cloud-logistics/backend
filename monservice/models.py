@@ -128,3 +128,42 @@ class ContainerRentInfo(models.Model):
         )
 
 
+class BoxTypeInfo(models.Model):
+    id = models.AutoField(primary_key=True)
+    box_type_name = models.CharField(max_length=128, default='')
+    box_type_detail = models.CharField(max_length=128, default='')
+    interval_time = models.IntegerField()
+    temperature_threshold_min = models.IntegerField()
+    temperature_threshold_max = models.IntegerField()
+    humidity_threshold_min = models.IntegerField()
+    humidity_threshold_max = models.IntegerField()
+    collision_threshold_min = models.IntegerField()
+    collision_threshold_max = models.IntegerField()
+    battery_threshold_min = models.IntegerField()
+    battery_threshold_max = models.IntegerField()
+    operation_threshold_min = models.IntegerField()
+    operation_threshold_max = models.IntegerField()
+    price = models.FloatField()
+    length = models.FloatField()
+    width = models.FloatField()
+    height = models.FloatField()
+
+
+class BoxInfo(models.Model):
+    deviceid = models.CharField(max_length=48, primary_key=True)
+    type = models.ForeignKey(BoxTypeInfo, related_name='box_info_box_type_fk')
+    date_of_production = models.CharField(max_length=128)
+    manufacturer = models.IntegerField()
+    produce_area = models.IntegerField()
+    hardware = models.IntegerField()
+    battery = models.IntegerField()
+    carrier = models.IntegerField()
+    tid = models.CharField(max_length=48)
+
+
+class SiteInfo(models.Model):
+    id = models.AutoField(primary_key=True)
+    location = models.CharField(max_length=128, default='')
+    latitude = models.CharField(max_length=16, default='0.0')
+    longitude = models.CharField(max_length=16, default='0.0')
+    site_code = models.CharField(max_length=48, default='')

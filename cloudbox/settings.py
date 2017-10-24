@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # 'sensor.apps.QuickstartConfig',
     'monservice.apps.MonserviceConfig',
+    'rentservice.apps.RentserviceConfig',
+    #'rent_service.apps.RentServiceConfig'
     'rest_framework',
     'rest_framework_jwt',
 ]
