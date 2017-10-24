@@ -34,6 +34,8 @@ class EnterpriseInfo(models.Model):
     enterprise_license_id_url = models.CharField(max_length=256)
     enterprise_legal_rep_name = models.CharField(max_length=128)
     enterprise_email = models.CharField(max_length=128)
+    enterprise_deposit = models.BigIntegerField(default=0)
+    enterprise_deposit_status = models.IntegerField(default=0)
     register_time = models.DateTimeField(default=datetime.datetime.today())
 
 
