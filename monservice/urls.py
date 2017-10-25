@@ -21,6 +21,8 @@ urlpatterns = [
     url(r'^securityConfig$', views.security_config),              # 云箱安全参数设置
     url(r'^basicInfoManage$', views.basic_info_manage),           # 基础信息管理
     url(r'^basicInfoConfig$', views.basic_info_config),           # 云箱基础信息录入
+    url(r'^basicInfo/(?P<id>\w+)/', views.remove_basic_info),     # 云箱基础信息删除
+    url(r'^basicInfoMod$', views.modify_basic_info),              # 云箱基础信息修改
     url(r'^mycontainers$', views.mycontainers),                   # 承运方页面
     url(r'^containersonlease$', views.containers_on_release),     # 承运方在租页面
     url(r'^availablecontainers$', views.containers_available),    # 承运方可用云箱

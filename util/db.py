@@ -54,6 +54,23 @@ def query_list(sql):
     return rows
 
 
+def delete_from_db(sql):
+    try:
+        pool = get_conn_pool()
+        conn = pool.getconn()
+        cur = conn.cursor()
+        log.debug('sql: ' + sql)
+        cur.execute(sql)
+        cur.close()
+    except Exception, e:
+        log.error('delete_from_db error,sql:' + sql)
+        conn.rollback()
+    finally:
+        if conn:
+            conn.commit()
+            pool.putconn(conn)
+
+
 # 防止sql注入查询
 def query_list_inject(sql, params):
     pool = get_conn_pool()
