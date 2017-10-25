@@ -385,7 +385,7 @@ def basic_info(request):
     try:
         id = json.loads(request.body)['containerId']
     except Exception, e:
-        id = NOT_APPLICABLE
+        id = ''
         log.error(e.message)
     data = query_list('select box_info.deviceid, box_type_info.box_type_name, produce_area_info.address, '
                       'manufacturer_info.name, carrier_info.carrier_name, date_of_production '
@@ -1023,6 +1023,10 @@ def indicator_history(request):
     try:
         id = json.loads(request.body)['containerId']
         indicator = json.loads(request.body)['requiredParam']
+    except Exception, e:
+        id= ""
+        indicator = "temperature"
+    try:
         if indicator == 'battery':
             indicator = 'temperature'   # 电量没有上报数据，暂时用温度代替
 
