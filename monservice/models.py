@@ -1,3 +1,6 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from __future__ import unicode_literals
 
 from django.db import models
@@ -161,9 +164,27 @@ class BoxInfo(models.Model):
     tid = models.CharField(max_length=48)
 
 
+# 国家
+class Nation(models.Model):
+    nation_id = models.AutoField(primary_key=True)
+    nation_name = models.CharField(max_length=100, default='')
+
+
+# 城市
+class City(models.Model):
+    city_name = models.CharField(max_length=50)
+    state_name = models.CharField(max_length=50)
+    nation_name = models.CharField(max_length=50)
+    longitude = models.CharField(max_length=20)
+    latitude = models.CharField(max_length=20)
+    area_name = models.CharField(max_length=10)
+    nation = models.ForeignKey(Nation, related_name='city_fk', default=1)
+
+
 class SiteInfo(models.Model):
     id = models.AutoField(primary_key=True)
     location = models.CharField(max_length=128, default='')
     latitude = models.CharField(max_length=16, default='0.0')
     longitude = models.CharField(max_length=16, default='0.0')
     site_code = models.CharField(max_length=48, default='')
+    city = models.ForeignKey(Nation, related_name='site_info_fk', default=1)
