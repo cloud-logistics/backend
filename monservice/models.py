@@ -168,6 +168,8 @@ class BoxInfo(models.Model):
 class Nation(models.Model):
     nation_id = models.AutoField(primary_key=True)
     nation_name = models.CharField(max_length=100, default='')
+    pic_url = models.CharField(max_length=200, default='')
+    sorted_key = models.CharField(max_length=10, default='')
 
 
 # 城市
@@ -178,7 +180,12 @@ class City(models.Model):
     longitude = models.CharField(max_length=20)
     latitude = models.CharField(max_length=20)
     area_name = models.CharField(max_length=10)
+    culture = models.TextField(default='')
+    taboo = models.TextField(default='')
+    picture_url = models.CharField(max_length=200, default='')
     nation = models.ForeignKey(Nation, related_name='city_fk', default=1)
+    sorted_key = models.CharField(max_length=10, default='')
+    flag = models.IntegerField(default=0)  # 酒店
 
 
 class SiteInfo(models.Model):
@@ -187,4 +194,4 @@ class SiteInfo(models.Model):
     latitude = models.CharField(max_length=16, default='0.0')
     longitude = models.CharField(max_length=16, default='0.0')
     site_code = models.CharField(max_length=48, default='')
-    city = models.ForeignKey(Nation, related_name='site_info_fk', default=1)
+    city = models.ForeignKey(City, related_name='site_info_fk', default=1)

@@ -11,9 +11,10 @@ import redis
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
-from util.db import query_list, save_to_db
+from util.db import query_list, save_to_db, delete_from_db
 from util.geo import cal_position
 from util import logger
+from util.cid import generate_cid
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from models import ContainerRentInfo
 from serializers import ContainerRentInfoSerializer
@@ -689,6 +690,26 @@ def basic_info_manage(request):
     pass
 
 
+# 云箱新ID生成
+@csrf_exempt
+def new_containerid(request):
+    try:
+        data = json.loads(request.body)
+        category = to_str(data['category'])  # 云箱类型
+        sql = 'select max(id) from iot.box_info'
+        id_query = query_list(sql)
+        if len(id_query) > 0:
+            sn = id_query[0][0] + 1
+        else:
+            sn = 1
+        cid = generate_cid(sn, category)
+        ret_data = {'containerId': cid}
+    except Exception, e:
+        log.error(e.message)
+    finally:
+        return JsonResponse(ret_data, safe=True, status=status.HTTP_200_OK)
+
+
 # 云箱基础信息录入
 @csrf_exempt
 def basic_info_config(request):
@@ -721,6 +742,51 @@ def basic_info_config(request):
         log.error(e.message)
     finally:
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+
+# 修改云箱基础信息
+@api_view(['PUT'])
+# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+# @permission_classes((IsAuthenticated,))
+def modify_basic_info(request):
+    try:
+        response_msg = 'save successfully.'
+        data = json.loads(request.body)
+        container_id = to_str(data['containerId'])  # 云箱id
+        date_of_production = to_str(data['manufactureTime'])  # 生产日期
+        battery_info = to_str(data['batteryInfo'])  # 电源信息
+        manufacturer = to_str(data['factory'])  # 生产厂家
+        produce_area = to_str(data['factoryLocation'])  # 生产地点
+        hardware_info = to_str(data['hardwareInfo'])  # 智能硬件信息
+        carrier = 1
+        # carrier = to_str(data['carrier'])                       # 承运人
+
+        sql = '''update iot.box_info set type = 1, date_of_production = '%s',  manufacturer = '%s', produce_area = '%s', hardware = '%s',
+            battery = '%s' where deviceid = '%s' ''' % (date_of_production, str(manufacturer), str(produce_area), str(hardware_info), str(battery_info), container_id)
+        save_to_db(sql)
+
+    except Exception, e:
+        log.error(e.message)
+    finally:
+        return JsonResponse(response_msg, safe=False, status=status.HTTP_200_OK)
+
+
+# 删除云箱基础信息
+@api_view(['DELETE'])
+# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+# @permission_classes((IsAuthenticated,))
+def remove_basic_info(request, id):
+    try:
+        container_id = str(id)
+        response_msg = 'save successfully.'
+        sql = '''delete from iot.box_info where deviceid = '%s' ''' % container_id
+        delete_from_db(sql)
+
+    except Exception, e:
+        log.error(e.message)
+    finally:
+        return JsonResponse(response_msg, safe=False, status=status.HTTP_200_OK)
 
 
 @csrf_exempt
