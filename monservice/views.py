@@ -301,7 +301,7 @@ def realtime_position(request):
         'left join iot.carrier_info carrier_info on carrier_info.id = order_info.carrierid '
         'left join iot.site_info site_info_src on site_info_src.id = order_info.srcid '
         'left join iot.site_info site_info_dst on site_info_dst.id = order_info.dstid '
-        'where box_info.deviceid = \'' + id + '\' and order_info.endtime > CAST(extract(epoch from now()) as text)'
+        'where box_info.deviceid = \'' + id + '\' '
         'group by box_info.deviceid,carrier_info.carrier_name, site_info_src.location, site_info_dst.location')
 
     if len(data) > 0:
@@ -332,7 +332,8 @@ def realtime_position(request):
         dst_longitude = ZERO
 
     cur_data = query_list('select latitude,longitude from iot.sensor_data '
-                          'where deviceid = \'' + clientid + '\' order by timestamp desc limit 1')
+                          'where deviceid = \'' + clientid + '\' '
+                          'and latitude <> \'0\' and longitude <> \'0\' order by timestamp desc limit 1')
     if len(cur_data) > 0:
         cur_latitude = cal_position(cur_data[0][0])
         cur_longitude = cal_position(cur_data[0][1])
@@ -411,18 +412,7 @@ def alarm_monitor(request):
 # 基础信息查询
 @csrf_exempt
 def basic_info(request):
-    try:
-        parameters = json.loads(request.body)
-        carrier = parameters['carrier']
-        container_type = parameters['containerType']
-        start_time = parameters['startTime']
-        end_time = parameters['endTime']
-        factory = parameters['factory']
-        factory_ocation = parameters['factoryLocation']
-        id = parameters['containerId']
-    except Exception, e:
-        id = ''
-        log.error(e.message)
+
     data = query_list('select box_info.deviceid, box_type_info.box_type_name, produce_area_info.address, '
                       'manufacturer_info.name, carrier_info.carrier_name, date_of_production '
                       'from iot.box_info box_info '
@@ -432,14 +422,7 @@ def basic_info(request):
                       'left join iot.carrier_info on order_info.carrierid = carrier_info.id '
                       'left join iot.produce_area_info produce_area_info on box_info.produce_area = produce_area_info.id '
                       'left join iot.manufacturer_info manufacturer_info on box_info.manufacturer = manufacturer_info.id '
-                      'where (box_info.deviceid = \'' + id + '\' or \'' + id + '\' = \'\') '
-                      'and carrier_info.id = ' + str(carrier) +
-                      ' and box_info.type = ' + str(container_type) +
-                      ' and manufacturer_info.id = ' + str(factory) +
-                      ' and produce_area_info.id = ' + str(factory_ocation) +
-                      ' and date_of_production >= \'' + str(start_time) +
-                      '\' and date_of_production < \'' + str(end_time) +
-                      '\' group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
+                      'group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
                       'carrier_name, date_of_production')
     ret_list = []
     for item in data:
