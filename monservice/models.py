@@ -195,3 +195,4 @@ class SiteInfo(models.Model):
     longitude = models.CharField(max_length=16, default='0.0')
     site_code = models.CharField(max_length=48, default='')
     city = models.ForeignKey(City, related_name='site_info_fk', default=1)
+    nation = models.ForeignKey(Nation, related_name='site_nation_fk', default=1)
