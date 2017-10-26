@@ -45,12 +45,32 @@ REDIS_MAP_KEY = 'gpsmap'
 @csrf_exempt
 def containers_overview(request):
     try:
-        with open(str(file_path)) as f:
-            load_dict = json.load(f)
-        return JsonResponse(load_dict, safe=True, status=status.HTTP_200_OK)
+        container_info_list = []
+        data = query_list('select box_info.deviceid,box_type_info.box_type_name, '
+                          'C.latitude,C.longitude '
+                          'from iot.box_info box_info '
+                          'left join iot.box_type_info box_type_info '
+                          'on box_info.type = box_type_info.id ' 
+                          'left join '
+                          '(select B.* from (select max(timestamp) as timestamp ,deviceid ' 
+                          'from iot.sensor_data group by deviceid) A ' 
+                          'left join iot.sensor_data B '
+                          'on A.timestamp = B.timestamp and A.deviceid = B.deviceid) C '
+                          'on box_info.deviceid = C.deviceid '
+                          'order by deviceid asc')
+        for item in data:
+            container_dict = {}
+            container_dict['title'] = item[0]
+            lng = cal_position((item[3], '0')[item[3] is None])
+            lat = cal_position((item[2], '0')[item[2] is None])
+            gps_dic = {'lng': float(lng), 'lat': float(lat)}
+            container_dict['position'] = gps_dic
+            container_dict['detail'] = gps_info_trans("%s,%s" % (gps_dic['lat'], gps_dic['lng']))
+            container_info_list.append(container_dict)
+        return JsonResponse(container_info_list, safe=False, status=status.HTTP_200_OK)
     except Exception, e:
         log.error('containers_overview response error, msg: ' + e.__str__())
-        return JsonResponse('', safe=True ,status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse('', safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @csrf_exempt
@@ -58,10 +78,10 @@ def satellites_overview(request):
     try:
         with open(str(file_path)) as f:
             load_dict = json.load(f)
-        return JsonResponse(load_dict, safe=True, status=status.HTTP_200_OK)
+        return JsonResponse(load_dict, safe=False, status=status.HTTP_200_OK)
     except Exception, e:
         log.error('satellites_overview response error, msg: ' + e.__str__())
-        return JsonResponse('', safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse('', safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # 实时报文
@@ -159,7 +179,7 @@ def realtime_message(request):
 
     # 获取传感器数据
     sensor_data = query_list('select temperature,humidity,longitude,latitude,speed,collide,light,timestamp '
-                             'from iot.sensor_data where deviceid = \'' + id + '\' and longitude <> \'0\' and latitude <> \'0\' order by timestamp desc limit 1')
+                             'from iot.sensor_data where deviceid = \'' + id + '\' order by timestamp desc limit 1')
     if len(sensor_data) > 0:
         temperature = sensor_data[0][0]
         humidity = sensor_data[0][1]
@@ -281,7 +301,7 @@ def realtime_position(request):
         'left join iot.carrier_info carrier_info on carrier_info.id = order_info.carrierid '
         'left join iot.site_info site_info_src on site_info_src.id = order_info.srcid '
         'left join iot.site_info site_info_dst on site_info_dst.id = order_info.dstid '
-        'where box_info.deviceid = \'' + id + '\' and order_info.endtime > CAST(extract(epoch from now()) as text)'
+        'where box_info.deviceid = \'' + id + '\' '
         'group by box_info.deviceid,carrier_info.carrier_name, site_info_src.location, site_info_dst.location')
 
     if len(data) > 0:
@@ -312,7 +332,8 @@ def realtime_position(request):
         dst_longitude = ZERO
 
     cur_data = query_list('select latitude,longitude from iot.sensor_data '
-                          'where deviceid = \'' + clientid + '\' order by timestamp desc limit 1')
+                          'where deviceid = \'' + clientid + '\' '
+                          'and latitude <> \'0\' and longitude <> \'0\' order by timestamp desc limit 1')
     if len(cur_data) > 0:
         cur_latitude = cal_position(cur_data[0][0])
         cur_longitude = cal_position(cur_data[0][1])
@@ -337,6 +358,13 @@ def realtime_position(request):
 # 报警监控
 @csrf_exempt
 def alarm_monitor(request):
+    parameters = json.loads(request.body)
+    try:
+        alert_type_id = parameters['alertType']
+        deviceid = parameters['containerId']
+    except Exception, e:
+        deviceid = ''
+        log.error(e.message)
     data = query_list('select alarm_info.deviceid,alert_level_info.level,alarm_info.timestamp,'
                       'alert_code_info.description,alarm_info.code,alarm_info.status,'
                       'carrier_info.carrier_name,alarm_info.longitude,alarm_info.latitude,'
@@ -347,7 +375,9 @@ def alarm_monitor(request):
                       'left join iot.alert_level_info alert_level_info on alarm_info.level = alert_level_info.id '
                       'left join iot.alert_code_info alert_code_info on alarm_info.code = alert_code_info.errcode '
                       'left join iot.carrier_info carrier_info on carrier_info.id = carrier '
-                      'where alarm_info.alarm_status = 1 order by timestamp desc')
+                      'where alarm_info.alarm_status = 1 and alert_code_info.id = ' + str(alert_type_id) +
+                      ' and (alarm_info.deviceid = \'' + to_str(deviceid) + '\' or \'' + deviceid + '\'= \'\') '
+                      'order by timestamp desc')
     ret_data = []
 
     for record in data:
@@ -382,11 +412,7 @@ def alarm_monitor(request):
 # 基础信息查询
 @csrf_exempt
 def basic_info(request):
-    try:
-        id = json.loads(request.body)['containerId']
-    except Exception, e:
-        id = ''
-        log.error(e.message)
+
     data = query_list('select box_info.deviceid, box_type_info.box_type_name, produce_area_info.address, '
                       'manufacturer_info.name, carrier_info.carrier_name, date_of_production '
                       'from iot.box_info box_info '
@@ -396,7 +422,6 @@ def basic_info(request):
                       'left join iot.carrier_info on order_info.carrierid = carrier_info.id '
                       'left join iot.produce_area_info produce_area_info on box_info.produce_area = produce_area_info.id '
                       'left join iot.manufacturer_info manufacturer_info on box_info.manufacturer = manufacturer_info.id '
-                      'where box_info.deviceid = \'' + id + '\' or \'' + id + '\' = \'\' '
                       'group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
                       'carrier_name, date_of_production')
     ret_list = []
@@ -573,7 +598,9 @@ def history_message(request):
 @api_view(['POST'])
 def status_summary(request):
     try:
-        id = json.loads(request.body)['containerId']
+        parameters = json.loads(request.body)
+        container_type = parameters['containerType']
+        id = parameters['containerId']
     except Exception, e:
         id = ''
         log.error(e.message)
@@ -582,7 +609,7 @@ def status_summary(request):
           'C.speed,C.temperature,C.humidity,C.collide,C.light ' \
           'from iot.box_info box_info ' \
           'left join iot.box_order_relation box_order_relation ' \
-          'on box_info.deviceid = box_order_relation.deviceid '
+          'on box_info.deviceid = box_order_relation.deviceid and box_info.type = ' + str(container_type)
 
     if id is not None and id != '':
         sql = sql + ' and box_info.deviceid = \'' + id + '\' '
@@ -603,7 +630,8 @@ def status_summary(request):
     if id is not None and id != '':
         sql = sql + 'where B.deviceid = \'' + id + '\''
 
-    sql = sql + ') C on C.deviceid=box_info.deviceid where order_info.endtime > CAST(extract(epoch from now()) as text)'
+    sql = sql + ') C on C.deviceid=box_info.deviceid group by box_info.deviceid,C.timestamp,carrier_info.carrier_name,' \
+                'C.longitude,C.latitude,C.speed,C.temperature,C.humidity,C.collide,C.light'
 
     data = query_list(sql)
 
@@ -1077,8 +1105,19 @@ def analysis_result(request):
 
 @api_view(['GET'])
 def operation_overview(request):
-    response = get_operation_overview()
-    return JsonResponse(response, safe=True, status=status.HTTP_200_OK)
+    sql_1 = 'select count(1) from iot.box_info'
+    sql_2 = 'select count(1) from iot.site_info'
+    container_num = query_list(sql_1)
+    site_num = query_list(sql_2)
+    return JsonResponse({'container_num': container_num[0][0],
+                         'site_num': site_num[0][0],
+                         'container_location': {'China': 2000,
+                                                'USA': 2000,
+                                                'Europe': 1500,
+                                                'India': 1500,
+                                                'Japan': 1000,
+                                                'Canada': 500,
+                                                'other': 500}}, safe=True, status=status.HTTP_200_OK)
 
 
 # 云箱安全参数
@@ -1309,48 +1348,49 @@ def gen_x_axis_time_list():
     return ret_time_list
 
 
-def get_operation_overview():
-    final_response = {}
-    foo = random.SystemRandom()
-    final_response['container_location'] = {"China": foo.randint(2000, 4000),
-                                            "USA": foo.randint(2000, 4000),
-                                            "Europe": foo.randint(1500, 3000),
-                                            "India": foo.randint(1500, 3000),
-                                            "Japan": foo.randint(1000, 2000),
-                                            "Canada": foo.randint(500, 1000),
-                                            "other": foo.randint(500, 1000)
-                                            }
-    container_num_int = 0
-    for item in final_response['container_location'].values():
-        container_num_int = container_num_int + item
-    final_response['container_num'] = container_num_int
-    final_response['container_on_lease'] = foo.randint(1000, container_num_int)
-    final_response['container_on_transportation'] = container_num_int - final_response['container_on_lease']
-    x_axis_time_list = gen_x_axis_time_list()
-    final_response['container_on_lease_history'] = [{"time": x_axis_time_list[0], "value": foo.randint(1000, 2000)},
-                                         {"time": x_axis_time_list[1], "value": foo.randint(2000, 3000)},
-                                         {"time": x_axis_time_list[2], "value": foo.randint(3000, 4000)},
-                                         {"time": x_axis_time_list[3], "value": foo.randint(4000, 5000)},
-                                         {"time": x_axis_time_list[4], "value": foo.randint(5000, 6000)},
-                                         {"time": x_axis_time_list[5], "value": foo.randint(7000, 8000)},
-                                         {"time": x_axis_time_list[6], "value": foo.randint(8000, 9000)},
-                                         {"time": x_axis_time_list[7], "value": foo.randint(9000, 10000)},
-                                         {"time": x_axis_time_list[8], "value": foo.randint(10000, 11000)},
-                                         {"time": x_axis_time_list[9], "value": foo.randint(12000, 13000)},
-                                         {"time": x_axis_time_list[10], "value": foo.randint(13000, 14000)},
-                                         {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
-                                         ]
-    final_response['container_on_transportation_history'] = [{"time": x_axis_time_list[0], "value": foo.randint(1000, 2000)},
-                                         {"time": x_axis_time_list[1], "value": foo.randint(2000, 3000)},
-                                         {"time": x_axis_time_list[2], "value": foo.randint(3000, 4000)},
-                                         {"time": x_axis_time_list[3], "value": foo.randint(4000, 5000)},
-                                         {"time": x_axis_time_list[4], "value": foo.randint(5000, 6000)},
-                                         {"time": x_axis_time_list[5], "value": foo.randint(7000, 8000)},
-                                         {"time": x_axis_time_list[6], "value": foo.randint(8000, 9000)},
-                                         {"time": x_axis_time_list[7], "value": foo.randint(9000, 10000)},
-                                         {"time": x_axis_time_list[8], "value": foo.randint(10000, 11000)},
-                                         {"time": x_axis_time_list[9], "value": foo.randint(12000, 13000)},
-                                         {"time": x_axis_time_list[10], "value": foo.randint(13000, 14000)},
-                                         {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
-                                        ]
-    return final_response
+#
+# def get_operation_overview():
+#     final_response = {}
+#     foo = random.SystemRandom()
+#     final_response['container_location'] = {"China": foo.randint(2000, 4000),
+#                                             "USA": foo.randint(2000, 4000),
+#                                             "Europe": foo.randint(1500, 3000),
+#                                             "India": foo.randint(1500, 3000),
+#                                             "Japan": foo.randint(1000, 2000),
+#                                             "Canada": foo.randint(500, 1000),
+#                                             "other": foo.randint(500, 1000)
+#                                             }
+#     container_num_int = 0
+#     for item in final_response['container_location'].values():
+#         container_num_int = container_num_int + item
+#     final_response['container_num'] = container_num_int
+#     final_response['container_on_lease'] = foo.randint(1000, container_num_int)
+#     final_response['container_on_transportation'] = container_num_int - final_response['container_on_lease']
+#     x_axis_time_list = gen_x_axis_time_list()
+#     final_response['container_on_lease_history'] = [{"time": x_axis_time_list[0], "value": foo.randint(1000, 2000)},
+#                                          {"time": x_axis_time_list[1], "value": foo.randint(2000, 3000)},
+#                                          {"time": x_axis_time_list[2], "value": foo.randint(3000, 4000)},
+#                                          {"time": x_axis_time_list[3], "value": foo.randint(4000, 5000)},
+#                                          {"time": x_axis_time_list[4], "value": foo.randint(5000, 6000)},
+#                                          {"time": x_axis_time_list[5], "value": foo.randint(7000, 8000)},
+#                                          {"time": x_axis_time_list[6], "value": foo.randint(8000, 9000)},
+#                                          {"time": x_axis_time_list[7], "value": foo.randint(9000, 10000)},
+#                                          {"time": x_axis_time_list[8], "value": foo.randint(10000, 11000)},
+#                                          {"time": x_axis_time_list[9], "value": foo.randint(12000, 13000)},
+#                                          {"time": x_axis_time_list[10], "value": foo.randint(13000, 14000)},
+#                                          {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
+#                                          ]
+#     final_response['container_on_transportation_history'] = [{"time": x_axis_time_list[0], "value": foo.randint(1000, 2000)},
+#                                          {"time": x_axis_time_list[1], "value": foo.randint(2000, 3000)},
+#                                          {"time": x_axis_time_list[2], "value": foo.randint(3000, 4000)},
+#                                          {"time": x_axis_time_list[3], "value": foo.randint(4000, 5000)},
+#                                          {"time": x_axis_time_list[4], "value": foo.randint(5000, 6000)},
+#                                          {"time": x_axis_time_list[5], "value": foo.randint(7000, 8000)},
+#                                          {"time": x_axis_time_list[6], "value": foo.randint(8000, 9000)},
+#                                          {"time": x_axis_time_list[7], "value": foo.randint(9000, 10000)},
+#                                          {"time": x_axis_time_list[8], "value": foo.randint(10000, 11000)},
+#                                          {"time": x_axis_time_list[9], "value": foo.randint(12000, 13000)},
+#                                          {"time": x_axis_time_list[10], "value": foo.randint(13000, 14000)},
+#                                          {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
+#                                         ]
+#     return final_response
