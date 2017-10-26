@@ -47,7 +47,7 @@ class AuthMiddleware(MiddlewareMixin):
                 conn.hset(PERMISSION_URL_HASH, item_access_group['group'], final_hash_value)
 
     def process_request(self, request):
-        if request.path.startswith(r'/api/v1/cloudbox/'):  # 检测如果不是登录的话
+        if request.path.startswith(r'/api/v1/cloudbox/rentservice/'):  # 检测如果不是登录的话
             try:
                 token = request.META.get('HTTP_AUTHORIZATION')
                 log.info("request token %s" % token)
