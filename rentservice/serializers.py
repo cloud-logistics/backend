@@ -84,3 +84,8 @@ class RentalAdminOperationRecords(serializers.ModelSerializer):
     class Meta:
         model = RentalAdminOperationRecords
         fields = '__all__'
+
+
+class RentServiceRegUser(serializers.ModelSerializer):
+    class Meta:
+        model = RentServiceRegUser

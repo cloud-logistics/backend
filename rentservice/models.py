@@ -119,7 +119,11 @@ class RentalAdminOperationRecords(models.Model):
     flag = models.IntegerField(default=0)
 
 
-
+class RentServiceRegUser(models.Model):
+    reg_user_id = models.CharField(max_length=64, primary_key=True)
+    user_name = models.CharField(max_length=64)
+    user_password = models.CharField(max_length=128)
+    user_token = models.CharField(max_length=64)
 
 
 
