@@ -52,11 +52,11 @@ def add_enterprise_info(request):
         return JsonResponse(retcode({}, "9999", '企业营业执照照片url不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
         enterprise_info = EnterpriseInfo(enterprise_id=uuid.uuid1(), enterprise_name=enterprise_name,
-                                        enterprise_tele=enterprise_tele, enterprise_license_id=enterprise_license_id,
-                                        enterprise_license_id_url=enterprise_license_id_url,
-                                        enterprise_legal_rep_name=enterprise_legal_rep_name,
-                                        enterprise_email=enterprise_email, enterprise_deposit=enterprise_deposit,
-                                        enterprise_deposit_status=0, register_time=datetime.datetime.now(tz))
+                                         enterprise_tele=enterprise_tele, enterprise_license_id=enterprise_license_id,
+                                         enterprise_license_id_url=enterprise_license_id_url,
+                                         enterprise_legal_rep_name=enterprise_legal_rep_name,
+                                         enterprise_email=enterprise_email, enterprise_deposit=enterprise_deposit,
+                                         enterprise_deposit_status=0, register_time=datetime.datetime.now(tz))
         enterprise_info.save()
     except Exception, e:
         log.error(repr(e))
