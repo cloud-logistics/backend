@@ -114,56 +114,6 @@ from django.contrib.auth.models import User
 #     num_of_door_open = models.TextField()
 #     battery = models.TextField()
 #     robert_operation_status = models.TextField()
-
-
-class ContainerRentInfo(models.Model):
-    deviceid = models.TextField()
-    starttime = models.TextField()
-    endtime = models.TextField()
-    carrier = models.IntegerField()
-    type = models.IntegerField()
-    owner = models.TextField()
-    rentstatus = models.IntegerField()
-
-    class Meta:
-        permissions = (
-            ("view_containerrentinfo", "Can see container rent info"),
-        )
-
-
-class BoxTypeInfo(models.Model):
-    id = models.AutoField(primary_key=True)
-    box_type_name = models.CharField(max_length=128, default='')
-    box_type_detail = models.CharField(max_length=128, default='')
-    interval_time = models.IntegerField()
-    temperature_threshold_min = models.IntegerField()
-    temperature_threshold_max = models.IntegerField()
-    humidity_threshold_min = models.IntegerField()
-    humidity_threshold_max = models.IntegerField()
-    collision_threshold_min = models.IntegerField()
-    collision_threshold_max = models.IntegerField()
-    battery_threshold_min = models.IntegerField()
-    battery_threshold_max = models.IntegerField()
-    operation_threshold_min = models.IntegerField()
-    operation_threshold_max = models.IntegerField()
-    price = models.FloatField()
-    length = models.FloatField()
-    width = models.FloatField()
-    height = models.FloatField()
-
-
-class BoxInfo(models.Model):
-    deviceid = models.CharField(max_length=48, primary_key=True)
-    type = models.ForeignKey(BoxTypeInfo, related_name='box_info_box_type_fk')
-    date_of_production = models.CharField(max_length=128)
-    manufacturer = models.IntegerField()
-    produce_area = models.IntegerField()
-    hardware = models.IntegerField()
-    battery = models.IntegerField()
-    carrier = models.IntegerField()
-    tid = models.CharField(max_length=48)
-
-
 # 国家
 class Nation(models.Model):
     nation_id = models.AutoField(primary_key=True)
@@ -197,6 +147,21 @@ class City(models.Model):
     province = models.ForeignKey(Province, related_name='city_province_fk', null=True)
 
 
+class ContainerRentInfo(models.Model):
+    deviceid = models.TextField()
+    starttime = models.TextField()
+    endtime = models.TextField()
+    carrier = models.IntegerField()
+    type = models.IntegerField()
+    owner = models.TextField()
+    rentstatus = models.IntegerField()
+
+    class Meta:
+        permissions = (
+            ("view_containerrentinfo", "Can see container rent info"),
+        )
+
+
 class SiteInfo(models.Model):
     id = models.AutoField(primary_key=True)
     location = models.CharField(max_length=128, default='')
@@ -206,3 +171,38 @@ class SiteInfo(models.Model):
     city = models.ForeignKey(City, related_name='site_city_fk', default=1)
     province = models.ForeignKey(Province, related_name='site_province_fk', default=1)
     nation = models.ForeignKey(Nation, related_name='site_nation_fk', default=1)
+
+
+class BoxTypeInfo(models.Model):
+    id = models.AutoField(primary_key=True)
+    box_type_name = models.CharField(max_length=128, default='')
+    box_type_detail = models.CharField(max_length=128, default='')
+    interval_time = models.IntegerField()
+    temperature_threshold_min = models.IntegerField()
+    temperature_threshold_max = models.IntegerField()
+    humidity_threshold_min = models.IntegerField()
+    humidity_threshold_max = models.IntegerField()
+    collision_threshold_min = models.IntegerField()
+    collision_threshold_max = models.IntegerField()
+    battery_threshold_min = models.IntegerField()
+    battery_threshold_max = models.IntegerField()
+    operation_threshold_min = models.IntegerField()
+    operation_threshold_max = models.IntegerField()
+    price = models.FloatField()
+    length = models.FloatField()
+    width = models.FloatField()
+    height = models.FloatField()
+
+
+class BoxInfo(models.Model):
+    deviceid = models.CharField(max_length=48, primary_key=True)
+    type = models.ForeignKey(BoxTypeInfo, related_name='box_info_box_type_fk')
+    date_of_production = models.CharField(max_length=128)
+    manufacturer = models.IntegerField()
+    produce_area = models.IntegerField()
+    hardware = models.IntegerField()
+    battery = models.IntegerField()
+    carrier = models.IntegerField()
+    tid = models.CharField(max_length=48)
+    ava_flag = models.CharField(max_length=1, default='Y')
+    siteinfo = models.ForeignKey(SiteInfo, related_name='box_site_fk', null=True)
