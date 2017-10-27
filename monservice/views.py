@@ -593,8 +593,8 @@ def history_message(request):
 
 
 # 云箱状态汇总
-@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-@permission_classes((IsAuthenticated,))
+# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+# @permission_classes((IsAuthenticated,))
 @api_view(['POST'])
 def status_summary(request):
     try:
@@ -1029,8 +1029,8 @@ def verify_user(request):
 
 
 # 向终端发送command
-@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-@permission_classes((IsAuthenticated,))
+# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+# @permission_classes((IsAuthenticated,))
 @api_view(['POST'])
 def send_command(request):
     action = json.loads(request.body)['action']
@@ -1044,8 +1044,8 @@ def send_command(request):
 
 
 # 实时报文温度、湿度曲线
-@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-@permission_classes((IsAuthenticated,))
+# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+# @permission_classes((IsAuthenticated,))
 @api_view(['POST'])
 def indicator_history(request):
     try:
