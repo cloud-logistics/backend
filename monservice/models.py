@@ -172,6 +172,14 @@ class Nation(models.Model):
     sorted_key = models.CharField(max_length=10, default='')
 
 
+# 省
+class Province(models.Model):
+    province_id = models.AutoField(primary_key=True)
+    province_name = models.CharField(max_length=100, default='')
+    zip_code = models.CharField(max_length=10, default='')
+    nation = models.ForeignKey(Nation, related_name='province_nation_fk', default=1)
+
+
 # 城市
 class City(models.Model):
     city_name = models.CharField(max_length=50)
@@ -183,9 +191,10 @@ class City(models.Model):
     culture = models.TextField(default='')
     taboo = models.TextField(default='')
     picture_url = models.CharField(max_length=200, default='')
-    nation = models.ForeignKey(Nation, related_name='city_fk', default=1)
+    nation = models.ForeignKey(Nation, related_name='city_fk')
     sorted_key = models.CharField(max_length=10, default='')
     flag = models.IntegerField(default=0)  # 酒店
+    province = models.ForeignKey(Province, related_name='city_province_fk', null=True)
 
 
 class SiteInfo(models.Model):
@@ -194,5 +203,6 @@ class SiteInfo(models.Model):
     latitude = models.CharField(max_length=16, default='0.0')
     longitude = models.CharField(max_length=16, default='0.0')
     site_code = models.CharField(max_length=48, default='')
-    city = models.ForeignKey(City, related_name='site_info_fk', default=1)
+    city = models.ForeignKey(City, related_name='site_city_fk', default=1)
+    province = models.ForeignKey(Province, related_name='site_province_fk', default=1)
     nation = models.ForeignKey(Nation, related_name='site_nation_fk', default=1)

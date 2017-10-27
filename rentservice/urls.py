@@ -13,6 +13,8 @@ urlpatterns = [
     # 企业信息更新接口
     url(r'^rentservice/site/list/(?P<latitude>[0-9.]+)/(?P<longitude>[0-9.]+)$', site.get_site_list),
     # 获取堆场列表
-    url(r'^auth/adduser$', auth.add_user),  #新增用户
-    url(r'^auth/auth$', auth.auth),  #新增用户
+    url(r'^auth/adduser$', auth.add_user),  # 新增用户
+    url(r'^auth/auth$', auth.auth),  # 新增用户
+    url(r'^rentservice/site/list/province/(?P<province>[0-9]+)/city/(?P<city>[0-9]+)$', site.get_site_by_province),
+    # 获取堆场列表
 ]

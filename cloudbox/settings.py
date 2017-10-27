@@ -18,7 +18,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
@@ -29,7 +28,6 @@ SECRET_KEY = '=pkbpxgj!(3r3*k$$_5il3!_s$h)_v#i^cy94bfcl9ca(tysxo'
 DEBUG = True
 
 ALLOWED_HOSTS = ['192.168.100.97', 'localhost', '127.0.0.1', '106.2.20.186', '10.35.0.14']
-
 
 # Application definition
 
@@ -43,7 +41,7 @@ INSTALLED_APPS = [
     # 'sensor.apps.QuickstartConfig',
     'monservice.apps.MonserviceConfig',
     'rentservice.apps.RentserviceConfig',
-    #'rent_service.apps.RentServiceConfig'
+    # 'rent_service.apps.RentServiceConfig'
     'rest_framework',
     'rest_framework_jwt',
 ]
@@ -80,7 +78,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'cloudbox.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
@@ -88,8 +85,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'OPTIONS': {
-                    'options': '-c search_path=iot'
-                },
+            'options': '-c search_path=iot'
+        },
         'NAME': 'cloudbox',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
@@ -97,7 +94,6 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -117,7 +113,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
@@ -131,12 +126,10 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
-
 
 REST_FRAMEWORK = {
     # 'DEFAULT_PERMISSION_CLASSES': [
@@ -152,5 +145,6 @@ REST_FRAMEWORK = {
     #     'rest_framework.authentication.SessionAuthentication',
     #     'rest_framework.authentication.BasicAuthentication',
     # ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 10,
 }
-
