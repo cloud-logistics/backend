@@ -61,7 +61,7 @@ class EnterpriseUser(models.Model):
     avatar_url = models.CharField(max_length=256)
     user_phone = models.CharField(max_length=16)
     user_email = models.CharField(max_length=128)
-    enterprise = models.ForeignKey(EnterpriseInfo, related_name='enterprise_user_enterprise_info_fk')
+    enterprise = models.ForeignKey(EnterpriseInfo, related_name='enterprise_user_enterprise_info_fk', null=True)
     user_token = models.CharField(max_length=64, default='')
     role = models.CharField(max_length=16, default='user')
     group = models.ForeignKey(AccessGroup, null=True)
