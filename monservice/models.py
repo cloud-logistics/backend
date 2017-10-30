@@ -171,7 +171,7 @@ class SiteInfo(models.Model):
     city = models.ForeignKey(City, related_name='site_city_fk', default=1)
     province = models.ForeignKey(Province, related_name='site_province_fk', default=1)
     nation = models.ForeignKey(Nation, related_name='site_nation_fk', default=1)
-    volume = models.IntegerField()
+    volume = models.IntegerField(default=0)
 
 
 class BoxTypeInfo(models.Model):
