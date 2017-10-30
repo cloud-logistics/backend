@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rentservice.models import EnterpriseInfo
 from rentservice.utils.retcode import *
-from rentservice.utils.logger import *
+from rentservice.utils import logger
 import uuid
 import datetime
 import pytz
