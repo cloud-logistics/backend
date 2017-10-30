@@ -6,7 +6,7 @@
 
 #### URL
 
-`api/v1/cloudbox/rentservice/rentservice/enterpriseuser/addenterpriseuser`
+`api/v1/cloudbox/rentservice/enterpriseuser/addenterpriseuser`
 
 #### Parameter
 
@@ -45,7 +45,7 @@
 
 #### URL
 
-`api/v1/cloudbox/rentservice/enterprise/enterpriseinfo/updateenterpriseinfo`
+`api/v1/cloudbox/rentservice/enterpriseuser/updateenterpriseinfo`
 
 #### Parameter
 
