@@ -71,6 +71,7 @@ class UserAppointment(models.Model):
     appointment_id = models.CharField(max_length=48, primary_key=True)
     user_id = models.ForeignKey(EnterpriseUser, related_name='user_appointment_fk')
     appointment_time = models.DateTimeField(default=datetime.datetime.today())
+    appointment_code = models.CharField(max_length=48, default='')
 
 
 class AppointmentDetail(models.Model):
