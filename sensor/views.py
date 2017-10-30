@@ -107,7 +107,7 @@ def build_sql(data_list):
 
     for i in range(size):
         data = data_list[i]
-        sql = sql + '(\'' + str(data['timestamp']) + '\',\'' + \
+        sql = sql + '(' + str(data['timestamp']) + ',\'' + \
             str(data['deviceid']) + '\',\'' + \
             str(data['temperature']) + '\',\'' + \
             str(data['humidity']) + '\',\'' + \
