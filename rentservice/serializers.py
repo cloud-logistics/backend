@@ -3,8 +3,20 @@
 
 
 from rest_framework import serializers
-from models import *
-
+from models import AccessGroup
+from models import AuthUserGroup
+from models import AccessUrlGroup
+from models import EnterpriseInfo
+from models import RentalServiceAdmin
+from models import UserAppointment
+from models import EnterpriseUser
+from models import AppointmentDetail
+from models import UserLeaseInfo
+from models import UserRentDay
+from models import UserRentMonth
+from models import RentalAdminOperationType
+from models import RentalAdminOperationRecords
+from models import RentServiceRegUser
 
 
 
