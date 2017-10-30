@@ -7,6 +7,7 @@ from rentservice.views import site
 from rentservice.views import auth
 from rentservice.views import enterpriseuser
 from rentservice.views import boxtype
+from rentservice.views import regions
 
 urlpatterns = [
     url(r'^rentservice/enterprise/enterpriseinfo/addenterpriseinfo$', enterprise.add_enterprise_info),  # 企业信息增加接口
@@ -24,5 +25,7 @@ urlpatterns = [
     url(r'^rentservice/enterpriseuser/addenterpriseuser$', enterpriseuser.add_enterprise_user),  # 用户信息添加
     url(r'^rentservice/enterpriseuser/updateenterpriseuser$', enterpriseuser.update_enterprise_user),  # 用户信息修改
     url(r'^rentservice/enterpriseuser/(?P<user_id>[0-9a-zA-Z-]+)$', enterpriseuser.del_enterprise_user),  # 删除用户
+    url(r'^rentservice/regions/provinces', regions.get_province_list),  # 获取省列表
+    url(r'^rentservice/regions/cities/(?P<province_id>[0-9]+)$', regions.get_city_list),  # 获取制定省的市列表
 
 ]
