@@ -33,11 +33,14 @@
       v_battery_threshold_min,v_battery_threshold_max,
       v_operation_threshold_min,v_operation_threshold_max;
 
-    /* 获取箱子承运人id */
+    /* 获取箱子承运人id
     SELECT order_info.carrierid FROM iot.order_info order_info
     INNER JOIN iot.box_order_relation box_order_relation
     ON order_info.trackid = box_order_relation.trackid WHERE box_order_relation.deviceid = NEW.deviceid
     GROUP BY order_info.carrierid INTO v_carrier_id;
+    */
+    v_carrier_id := 1;
+
 
     v_sql_insert := 'INSERT INTO iot.alarm_info(timestamp,
                                  deviceid,

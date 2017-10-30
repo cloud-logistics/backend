@@ -593,8 +593,8 @@ def history_message(request):
 
 
 # 云箱状态汇总
-@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-@permission_classes((IsAuthenticated,))
+# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+# @permission_classes((IsAuthenticated,))
 @api_view(['POST'])
 def status_summary(request):
     try:
@@ -1029,8 +1029,8 @@ def verify_user(request):
 
 
 # 向终端发送command
-@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-@permission_classes((IsAuthenticated,))
+# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+# @permission_classes((IsAuthenticated,))
 @api_view(['POST'])
 def send_command(request):
     action = json.loads(request.body)['action']
@@ -1044,32 +1044,32 @@ def send_command(request):
 
 
 # 实时报文温度、湿度曲线
-@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-@permission_classes((IsAuthenticated,))
+# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
+# @permission_classes((IsAuthenticated,))
 @api_view(['POST'])
 def indicator_history(request):
     try:
         id = json.loads(request.body)['containerId']
-        indicator = json.loads(request.body)['requiredParam']
     except Exception, e:
         id= ""
+    try:
+        indicator = json.loads(request.body)['requiredParam']
+    except Exception, e:
         indicator = "temperature"
     try:
-        if indicator == 'battery':
-            indicator = 'temperature'   # 电量没有上报数据，暂时用温度代替
-
         end_time_str = str(time.strftime('%Y-%m-%d %H', time.localtime(int(time.time())))) + ':00:00'
         end_time = int(time.mktime(time.strptime(end_time_str, '%Y-%m-%d %H:%M:%S')))
         start_time = end_time - 3600 * 24
 
-        data_list = query_list('SELECT * FROM iot.fn_indicator_history('+ str(start_time) +',' +
-                  str(end_time) + ',\'' + indicator + '\',\'' + id + '\') AS (value DECIMAL, hour INTEGER)')
         data_dic = {}
         value_arr = []
 
-        # 将list转换为字典
-        for i in range(len(data_list)):
-            data_dic.update({data_list[i][1]: data_list[i][0]})
+        if indicator != 'battery':
+            data_list = query_list('SELECT * FROM iot.fn_indicator_history(' + str(start_time) + ',' +
+                                   str(end_time) + ',\'' + indicator + '\',\'' + id + '\') AS (value DECIMAL, hour INTEGER)')
+            # 将list转换为字典
+            for i in range(len(data_list)):
+                data_dic.update({data_list[i][1]: data_list[i][0]})
 
         for j in range(24):
             y = data_dic.get(j)
@@ -1080,13 +1080,14 @@ def indicator_history(request):
             x2 = time.localtime(start_time + (j + 1) * 3600)
             time_x1 = time.strftime('%H:%M', x1)
             time_x2 = time.strftime('%H:%M', x2)
-            if json.loads(request.body)['requiredParam'] == 'battery':
-                value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(100 - 2*j)})
+
+            if indicator == 'battery':
+                value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(100 - 2 * j)})
             else:
                 value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(y)})
     except Exception, e:
         log.error(e.message)
-    if json.loads(request.body)['requiredParam'] == 'battery':
+    if indicator == 'battery':
         return JsonResponse({'battery': value_arr}, safe=True, status=status.HTTP_200_OK)
     else:
         return JsonResponse({indicator: value_arr}, safe=True, status=status.HTTP_200_OK)
