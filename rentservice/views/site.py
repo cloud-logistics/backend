@@ -8,7 +8,10 @@ from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rest_framework.settings import api_settings
 from monservice.models import SiteInfo
+from monservice.models import BoxTypeInfo
+from monservice.models import BoxInfo
 from monservice.serializers import SiteInfoSerializer
+from monservice.serializers import BoxTypeInfoSerializer
 from rentservice.utils.retcode import *
 from rentservice.utils.logger import *
 import uuid
@@ -51,14 +54,31 @@ def get_site_by_province(request, province, city):
     _province = int(province)
     _city = int(city)
     if _province == 0 and _city == 0:
-        print 'all'
         site_list = SiteInfo.objects.all().order_by('id')
     elif _province != 0 and _city == 0:
-        print 'province'
         site_list = SiteInfo.objects.filter(province=_province).order_by('id')
     elif _province != 0 and _city != 0:
-        print 'city'
         site_list = SiteInfo.objects.filter(city=_city).order_by('id')
     page = paginator.paginate_queryset(site_list, request)
     ret_ser = SiteInfoSerializer(page, many=True)
     return paginator.get_paginated_response(ret_ser.data)
+
+
+# 查询堆场的详细信息，包括每种类型的箱子所剩下可租用的个数
+@csrf_exempt
+@api_view(['GET'])
+def get_site_detail(request, site_id):
+    try:
+        site_info = SiteInfo.objects.get(id=site_id)
+    except SiteInfo.DoesNotExist:
+        return JsonResponse(retcode({}, "999999", "堆场信息不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
+    # 获取各种类型箱子的可用个数
+    box_counts = []
+    type_list = BoxTypeInfo.objects.all()
+    for _type in type_list:
+        box_num = BoxInfo.objects.filter(siteinfo=site_info, type=_type).count()
+        box_counts.append({'box_type': BoxTypeInfoSerializer(_type).data, 'box_num': box_num})
+    return JsonResponse(
+        retcode({'site_info': SiteInfoSerializer(site_info).data, 'box_counts': box_counts}, "000000", "Success"),
+        safe=True,
+        status=status.HTTP_200_OK)
