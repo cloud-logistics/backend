@@ -48,7 +48,8 @@ class RentalServiceAdmin(models.Model):
     avatar_url = models.CharField(max_length=256)
     user_phone = models.CharField(max_length=16)
     user_email = models.CharField(max_length=128)
-    group = models.ForeignKey(AuthUserGroup, related_name='rental_service_admin_fk')
+    user_token = models.CharField(max_length=64, default='')
+    group = models.ForeignKey(AccessGroup, related_name='enterprise_user_fk')
 
 
 class EnterpriseUser(models.Model):
@@ -60,8 +61,10 @@ class EnterpriseUser(models.Model):
     avatar_url = models.CharField(max_length=256)
     user_phone = models.CharField(max_length=16)
     user_email = models.CharField(max_length=128)
-    enterprise_id = models.ForeignKey(EnterpriseInfo, related_name='rental_service_admin_enterprise_info_fk')
-    group = models.ForeignKey(AuthUserGroup, related_name='enterprise_user_fk')
+    enterprise = models.ForeignKey(EnterpriseInfo, related_name='enterprise_user_enterprise_info_fk')
+    user_token = models.CharField(max_length=64, default='')
+    role = models.CharField(max_length=16, default='user')
+    group = models.ForeignKey(AccessGroup, null=True)
 
 
 class UserAppointment(models.Model):
