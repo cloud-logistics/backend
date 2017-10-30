@@ -58,3 +58,10 @@ docs/_build/
 # PyBuilder
 target/
 
+# Add by Yuchunshen
+.DS_Store
+.idea/
+.gradle
+key.private
+key.public
+state.properties
