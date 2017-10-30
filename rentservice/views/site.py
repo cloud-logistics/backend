@@ -5,7 +5,6 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
-from rest_framework.parsers import JSONParser
 from rest_framework.settings import api_settings
 from monservice.models import SiteInfo
 from monservice.models import BoxTypeInfo
@@ -13,9 +12,6 @@ from monservice.models import BoxInfo
 from monservice.serializers import SiteInfoSerializer
 from monservice.serializers import BoxTypeInfoSerializer
 from rentservice.utils.retcode import *
-from rentservice.utils.logger import *
-import uuid
-import datetime
 import pytz
 
 log = logger.get_logger(__name__)
