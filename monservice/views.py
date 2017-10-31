@@ -1057,9 +1057,13 @@ def indicator_history(request):
     except Exception, e:
         indicator = "temperature"
     try:
+        days = json.loads(request.body)['days']
+    except Exception, e:
+        days = 1
+    try:
         end_time_str = str(time.strftime('%Y-%m-%d %H', time.localtime(int(time.time())))) + ':00:00'
         end_time = int(time.mktime(time.strptime(end_time_str, '%Y-%m-%d %H:%M:%S')))
-        start_time = end_time - 3600 * 24
+        start_time = end_time - 3600 * 24 * days
 
         data_dic = {}
         value_arr = []
@@ -1071,7 +1075,7 @@ def indicator_history(request):
             for i in range(len(data_list)):
                 data_dic.update({data_list[i][1]: data_list[i][0]})
 
-        for j in range(24):
+        for j in range(days * 24):
             y = data_dic.get(j)
             if y is None:
                 y = 0
@@ -1106,12 +1110,16 @@ def analysis_result(request):
 
 @api_view(['GET'])
 def operation_overview(request):
-    sql_1 = 'select count(1) from iot.box_info'
-    sql_2 = 'select count(1) from iot.site_info'
+    sql_1 = 'select count(1) from iot.monservice_boxinfo'
+    sql_2 = 'select count(1) from iot.monservice_siteinfo'
+    sql_3 = 'select sum(volume) from iot.monservice_siteinfo'
+
     container_num = query_list(sql_1)
     site_num = query_list(sql_2)
+    volume = query_list(sql_3)
     return JsonResponse({'container_num': container_num[0][0],
                          'site_num': site_num[0][0],
+                         'volume': (volume[0][0], 0)[volume[0][0] is None],
                          'container_location': {'China': 2000,
                                                 'USA': 2000,
                                                 'Europe': 1500,
