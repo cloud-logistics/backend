@@ -80,7 +80,9 @@
 
 `container/api/v1/cloudbox/basicInfo/{container_id}`
 
-#### 方法： DELETE
+#### 方法： 
+
+`DELETE`
 
 #### BODY:
 

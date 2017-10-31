@@ -82,7 +82,9 @@
 
 `container/api/v1/cloudbox/sites/{site_id}`
 
-#### 方法： DELETE
+#### 方法： 
+
+`DELETE`
 
 #### BODY:
 
