@@ -78,7 +78,7 @@
 
 #### URL： 
 
-`container/api/v1/cloudbox/basicInfo/HNAR0000170`
+`container/api/v1/cloudbox/basicInfo/{container_id}`
 
 #### 方法： DELETE
 

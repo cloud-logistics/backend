@@ -29,7 +29,7 @@ import urllib
 import urllib2
 import json
 import random
-from monservice.models import BoxInfo, BoxTypeInfo
+from monservice.models import BoxInfo, BoxTypeInfo, SiteInfo, City, Province, Nation
 
 
 log = logger.get_logger('monservice.view.py')
@@ -1397,3 +1397,85 @@ def gen_x_axis_time_list():
 #                                          {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
 #                                         ]
 #     return final_response
+
+
+# 新增堆场
+@csrf_exempt
+@api_view(['POST'])
+def add_site(request):
+    try:
+        data = json.loads(request.body)
+        location = to_str(data['location'])             # 堆场名称
+        longtitude = to_str(data['longitude'])          # 经度
+        latitude = to_str(data['latitude'])             # 纬度
+        site_code = to_str(data['site_code'])           # 堆场代码
+        volume = data['volume']                 # 堆场箱子容量
+        city_id = data['city_id']                       # 城市
+        province_id = data['province_id']               # 省
+        nation_id = data['nation_id']                   # 国家
+
+        city = City.objects.get(id=city_id)
+        province = Province.objects.get(province_id=province_id)
+        nation = Nation.objects.get(nation_id=nation_id)
+        site = SiteInfo(location=location, latitude=latitude, longitude=longtitude, site_code=site_code,
+                        city= city, province=province, nation=nation, volume=volume)
+        site.save()
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'status': 'ERROR', 'msg': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'add site success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+# 删除堆场
+@csrf_exempt
+@api_view(['DELETE'])
+def delete_site(request, id):
+    try:
+        SiteInfo.objects.get(id=id).delete()
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'status': 'ERROR', 'msg': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'delete site success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+# 修改堆场
+@csrf_exempt
+@api_view(['PUT'])
+def modify_site(request, id):
+    try:
+        response_msg = 'OK'
+        data = json.loads(request.body)
+
+        site = SiteInfo.objects.get(id=id)
+        site.location = to_str(data['location'])  # 堆场名称
+        site.longitude = to_str(data['longitude'])  # 经度
+        site.latitude = to_str(data['latitude'])  # 纬度
+        site.site_code = to_str(data['site_code'])  # 堆场代码
+        site.volume = data['volume']  # 堆场箱子容量
+
+        city_id = data['city_id']  # 城市
+        province_id = data['province_id']  # 省
+        nation_id = data['nation_id']  # 国家
+        city = City.objects.get(id=city_id)
+        province = Province.objects.get(province_id=province_id)
+        nation = Nation.objects.get(nation_id=nation_id)
+        site.city = city
+        site.province = province
+        site.nation = nation
+        site.save()
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'status': 'ERROR', 'msg': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'modify site success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
