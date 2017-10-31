@@ -4,7 +4,7 @@
 
 def generate_cid(sn, category):
     owner_code = 'HNA'
-    categories = {'冷冻': 'F', '医药': 'M', '冷藏': 'R', '普通': 'N', '特殊': 'S', '交付': 'D', }
+    categories = {'2': 'F', '3': 'M', '1': 'R', '4': 'N', '5': 'S', '6': 'D', }
     cat_code = categories[category]
     sn_code = '%06d' % sn
     first10 = owner_code + cat_code + sn_code
