@@ -19,5 +19,5 @@ tz = pytz.timezone('Asia/Shanghai')
 @api_view(['GET'])
 def get_box_type_list(request):
     type_list = BoxTypeInfo.objects.all()
-    return JsonResponse(retcode(BoxTypeInfoSerializer(type_list, many=True).data, "000000", "Success"), safe=True,
+    return JsonResponse(retcode(BoxTypeInfoSerializer(type_list, many=True).data, "0000", "Success"), safe=True,
                         status=status.HTTP_200_OK)
