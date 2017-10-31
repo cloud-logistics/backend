@@ -67,7 +67,7 @@ def get_site_detail(request, site_id):
     try:
         site_info = SiteInfo.objects.get(id=site_id)
     except SiteInfo.DoesNotExist:
-        return JsonResponse(retcode({}, "999999", "堆场信息不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(retcode({}, "9999", "堆场信息不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
     # 获取各种类型箱子的可用个数
     box_counts = []
     type_list = BoxTypeInfo.objects.all()
@@ -75,6 +75,6 @@ def get_site_detail(request, site_id):
         box_num = BoxInfo.objects.filter(siteinfo=site_info, type=_type).count()
         box_counts.append({'box_type': BoxTypeInfoSerializer(_type).data, 'box_num': box_num})
     return JsonResponse(
-        retcode({'site_info': SiteInfoSerializer(site_info).data, 'box_counts': box_counts}, "000000", "Success"),
+        retcode({'site_info': SiteInfoSerializer(site_info).data, 'box_counts': box_counts}, "0000", "Success"),
         safe=True,
         status=status.HTTP_200_OK)

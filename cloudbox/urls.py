@@ -19,7 +19,7 @@ from django.contrib import admin
 
 
 urlpatterns = [
-    url(r'^container/api/v1/cloudbox/', include('sensor.urls')),
+    url(r'^api/v1/cloudbox/', include('sensor.urls')),
     url(r'^container/api/v1/cloudbox/', include('monservice.urls')),
     url(r'^container/api/v1/cloudbox/', include('rentapp.urls')),
     url(r'^container/api/v1/cloudbox/', include('rentservice.urls')),
