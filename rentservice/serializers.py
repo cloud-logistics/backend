@@ -38,7 +38,7 @@ class AccessUrlGroupSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class EnterpriseInfo(serializers.ModelSerializer):
+class EnterpriseInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = EnterpriseInfo
         fields = '__all__'
