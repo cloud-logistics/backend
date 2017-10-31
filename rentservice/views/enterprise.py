@@ -5,17 +5,19 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.settings import api_settings
 from rest_framework.parsers import JSONParser
 from rentservice.models import EnterpriseInfo
 from rentservice.utils.retcode import *
 from rentservice.utils import logger
+from ..serializers import EnterpriseInfoSerializer
 import uuid
 import datetime
 import pytz
 
-
 log = logger.get_logger(__name__)
 tz = pytz.timezone('Asia/Shanghai')
+
 
 @csrf_exempt
 @api_view(['POST'])
@@ -63,7 +65,6 @@ def add_enterprise_info(request):
     ret = {}
     ret['enterprise_id'] = enterprise_info.enterprise_id
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
-
 
 
 @csrf_exempt
@@ -122,12 +123,35 @@ def update_enterprise_info(request):
 @csrf_exempt
 @api_view(['DELETE'])
 def del_enterpise_info(request, enterprise_id):
+    ret = {}
     try:
         EnterpriseInfo.objects.get(enterprise_id=enterprise_id).delete()
-        ret = {}
         ret['enterprise_id'] = enterprise_id
     except EnterpriseInfo.DoesNotExist:
         return JsonResponse(retcode(ret, "9999", "删除企业信息失败"), safe=True, status=status.HTTP_400_BAD_REQUEST)
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
 
+@csrf_exempt
+@api_view(['GET'])
+def list_enterpise_info(request):
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    try:
+        enterprise_ret = EnterpriseInfo.objects.all()
+        page = paginator.paginate_queryset(enterprise_ret, request)
+        ret_ser = EnterpriseInfoSerializer(page, many=True)
+    except Exception:
+        return JsonResponse(retcode({}, "9999", "查询企业信息列表失败"), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    return paginator.get_paginated_response(ret_ser.data)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def enterpise_info_detail(request, enterprise_id):
+    try:
+        ret_enterpriseinfo = EnterpriseInfo.objects.get(enterprise_id=enterprise_id)
+        ser_enterpriseinfo = EnterpriseInfoSerializer(ret_enterpriseinfo)
+    except EnterpriseInfo.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "查询企业信息失败"), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    return JsonResponse(retcode(ser_enterpriseinfo.data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)

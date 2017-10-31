@@ -5,6 +5,7 @@ from models import Nation
 from models import City
 from models import BoxTypeInfo
 from models import BoxInfo
+from models import Province
 
 
 class ContainerRentInfoSerializer(serializers.ModelSerializer):
@@ -16,6 +17,12 @@ class ContainerRentInfoSerializer(serializers.ModelSerializer):
 class NationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Nation
+        fields = '__all__'
+
+
+class ProvinceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Province
         fields = '__all__'
 
 

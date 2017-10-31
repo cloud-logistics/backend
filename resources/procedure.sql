@@ -387,7 +387,7 @@ CREATE OR REPLACE FUNCTION iot.fn_indicator_history(start_time INTEGER, end_time
     v_indicator := $3;
     v_deviceid := $4;
     v_seconds_per_hour := 3600;
-    v_hours := 24;
+    v_hours := (v_end_time -v_start_time) / v_seconds_per_hour;
     v_i := 0;
 
     v_sql = 'SELECT CAST(AVG(' || v_indicator || ') AS DECIMAL(20, 2)),hour FROM(SELECT CASE';
