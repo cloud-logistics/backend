@@ -17,7 +17,7 @@ from util import logger
 from util.cid import generate_cid
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from models import ContainerRentInfo
-from serializers import ContainerRentInfoSerializer
+from serializers import SiteInfoSerializer
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework_jwt.settings import api_settings
@@ -30,6 +30,7 @@ import urllib2
 import json
 import random
 from monservice.models import BoxInfo, BoxTypeInfo, SiteInfo, City, Province, Nation
+from rest_framework.settings import api_settings
 
 
 log = logger.get_logger('monservice.view.py')
@@ -1451,7 +1452,6 @@ def delete_site(request, id):
 @api_view(['PUT'])
 def modify_site(request, id):
     try:
-        response_msg = 'OK'
         data = json.loads(request.body)
 
         site = SiteInfo.objects.get(id=id)
@@ -1479,3 +1479,22 @@ def modify_site(request, id):
     else:
         response_msg = {'status': 'OK', 'msg': 'modify site success'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+# 获取全部堆场信息
+@csrf_exempt
+@api_view(['GET'])
+def get_sites(request):
+    try:
+        pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+        paginator = pagination_class()
+        sites = SiteInfo.objects.all().order_by('id')
+        page = paginator.paginate_queryset(sites, request)
+        ret_ser = SiteInfoSerializer(page, many=True)
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'code': 'ERROR', 'message': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return paginator.get_paginated_response(ret_ser.data, 'OK', 'query sites success')

@@ -38,4 +38,5 @@ urlpatterns = [
     url(r'^sites$', views.add_site),                              # 增加堆场
     url(r'^sites/(?P<id>\d+)/', views.delete_site),               # 删除堆场
     url(r'^sites/(?P<id>\d+)', views.modify_site),                # 修改堆场
+    url(r'^allsites$', views.get_sites),                          # 查询堆场
 ]
