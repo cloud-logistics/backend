@@ -249,24 +249,25 @@ CREATE OR REPLACE FUNCTION iot.cal_missing_alarm() RETURNS void AS $$
     v_id                                 INTEGER;
     v_alarm_status                       INTEGER;
     v_carrier                            INTEGER;
+    v_endpointid                         TEXT;
 
   BEGIN
 
     FOR data_record IN
-      /* 获取全部device最新数据，判断是否失联，﻿flag: 0 未失联  1 失联 */
+      /* 获取全部device最新数据，判断是否失联，flag: 0 未失联  1 失联 */
       SELECT CASE WHEN (timestamp + interval_time * 60) < extract(epoch from now()) THEN 1 ELSE 0 END AS flag,
-      timestamp,deviceid,endpointid FROM (
-      SELECT sensor_data.deviceid,sensor_data.endpointid,max(timestamp) AS timestamp,interval_time
+      timestamp,deviceid FROM (
+      SELECT sensor_data.deviceid,max(timestamp) AS timestamp,interval_time
       FROM iot.sensor_data sensor_data INNER JOIN
       (SELECT deviceid,type FROM iot.box_info GROUP BY deviceid,type) device
       ON sensor_data.deviceid = device.deviceid
       INNER JOIN iot.box_type_info box_type_info ON device.type = box_type_info.id
-      group by sensor_data.deviceid, interval_time, sensor_data.endpointid) A
+      group by sensor_data.deviceid, interval_time) A
     LOOP
       /* 获取箱子当前温度、湿度等数据 */
-      SELECT temperature,humidity,longitude,latitude,speed,collide FROM iot.sensor_data
+      SELECT temperature,humidity,longitude,latitude,speed,collide,endpointid FROM iot.sensor_data
       WHERE timestamp = data_record.timestamp AND deviceid = data_record.deviceid LIMIT 1
-      INTO v_temperature,v_humidity,v_longitude,v_latitude,v_speed,v_collide;
+      INTO v_temperature,v_humidity,v_longitude,v_latitude,v_speed,v_collide,v_endpointid;
 
       v_id := NULL;
       v_alarm_status := NULL;
@@ -318,7 +319,7 @@ CREATE OR REPLACE FUNCTION iot.cal_missing_alarm() RETURNS void AS $$
              0.8,
              '装货',
              1,
-             data_record.endpointid);
+             v_endpointid);
 
         ELSEIF v_alarm_status = 1 THEN
           /* 告警表中已有告警，且是未清除状态 */
