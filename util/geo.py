@@ -37,11 +37,12 @@ def cal_speed(start_latitude, start_longitude, end_latitude, end_longitude, star
 
 # 将传感器数据的经度或纬度转换为小数点形式，Longitude: 116296046, //dddmmmmmm   Latitude: 39583032,  //ddmmmmmm
 def cal_position(value):
-    hour = value[:-6]
-    minute = value[len(hour):len(value)]
-
-    return float(hour + '.' + minute)
-
+    if len(value) > 6:
+        hour = value[:-6]
+        minute = value[len(hour):len(value)]
+        return float(hour + '.' + minute)
+    else:
+        return value
 
 # 根据地点名称获取经纬度
 def get_lng_lat(address):
