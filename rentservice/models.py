@@ -4,9 +4,10 @@ from django.db import models
 from monservice.models import BoxTypeInfo, BoxInfo, SiteInfo
 import datetime
 from django.utils import timezone
-
+import pytz
 
 # Create your models here.
+timezone = pytz.timezone('Asia/Shanghai')
 
 
 class AccessGroup(models.Model):
@@ -82,18 +83,19 @@ class AppointmentDetail(models.Model):
     box_type = models.ForeignKey(BoxTypeInfo, related_name='appointment_detail_box_type_fk')
     box_num = models.IntegerField(default=0)
     site_id = models.ForeignKey(SiteInfo)
+    flag = models.IntegerField(default=0)
 
 
-class UserLeaseInfo(models.Model):
-    user_lease_info_id = models.CharField(max_length=48, primary_key=True)
-    user_id = models.ForeignKey(EnterpriseUser, related_name='user_lease_info_enterprise_user_fk')
-    lease_start_time = models.DateTimeField()
-    lease_end_time = models.DateTimeField()
-    lease_admin_off = models.CharField(max_length=48)
-    lease_admin_on = models.CharField(max_length=48)
-    box_id = models.ForeignKey(BoxInfo, related_name='user_lease_info_box_info_fk')
-    off_site_id = models.IntegerField()
-    on_site_id = models.IntegerField()
+class RentLeaseInfo(models.Model):
+    lease_info_id = models.CharField(max_length=48, primary_key=True)
+    user_id = models.ForeignKey(EnterpriseUser)
+    lease_start_time = models.DateTimeField(default=datetime.datetime.now())
+    lease_end_time = models.DateTimeField(null=True)
+    lease_admin_off = models.ForeignKey(RentalServiceAdmin, null=True, related_name='lease_admin_off_fk')
+    lease_admin_on = models.ForeignKey(RentalServiceAdmin, null=True, related_name='lease_admin_on_fk')
+    box = models.ForeignKey(BoxInfo, null=True, related_name='box_id_fk')
+    off_site = models.ForeignKey(SiteInfo, null=True, related_name='off_site_fk')
+    on_site = models.ForeignKey(SiteInfo, null=True, related_name='on_site_fk')
     rent = models.BigIntegerField(default=0)
 
 
@@ -113,23 +115,23 @@ class UserRentMonth(models.Model):
     rent = models.BigIntegerField(default=0)
 
 
-class RentalAdminOperationType(models.Model):
-    type_id = models.CharField(max_length=48, primary_key=True)
-    operation_name = models.CharField(max_length=128, default='default operation')
+# class RentalAdminOperationType(models.Model):
+#     type_id = models.CharField(max_length=48, primary_key=True)
+#     operation_name = models.CharField(max_length=128, default='default operation')
 
 
 class RentalAdminOperationRecords(models.Model):
     record_id = models.CharField(max_length=48, primary_key=True)
     admin_id = models.ForeignKey(RentalServiceAdmin, related_name='rental_admin_operation_record_rental_admin_id_fk')
-    operation = models.ForeignKey(RentalAdminOperationType, related_name='rental_admin_operation_record_oper_type_fk')
+    operation_detail = models.CharField(max_length=128, default='')
     flag = models.IntegerField(default=0)
 
 
-class RentServiceRegUser(models.Model):
-    reg_user_id = models.CharField(max_length=64, primary_key=True)
-    user_name = models.CharField(max_length=64)
-    user_password = models.CharField(max_length=128)
-    user_token = models.CharField(max_length=64)
+# class RentServiceRegUser(models.Model):
+#     reg_user_id = models.CharField(max_length=64, primary_key=True)
+#     user_name = models.CharField(max_length=64)
+#     user_password = models.CharField(max_length=128)
+#     user_token = models.CharField(max_length=64)
 
 
 
