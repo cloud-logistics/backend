@@ -11,3 +11,10 @@ def retcode(data, code, msg):
     ret['code'] = code
     ret['message'] = msg
     return ret
+
+
+def errcode(code, msg):
+    err_code = {}
+    err_code['code'] = code
+    err_code['message'] = msg
+    return err_code
