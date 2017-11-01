@@ -207,3 +207,15 @@ class BoxInfo(models.Model):
     tid = models.CharField(max_length=48)
     ava_flag = models.CharField(max_length=1, default='Y')
     siteinfo = models.ForeignKey(SiteInfo, related_name='box_site_fk', null=True)
+
+
+# 仓库各类型可用箱子数量
+class SiteBoxStock(models.Model):
+    stock_id = models.AutoField(primary_key=True)
+    site = models.ForeignKey(SiteInfo, related_name='stock_site_fk')
+    box_type = models.ForeignKey(BoxTypeInfo, related_name='stock_box_type_fk')
+    ava_num = models.IntegerField(default=0)  # 可用数量
+    reserve_num = models.IntegerField(default=0)  # 预约数量
+
+    class Meta:
+        unique_together = ('site', 'box_type',)

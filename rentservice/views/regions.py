@@ -21,7 +21,7 @@ tz = pytz.timezone('Asia/Shanghai')
 @api_view(['GET'])
 def get_province_list(request):
     province_list = Province.objects.all().order_by('province_id')
-    return JsonResponse(retcode(ProvinceSerializer(province_list, many=True).data, "000000", "Success"), safe=True,
+    return JsonResponse(retcode(ProvinceSerializer(province_list, many=True).data, "0000", "Success"), safe=True,
                         status=status.HTTP_200_OK)
 
 
@@ -32,7 +32,7 @@ def get_city_list(request, province_id):
     try:
         province = Province.objects.get(province_id=province_id)
     except Province.DoesNotExist:
-        return JsonResponse(retcode({}, "999999", "省信息不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(retcode({}, "9999", "省信息不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
     city_list = City.objects.filter(province=province).order_by('id')
-    return JsonResponse(retcode(CitySerializer(city_list, many=True).data, "000000", "Success"), safe=True,
+    return JsonResponse(retcode(CitySerializer(city_list, many=True).data, "0000", "Success"), safe=True,
                         status=status.HTTP_200_OK)

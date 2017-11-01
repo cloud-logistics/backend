@@ -134,5 +134,21 @@ class RentalAdminOperationRecords(models.Model):
 #     user_token = models.CharField(max_length=64)
 
 
+class AppointmentCodeSeq(models.Model):
+    """
+        This class maps to OrderNumberSeq which is a PostgreSQL sequence.
+        This sequence runs from 1 to 9999 after which it restarts (cycles) at 1.
+        A sequence is basically a special single row table.
+        """
+    sequence_name = models.CharField(max_length=128, primary_key=True)
+    last_value = models.IntegerField()
+    increment_by = models.IntegerField()
+    max_value = models.IntegerField()
+    min_value = models.IntegerField()
+    cache_value = models.IntegerField()
+    log_cnt = models.IntegerField()
+    is_cycled = models.BooleanField()
+    is_called = models.BooleanField()
 
-
+    class Meta:
+        db_table = u'iot.appointment_code'

@@ -35,4 +35,7 @@ urlpatterns = [
     url(r'^returncontainer$', views.return_container),            # 归还云箱
     url(r'^getSecurityConfig$', views.get_security_config),       # 获取运行安全参数
 
+    url(r'^sites$', views.add_site),                              # 增加堆场
+    url(r'^sites/(?P<id>\d+)/', views.delete_site),               # 删除堆场
+    url(r'^sites/(?P<id>\d+)', views.modify_site),                # 修改堆场
 ]

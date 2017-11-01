@@ -29,6 +29,7 @@ import urllib
 import urllib2
 import json
 import random
+from monservice.models import BoxInfo, BoxTypeInfo, SiteInfo, City, Province, Nation
 
 
 log = logger.get_logger('monservice.view.py')
@@ -673,102 +674,95 @@ def basic_info_manage(request):
     pass
 
 
-# 云箱新ID生成
-@csrf_exempt
-def new_containerid(request):
-    try:
-        data = json.loads(request.body)
-        category = to_str(data['category'])  # 云箱类型
-        sql = 'select max(id) from iot.box_info'
-        id_query = query_list(sql)
-        if len(id_query) > 0:
-            sn = id_query[0][0] + 1
-        else:
-            sn = 1
-        cid = generate_cid(sn, category)
-        ret_data = {'containerId': cid}
-    except Exception, e:
-        log.error(e.message)
-    finally:
-        return JsonResponse(ret_data, safe=True, status=status.HTTP_200_OK)
+
+def new_containerid(category):
+    sql = '''select nextval('iot.monservice_box_id_seq') from iot.monservice_box_id_seq'''
+    id_query = query_list(sql)
+    sn = id_query[0][0]
+    cid = generate_cid(sn, category)
+    return cid
+
 
 
 # 云箱基础信息录入
 @csrf_exempt
+@api_view(['POST'])
 def basic_info_config(request):
     try:
-        response_msg = 'internal error.'
         data = json.loads(request.body)
-        container_id = to_str(data['containerId'])              # 云箱id
+        rfid = to_str(data['rfid'])                             # RFID
         date_of_production = to_str(data['manufactureTime'])    # 生产日期
-        battery_info = to_str(data['batteryInfo'])              # 电源信息
-        manufacturer = to_str(data['factory'])                  # 生产厂家
-        produce_area = to_str(data['factoryLocation'])          # 生产地点
-        hardware_info = to_str(data['hardwareInfo'])            # 智能硬件信息
-        carrier = 1
-        # carrier = to_str(data['carrier'])                       # 承运人
+        battery_info = data['batteryInfo']                      # 电源信息
+        manufacturer = data['factory']                          # 生产厂家
+        produce_area = data['factoryLocation']                  # 生产地点
+        hardware_info = data['hardwareInfo']                    # 智能硬件信息
+        category = data['containerType']
+        container_id = new_containerid(str(category))           # 生成云箱id
 
-        sql = 'insert into iot.box_info(deviceid, type, date_of_production, manufacturer, produce_area, ' \
-              'hardware, battery, carrier) ' \
-              'VALUES (\'' + container_id + '\', 1, \'' + date_of_production + '\',' + str(manufacturer) + ',' \
-              + str(produce_area) + ',' + str(hardware_info) + ',' + str(battery_info) + ',' + str(carrier) + ')'
-
-        flag = container_exists(container_id)
-        if not flag:
-            # 云箱id不存在就保存
-            save_to_db(sql)
-            response_msg = 'save successfully.'
-        else:
-            response_msg = 'save failed, container id already exists.'
+        box_type = BoxTypeInfo.objects.get(id=category)
+        box = BoxInfo(deviceid=container_id, type=box_type, date_of_production=date_of_production, manufacturer=manufacturer,
+                      produce_area=produce_area, hardware=hardware_info, battery=battery_info, carrier=1, tid=rfid)
+        box.save()
 
     except Exception, e:
         log.error(e.message)
-    finally:
+        response_msg = {'status': 'ERROR', 'msg': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'add box success'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
-
 # 修改云箱基础信息
+@csrf_exempt
 @api_view(['PUT'])
-# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-# @permission_classes((IsAuthenticated,))
 def modify_basic_info(request):
     try:
-        response_msg = 'save successfully.'
         data = json.loads(request.body)
         container_id = to_str(data['containerId'])  # 云箱id
-        date_of_production = to_str(data['manufactureTime'])  # 生产日期
-        battery_info = to_str(data['batteryInfo'])  # 电源信息
-        manufacturer = to_str(data['factory'])  # 生产厂家
-        produce_area = to_str(data['factoryLocation'])  # 生产地点
-        hardware_info = to_str(data['hardwareInfo'])  # 智能硬件信息
-        carrier = 1
-        # carrier = to_str(data['carrier'])                       # 承运人
+        box = BoxInfo.objects.get(deviceid=container_id)
 
-        sql = '''update iot.box_info set type = 1, date_of_production = '%s',  manufacturer = '%s', produce_area = '%s', hardware = '%s',
-            battery = '%s' where deviceid = '%s' ''' % (date_of_production, str(manufacturer), str(produce_area), str(hardware_info), str(battery_info), container_id)
-        save_to_db(sql)
+        date_of_production = to_str(data['manufactureTime'])  # 生产日期
+        battery_info = data['batteryInfo']  # 电源信息
+        manufacturer = data['factory']  # 生产厂家
+        produce_area = data['factoryLocation']  # 生产地点
+        hardware_info = data['hardwareInfo']  # 智能硬件信息
+        category = data['containerType']
+        rfid = to_str(data['rfid']) # RFID
+
+        box.type = BoxTypeInfo.objects.get(id=category)
+        box.date_of_production = date_of_production
+        box.manufacturer = manufacturer
+        box.produce_area = produce_area
+        box.hardware = hardware_info
+        box.battery = battery_info
+        box.tid = rfid
+
+        box.save()
 
     except Exception, e:
         log.error(e.message)
-    finally:
-        return JsonResponse(response_msg, safe=False, status=status.HTTP_200_OK)
+        response_msg = {'status': 'ERROR', 'msg': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'modify box success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
 # 删除云箱基础信息
+@csrf_exempt
 @api_view(['DELETE'])
-# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-# @permission_classes((IsAuthenticated,))
 def remove_basic_info(request, id):
     try:
         container_id = str(id)
-        response_msg = 'save successfully.'
-        sql = '''delete from iot.box_info where deviceid = '%s' ''' % container_id
-        delete_from_db(sql)
+        BoxInfo.objects.get(deviceid=container_id).delete()
 
     except Exception, e:
         log.error(e.message)
-    finally:
+        response_msg = {'status': 'ERROR', 'msg': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'delete box success'}
         return JsonResponse(response_msg, safe=False, status=status.HTTP_200_OK)
 
 
@@ -1403,3 +1397,85 @@ def gen_x_axis_time_list():
 #                                          {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
 #                                         ]
 #     return final_response
+
+
+# 新增堆场
+@csrf_exempt
+@api_view(['POST'])
+def add_site(request):
+    try:
+        data = json.loads(request.body)
+        location = to_str(data['location'])             # 堆场名称
+        longtitude = to_str(data['longitude'])          # 经度
+        latitude = to_str(data['latitude'])             # 纬度
+        site_code = to_str(data['site_code'])           # 堆场代码
+        volume = data['volume']                 # 堆场箱子容量
+        city_id = data['city_id']                       # 城市
+        province_id = data['province_id']               # 省
+        nation_id = data['nation_id']                   # 国家
+
+        city = City.objects.get(id=city_id)
+        province = Province.objects.get(province_id=province_id)
+        nation = Nation.objects.get(nation_id=nation_id)
+        site = SiteInfo(location=location, latitude=latitude, longitude=longtitude, site_code=site_code,
+                        city= city, province=province, nation=nation, volume=volume)
+        site.save()
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'status': 'ERROR', 'msg': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'add site success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+# 删除堆场
+@csrf_exempt
+@api_view(['DELETE'])
+def delete_site(request, id):
+    try:
+        SiteInfo.objects.get(id=id).delete()
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'status': 'ERROR', 'msg': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'delete site success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+# 修改堆场
+@csrf_exempt
+@api_view(['PUT'])
+def modify_site(request, id):
+    try:
+        response_msg = 'OK'
+        data = json.loads(request.body)
+
+        site = SiteInfo.objects.get(id=id)
+        site.location = to_str(data['location'])  # 堆场名称
+        site.longitude = to_str(data['longitude'])  # 经度
+        site.latitude = to_str(data['latitude'])  # 纬度
+        site.site_code = to_str(data['site_code'])  # 堆场代码
+        site.volume = data['volume']  # 堆场箱子容量
+
+        city_id = data['city_id']  # 城市
+        province_id = data['province_id']  # 省
+        nation_id = data['nation_id']  # 国家
+        city = City.objects.get(id=city_id)
+        province = Province.objects.get(province_id=province_id)
+        nation = Nation.objects.get(nation_id=nation_id)
+        site.city = city
+        site.province = province
+        site.nation = nation
+        site.save()
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'status': 'ERROR', 'msg': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'modify site success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
