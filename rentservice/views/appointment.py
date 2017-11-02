@@ -13,8 +13,11 @@ from rentservice.models import AppointmentDetail
 from monservice.models import SiteBoxStock
 from rentservice.models import EnterpriseUser
 from rentservice.models import AppointmentCodeSeq
+from rentservice.serializers import UserAppointmentSerializer
+from rentservice.serializers import AppointmentDetailSerializer
 from monservice.models import SiteInfo
 from monservice.models import BoxTypeInfo
+from monservice.serializers import SiteInfoSerializer
 import datetime
 import uuid
 import pytz
@@ -79,16 +82,65 @@ def create_appointment(request):
                     appointment_detail = AppointmentDetail(detail_id=str(uuid.uuid1()),
                                                            appointment_id=appointment_model,
                                                            box_type=box_type_model, box_num=_site_num['num'],
-                                                           site_id=site_model)
+                                                           site_id=site_model, flag=0)
                     detail_list.append(appointment_detail)
             # 批量insert appointment detail
             AppointmentDetail.objects.bulk_create(detail_list)
     except Exception as e:
-        log.error("the message is %s" % e.message)
-        log.error("the args is %s" % e.args)
         return JsonResponse(retcode({}, "9999", e.message), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return JsonResponse(retcode({}, "0000", "Success"), safe=True, status=status.HTTP_200_OK)
+    return JsonResponse(retcode(UserAppointmentSerializer(appointment_model).data, "0000", "Success"), safe=True,
+                        status=status.HTTP_200_OK)
+
+
+# 承运个人预约单查询
+@csrf_exempt
+@api_view(['GET'])
+def get_list_by_user(request, user_id):
+    try:
+        user = EnterpriseUser.objects.get(user_id=user_id)
+    except EnterpriseUser.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
+    # 获取预约单列表
+    appointment_list = UserAppointment.objects.filter(user_id=user)
+    ret = []
+    for appointment_item in appointment_list:
+        tmp_list = []
+        res_app_list = []
+        detail_list = AppointmentDetail.objects.filter(appointment_id=appointment_item)
+        for detail in detail_list:
+            if detail.site_id.id in tmp_list:
+                res_app_list[tmp_list.index(detail.site_id.id)]['box_info'].append(
+                    AppointmentDetailSerializer(detail).data)
+            else:
+                tmp_list.append(detail.site_id.id)
+                res_app_list.append({'site': SiteInfoSerializer(detail.site_id).data,
+                                     'box_info': [AppointmentDetailSerializer(detail).data]})
+        ret.append({'appointment': UserAppointmentSerializer(appointment_item).data, 'info': res_app_list})
+    return JsonResponse(retcode(ret, "0000", "Success"), safe=True, status=status.HTTP_200_OK)
+
+
+# 预约单详情查询
+@csrf_exempt
+@api_view(['GET'])
+def get_appointment_detail(request, appointment_id):
+    try:
+        appointment = UserAppointment.objects.get(appointment_id=appointment_id)
+    except UserAppointment.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "预约单不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
+    tmp_list = []
+    res_app_list = []
+    detail_list = AppointmentDetail.objects.filter(appointment_id=appointment)
+    for detail in detail_list:
+        if detail.site_id.id in tmp_list:
+            res_app_list[tmp_list.index(detail.site_id.id)]['box_info'].append(
+                AppointmentDetailSerializer(detail).data)
+        else:
+            tmp_list.append(detail.site_id.id)
+            res_app_list.append({'site': SiteInfoSerializer(detail.site_id).data,
+                                 'box_info': [AppointmentDetailSerializer(detail).data]})
+    ret = {'appointment': UserAppointmentSerializer(appointment).data, 'info': res_app_list}
+    return JsonResponse(retcode(ret, "0000", "Success"), safe=True, status=status.HTTP_200_OK)
 
 
 # 获取预约码

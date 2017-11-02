@@ -11,7 +11,6 @@ from rentservice.views import regions
 from rentservice.views import boxrentservice
 from rentservice.views import appointment
 
-
 urlpatterns = [
     url(r'^rentservice/enterprise/enterpriseinfo/addenterpriseinfo/$', enterprise.add_enterprise_info),  # 企业信息增加接口
     url(r'^rentservice/enterprise/enterpriseinfo/updateenterpriseinfo/$', enterprise.update_enterprise_info),  # 企业信息更新接口
@@ -37,5 +36,7 @@ urlpatterns = [
     url(r'^rentservice/regions/cities/(?P<province_id>[0-9]+)$', regions.get_city_list),  # 获取制定省的市列表
     url(r'^rentservice/boxrentservice/order$', boxrentservice.rent_boxes_order),  # 租箱
     url(r'^rentservice/appointment/create', appointment.create_appointment),  # 承租方预约
+    url(r'^rentservice/appointment/(?P<user_id>[0-9a-zA-Z-]+)/list$', appointment.get_list_by_user),  # 承租方预约列表查询
+    url(r'^rentservice/appointment/(?P<appointment_id>[0-9a-zA-Z-]+)/detail$', appointment.get_appointment_detail),  # 预约详情查询
 
 ]
