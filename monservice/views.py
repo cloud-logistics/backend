@@ -12,7 +12,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from util.db import query_list, save_to_db, delete_from_db
-from util.geo import cal_position
+from util.geo import cal_position, get_lng_lat, get_position_name
 from util import logger
 from util.cid import generate_cid
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -70,17 +70,6 @@ def containers_overview(request):
         return JsonResponse(container_info_list, safe=False, status=status.HTTP_200_OK)
     except Exception, e:
         log.error('containers_overview response error, msg: ' + e.__str__())
-        return JsonResponse('', safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@csrf_exempt
-def satellites_overview(request):
-    try:
-        with open(str(file_path)) as f:
-            load_dict = json.load(f)
-        return JsonResponse(load_dict, safe=False, status=status.HTTP_200_OK)
-    except Exception, e:
-        log.error('satellites_overview response error, msg: ' + e.__str__())
         return JsonResponse('', safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -417,9 +406,6 @@ def basic_info(request):
                       'manufacturer_info.name, carrier_info.carrier_name, date_of_production '
                       'from iot.box_info box_info '
                       'left join iot.box_type_info on box_info.type = box_type_info.id '
-                      'left join iot.box_order_relation box_order_relation on box_order_relation.deviceid = box_info.deviceid '
-                      'left join iot.order_info order_info on order_info.trackid = box_order_relation.trackid '
-                      'left join iot.carrier_info on order_info.carrierid = carrier_info.id '
                       'left join iot.produce_area_info produce_area_info on box_info.produce_area = produce_area_info.id '
                       'left join iot.manufacturer_info manufacturer_info on box_info.manufacturer = manufacturer_info.id '
                       'group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
@@ -1439,23 +1425,16 @@ def get_city_list(request, province_id):
 @api_view(['POST'])
 def get_lnglat(request):
     position_name = json.loads(request.body)['position_name']
-    values = {}
-    values['address'] = to_str(position_name)
-    values['key'] = "AIzaSyDD2vDhoHdl8eJAIyWPv0Jw7jeO6VtlRF8"
-    params = urllib.urlencode(values)
-    url = "https://ditu.google.cn/maps/api/geocode/json"
-    geturl = url + "?" + params
-    request = urllib2.Request(geturl)
-    response = urllib2.urlopen(request)
-    response_dic = json.loads(response.read())
+    data = get_lng_lat(to_str(position_name))
+    return JsonResponse({'position_name': position_name,
+                         'longitude': data['longitude'], 'latitude': data['latitude']},
+                        safe=True, status=status.HTTP_200_OK)
 
-    if response_dic['status'] == 'OK':
-        longitude = str(response_dic['results'][0]['geometry']['location']['lng'])
-        latitude = str(response_dic['results'][0]['geometry']['location']['lat'])
-        return JsonResponse({'position_name': position_name,
-                             'longitude': longitude, 'latitude': latitude}, safe=True, status=status.HTTP_200_OK)
-    else:
-        log.info("req response: %s" % response_dic)
-        return JsonResponse({'position_name': position_name,
-                             'longitude': 0, 'latitude': 0}, safe=True, status=status.HTTP_200_OK)
-
+# 根据经纬度查询地名
+@csrf_exempt
+@api_view(['POST'])
+def get_position(request):
+    longitude = json.loads(request.body)['longitude']
+    latitude = json.loads(request.body)['latitude']
+    position_name = get_position_name(longitude, latitude)
+    return JsonResponse({'position_name': position_name}, safe=True, status=status.HTTP_200_OK)

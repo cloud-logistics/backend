@@ -2,16 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from django.conf.urls import url
-
 from monservice import views
 from monservice.view import site
 
 urlpatterns = [
-    # url(r'^auth$', obtain_jwt_token),
     url(r'^auth$', views.verify_user),
-    url(r'^containers$', views.containers_overview),
-    url(r'^satellites$', views.satellites_overview),
-    url(r'^realtimeInfo$', views.realtime_message),               # 实时报文
+    url(r'^containers$', views.containers_overview),              # 云箱概览
+    url(r'^realtimeInfo$', views.realtime_message),               # 实时状态
     url(r'^containerInstantInfo$', views.realtime_position),      # 实时位置
     url(r'^containerhistory$', views.history_path),               # 历史轨迹
     url(r'^alerts$', views.alarm_monitor),                        # 报警监控
@@ -40,9 +37,10 @@ urlpatterns = [
     url(r'^sites/(?P<id>\d+)', site.modify_site),                # 修改堆场
     url(r'^allsites$', site.get_sites),                          # 查询堆场
 
-
     url(r'^nationlist$', views.get_nation_list),                          # 获取国家列表
     url(r'^provincelist/(?P<nation_id>\d+)$', views.get_province_list),   # 根据国家获取省列表
     url(r'^citylist/(?P<province_id>\d+)$', views.get_city_list),         # 根据省获取城市列表
     url(r'^getlnglat$', views.get_lnglat),                        # 根据省获取城市列表
+    url(r'^getPosition$', views.get_position),                    # 根据经纬度获取地名
+
 ]
