@@ -7,11 +7,12 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rentservice.models import EnterpriseInfo, EnterpriseUser, AccessGroup, AuthUserGroup
-from rentservice.utils.retcode import retcode
+from rentservice.utils.retcode import retcode, errcode
 from rentservice.utils import logger
 from rentservice.utils.redistools import RedisTool
 from django.db import transaction
-# from rentservice.serializers import *
+from rest_framework.settings import api_settings
+from rentservice.serializers import EnterpriseUserSerializer
 import uuid
 import datetime
 import pytz
@@ -160,6 +161,32 @@ def del_enterprise_user(request, user_id):
     except EnterpriseInfo.DoesNotExist:
         return JsonResponse(retcode(ret, "9999", "删除用户信息失败"), safe=True, status=status.HTTP_400_BAD_REQUEST)
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def list_enterprise_user(request):
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    try:
+        enterpise_user_ret = EnterpriseUser.objects.all()
+        page = paginator.paginate_queryset(enterpise_user_ret, request)
+        enterprise_user_ser = EnterpriseUserSerializer(page, many=True)
+    except Exception, e:
+        log.error(repr(e))
+    return paginator.get_paginated_response(enterprise_user_ser.data)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def enterprise_user_detail(request, user_id):
+    try:
+        user = EnterpriseUser.objects.get(user_id=user_id)
+        ser_user = EnterpriseUserSerializer(user)
+    except EnterpriseUser.DoesNotExist:
+        return JsonResponse(retcode(errcode("9999", "查询用户信息失败"), "9999", "查询用户信息失败"), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    return JsonResponse(retcode(ser_user.data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
 
 def update_redis_token(user_token, group):
