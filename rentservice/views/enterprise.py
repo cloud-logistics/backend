@@ -155,3 +155,23 @@ def enterpise_info_detail(request, enterprise_id):
     except EnterpriseInfo.DoesNotExist:
         return JsonResponse(retcode(errcode("9999", "查询企业信息失败"), "9999", "查询企业信息失败"), safe=True, status=status.HTTP_400_BAD_REQUEST)
     return JsonResponse(retcode(ser_enterpriseinfo.data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['PUT'])
+def enterpise_deposit_confirm(request):
+    data = JSONParser().parse(request)
+    try:
+        enterprise_id = data['enterprise_id']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '企业id为空'), "9999", '企业id为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        ret_enterpriseinfo = EnterpriseInfo.objects.get(enterprise_id=enterprise_id)
+        ser_enterpriseinfo = EnterpriseInfoSerializer(ret_enterpriseinfo)
+        ret_enterpriseinfo.enterprise_deposit_status = 1
+        ret_enterpriseinfo.save()
+    except EnterpriseInfo.DoesNotExist:
+        return JsonResponse(retcode(errcode("9999", "查询企业信息失败"), "9999", "查询企业信息失败"), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    return JsonResponse(retcode(ser_enterpriseinfo.data, "0000", "Succ"), safe=False, status=status.HTTP_200_OK)

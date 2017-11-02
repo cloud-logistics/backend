@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from django.http import JsonResponse
+from django.db import transaction
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from util.db import query_list, save_to_db, query_list_inject, delete_from_db
 from util.geo import cal_position, get_lng_lat, get_distance, get_path_distance
 from util import logger
+from monservice.models import SiteHistory
 from rest_framework.decorators import api_view
 import json
 import uuid
@@ -527,16 +529,12 @@ def get_sites(request):
 @api_view(['GET'])
 def get_site_stream(request, id):
     try:
-        site_id = str(id)
-        log.debug(site_id)
-        sql = '''select timestamp, box_id, op_type from iot.site_history where site_id = %s order by timestamp''' % site_id
-
-        data = query_list(sql)
         ret_data = []
+        data = SiteHistory.objects.filter(site_id=id)
         for record in data:
-            ts = record[0]
-            box_id = str(record[1])
-            type = record[2]
+            ts = record.timestamp
+            box_id = record.box_id
+            type = record.op_type
             timestr = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
             # 操作类型：1表示入仓，0表示出仓
@@ -546,8 +544,7 @@ def get_site_stream(request, id):
                 typestr = '出库'
 
             ret_data.append({'timestamp': timestr, 'box_id': box_id, 'type': typestr})
-
-            resp = {'site_id': site_id, 'siteHistory': ret_data}
+            resp = {'site_id': str(id), 'siteHistory': ret_data}
     except Exception, e:
         log.error(e.message)
         response_msg = e.message
@@ -564,12 +561,12 @@ def box_inout(request):
         site_id = str(data['site_id'])  # 堆场id
         boxes = data['boxes']  # 箱子数组
         ts = str(time.time())[0:10]
-
-        for box in boxes:
-            box_id = str(box['box_id'])  # 箱子id
-            type = str(box['type'])      # 操作类型：1表示入仓，0表示出仓
-            sql = '''insert into iot.site_history(timestamp, site_id, box_id, op_type) values(%s, %s, '%s', %s)''' % (ts, site_id, box_id, type)
-        save_to_db(sql)
+        with transaction.atomic():
+            for box in boxes:
+                box_id = str(box['box_id'])  # 箱子id
+                type = str(box['type'])  # 操作类型：1表示入仓，0表示出仓
+                history = SiteHistory(timestamp=ts, site_id=site_id, box_id=box_id, op_type=type)
+                history.save()
     except Exception, e:
         log.error(e.message)
         response_msg = e.message
