@@ -30,11 +30,6 @@ import urllib2
 import json
 import random
 from monservice.models import BoxInfo, BoxTypeInfo, SiteInfo, City, Province, Nation
-<<<<<<< HEAD
-=======
-# from rest_framework.settings import api_settings
->>>>>>> e2fd7677967127939f0d4c89b0a198aca9cfdea2
-
 
 log = logger.get_logger('monservice.view.py')
 file_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + 'mock_data.json'
