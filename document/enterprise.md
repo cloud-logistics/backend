@@ -6,7 +6,7 @@
 
 #### URL
 
-`api/v1/cloudbox/rentservice/enterprise/enterpriseinfo/addenterpriseinfo/`
+`container／api/v1/cloudbox/rentservice/enterprise/enterpriseinfo/addenterpriseinfo/`
 
 #### Parameter
 
@@ -43,7 +43,7 @@
 
 #### URL
 
-`api/v1/cloudbox/rentservice/enterprise/enterpriseinfo/updateenterpriseinfo/`
+`container／api/v1/cloudbox/rentservice/enterprise/enterpriseinfo/updateenterpriseinfo/`
 
 #### Parameter
 
@@ -81,7 +81,7 @@
 
 #### URL
 
-`api/v1/cloudbox/rentservice/enterprise/enterpriseinfo/{enterprise_id}`
+`container／api/v1/cloudbox/rentservice/enterprise/enterpriseinfo/{enterprise_id}`
 
 #### Parameter
 
@@ -110,7 +110,7 @@
 
 #### URL
 
-`api/v1/cloudbox/rentservice/enterprise/enterpriseinfo/list/`
+`container／api/v1/cloudbox/rentservice/enterprise/enterpriseinfo/list`
 
 #### Parameter
 
@@ -153,7 +153,7 @@
 
 #### URL
 
-`api/v1/cloudbox/rentservice/enterprise/enterpriseinfo/{enterprise_id}/`
+`container／api/v1/cloudbox/rentservice/enterprise/enterpriseinfo/{enterprise_id}/`
 
 #### Parameter
 
