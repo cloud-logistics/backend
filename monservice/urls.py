@@ -39,4 +39,10 @@ urlpatterns = [
     url(r'^sites/(?P<id>\d+)/', views.delete_site),               # 删除堆场
     url(r'^sites/(?P<id>\d+)', views.modify_site),                # 修改堆场
     url(r'^allsites$', views.get_sites),                          # 查询堆场
+
+    url(r'^nationlist$', views.get_nation_list),                          # 获取国家列表
+    url(r'^provincelist/(?P<nation_id>\d+)$', views.get_province_list),   # 根据国家获取省列表
+    url(r'^citylist/(?P<province_id>\d+)$', views.get_city_list),         # 根据省获取城市列表
+    url(r'^getlnglat$', views.get_lnglat),                        # 根据省获取城市列表
+
 ]

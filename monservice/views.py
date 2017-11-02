@@ -1498,3 +1498,70 @@ def get_sites(request):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return paginator.get_paginated_response(ret_ser.data, 'OK', 'query sites success')
+
+
+# 获取国家列表
+@csrf_exempt
+@api_view(['GET'])
+def get_nation_list(request):
+    ret_list = []
+    nation_list = Nation.objects.filter(nation_name='中国').order_by('sorted_key')
+    for item in nation_list:
+        ret_list.append({'nation_id': item.nation_id, 'nation_name': item.nation_name})
+
+    return JsonResponse({'data': ret_list}, safe=True, status=status.HTTP_200_OK)
+
+
+# 根据国家获取省列表
+@csrf_exempt
+@api_view(['GET'])
+def get_province_list(request, nation_id):
+    ret_list = []
+    province_list = Province.objects.filter(nation_id=nation_id).order_by('zip_code')
+    for item in province_list:
+        ret_list.append({'province_id': item.province_id, 'province_name': item.province_name})
+
+    return JsonResponse({'data': ret_list}, safe=True, status=status.HTTP_200_OK)
+
+
+# 根据省获取城市列表
+@csrf_exempt
+@api_view(['GET'])
+def get_city_list(request, province_id):
+    ret_list = []
+    city_list = City.objects.filter(province_id=province_id).order_by('sorted_key')
+    for item in city_list:
+        ret_list.append({'city_id': item.id, 'city_name': item.city_name,
+                         'longitude': item.longitude, 'latitude': item.latitude})
+    return JsonResponse({'data': ret_list}, safe=True, status=status.HTTP_200_OK)
+
+
+# 根据地点名称获取经纬度
+@csrf_exempt
+@api_view(['POST'])
+def get_lnglat(request):
+    position_name = json.loads(request.body)['position_name']
+    values = {}
+    values['address'] = to_str(position_name)
+    values['key'] = "AIzaSyDD2vDhoHdl8eJAIyWPv0Jw7jeO6VtlRF8"
+    params = urllib.urlencode(values)
+    url = "https://ditu.google.cn/maps/api/geocode/json"
+    geturl = url + "?" + params
+    request = urllib2.Request(geturl)
+    response = urllib2.urlopen(request)
+    response_dic = json.loads(response.read())
+
+    if response_dic['status'] == 'OK':
+        longitude = str(response_dic['results'][0]['geometry']['location']['lng'])
+        latitude = str(response_dic['results'][0]['geometry']['location']['lat'])
+        return JsonResponse({'position_name': position_name,
+                             'longitude': longitude, 'latitude': latitude}, safe=True, status=status.HTTP_200_OK)
+    else:
+        log.info("req response: %s" % response_dic)
+        return JsonResponse({'position_name': position_name,
+                             'longitude': 0, 'latitude': 0}, safe=True, status=status.HTTP_200_OK)
+
+
+
+
+
