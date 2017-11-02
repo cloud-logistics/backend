@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from models import ContainerRentInfo
 from models import SiteInfo
+from models import SiteHistory
 from models import Nation
 from models import City
 from models import BoxTypeInfo
@@ -37,6 +38,12 @@ class SiteInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SiteInfo
+        fields = '__all__'
+
+
+class SiteHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteHistory
         fields = '__all__'
 
 
