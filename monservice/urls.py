@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from django.conf.urls import url
-from rest_framework_jwt.views import obtain_jwt_token
-from rest_framework_jwt.views import verify_jwt_token
+
 from monservice import views
+from monservice.view import site
 
 urlpatterns = [
     # url(r'^auth$', obtain_jwt_token),
@@ -35,8 +35,8 @@ urlpatterns = [
     url(r'^returncontainer$', views.return_container),            # 归还云箱
     url(r'^getSecurityConfig$', views.get_security_config),       # 获取运行安全参数
 
-    url(r'^sites$', views.add_site),                              # 增加堆场
-    url(r'^sites/(?P<id>\d+)/', views.delete_site),               # 删除堆场
-    url(r'^sites/(?P<id>\d+)', views.modify_site),                # 修改堆场
-    url(r'^allsites$', views.get_sites),                          # 查询堆场
+    url(r'^sites$', site.add_site),                              # 增加堆场
+    url(r'^sites/(?P<id>\d+)/', site.delete_site),               # 删除堆场
+    url(r'^sites/(?P<id>\d+)', site.modify_site),                # 修改堆场
+    url(r'^allsites$', site.get_sites),                          # 查询堆场
 ]
