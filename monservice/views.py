@@ -1437,4 +1437,29 @@ def get_position(request):
     longitude = json.loads(request.body)['longitude']
     latitude = json.loads(request.body)['latitude']
     position_name = get_position_name(longitude, latitude)
-    return JsonResponse({'position_name': position_name}, safe=True, status=status.HTTP_200_OK)
+    if position_name <> '':
+        city_data = City.objects.extra(select=None,
+                                       where=['POSITION(city_name IN %s) > 0',
+                                              'POSITION(nation_name IN %s) > 0',
+                                              'POSITION(state_name IN %s) > 0',
+                                              ], params=[position_name, position_name, position_name])
+        if len(city_data) > 0:
+            nation_id = city_data[0].nation_id
+            province_id = city_data[0].province_id
+            city_id = city_data[0].id
+            nation_name = city_data[0].nation_name
+            province_name = city_data[0].state_name
+            city_name = city_data[0].city_name
+
+        else:
+            nation_id = 0
+            province_id = 0
+            city_id = 0
+            nation_name = ''
+            province_name = ''
+            city_name = ''
+
+    return JsonResponse({'position_name': position_name, 'nation_id': nation_id,
+                         'province_id': province_id, 'city_id': city_id,
+                         'nation_name': nation_name, 'province_name': province_name,
+                         'city_name': city_name}, safe=True, status=status.HTTP_200_OK)
