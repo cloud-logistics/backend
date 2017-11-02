@@ -30,7 +30,7 @@ import urllib2
 import json
 import random
 from monservice.models import BoxInfo, BoxTypeInfo, SiteInfo, City, Province, Nation
-from rest_framework.settings import api_settings
+# from rest_framework.settings import api_settings
 
 
 log = logger.get_logger('monservice.view.py')
