@@ -174,6 +174,13 @@ class SiteInfo(models.Model):
     volume = models.IntegerField(default=0)
 
 
+class SiteHistory(models.Model):
+    timestamp = models.IntegerField()
+    site_id = models.IntegerField()
+    box_id = models.CharField(max_length=48, default='')
+    op_type = models.IntegerField(default=0)
+
+
 class BoxTypeInfo(models.Model):
     id = models.AutoField(primary_key=True)
     box_type_name = models.CharField(max_length=128, default='')
