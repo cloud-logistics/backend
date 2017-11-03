@@ -62,10 +62,16 @@ class BoxTypeInfoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class SiteBareInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteInfo
+        fields = ('id', 'location', 'site_code')
+
+
 class SiteDispatchSerializer(serializers.ModelSerializer):
 
-    start = SiteInfoSerializer()
-    finish = SiteInfoSerializer()
+    start = SiteBareInfoSerializer()
+    finish = SiteBareInfoSerializer()
 
     class Meta:
         model = SiteDispatch
@@ -121,3 +127,6 @@ class SiteFullInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteInfo
         fields = '__all__'
+
+
+

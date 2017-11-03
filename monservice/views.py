@@ -29,7 +29,7 @@ import urllib
 import urllib2
 import json
 import random
-from monservice.models import BoxInfo, BoxTypeInfo, SiteInfo, City, Province, Nation
+from monservice.models import BoxInfo, BoxTypeInfo, SiteInfo, City, Province, Nation, Manufacturer, ProduceArea, Hardware, Battery
 
 log = logger.get_logger('monservice.view.py')
 file_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + 'mock_data.json'
@@ -678,15 +678,20 @@ def basic_info_config(request):
         rfid = to_str(data['rfid'])                             # RFID
         date_of_production = to_str(data['manufactureTime'])    # 生产日期
         battery_info = data['batteryInfo']                      # 电源信息
+        bat = Battery.objects.get(id=battery_info)
         manufacturer = data['factory']                          # 生产厂家
+        man = Manufacturer.objects.get(id=manufacturer)
         produce_area = data['factoryLocation']                  # 生产地点
+        pro = ProduceArea.objects.get(id=produce_area)
         hardware_info = data['hardwareInfo']                    # 智能硬件信息
+        hard = Hardware.objects.get(id=hardware_info)
         category = data['containerType']
+
         container_id = new_containerid(str(category))           # 生成云箱id
 
         box_type = BoxTypeInfo.objects.get(id=category)
-        box = BoxInfo(deviceid=container_id, type=box_type, date_of_production=date_of_production, manufacturer=manufacturer,
-                      produce_area=produce_area, hardware=hardware_info, battery=battery_info, carrier=1, tid=rfid)
+        box = BoxInfo(deviceid=container_id, type=box_type, date_of_production=date_of_production, manufacturer=man,
+                      produce_area=pro, hardware=hard, battery=bat, carrier=1, tid=rfid)
         box.save()
 
     except Exception, e:

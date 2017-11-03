@@ -138,3 +138,6 @@ def get_site_boxes(request, id):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return paginator.get_paginated_response(ret_ser.data, 'OK', 'query sites box success')
+
+
+

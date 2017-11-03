@@ -26,11 +26,12 @@ ave = 0.5
 @api_view(['GET'])
 def get_dispatches(request):
     try:
+        dispatches = SiteDispatch.objects.all().order_by('did')
 
-        dispatches = SiteDispatch.objects.filter(create_time__gte=datetime.date.today()).order_by('did')
         if len(dispatches) == 0:
             dispatches = generate_dispatches()
-        ser_dispatches = SiteDispatchSerializer(dispatches)
+
+        ser_dispatches = SiteDispatchSerializer(dispatches, many=True)
 
     except Exception, e:
         log.error(e.message)
@@ -38,7 +39,30 @@ def get_dispatches(request):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'dispatches': ser_dispatches.data, 'status':'OK', 'msg': 'query dispatches success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def create_dispatches(request):
+    try:
+        data = json.loads(request.body)
+        start_id = data['start_id']
+        finish_id = data['finish_id']
+        count = data['count']
+
+        # start_site = SiteInfo.objects.get(id=start_id)
+        # finish_site = SiteInfo.objects.get(id=finish_id)
+        dispatch = SiteDispatch(count=count, start_id=start_id, finish_id=finish_id, create_date=datetime.date.today())
+        dispatch.save()
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'code': 'ERROR', 'message': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status':'OK', 'msg': 'query dispatches success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
 class DSite:
