@@ -109,12 +109,6 @@ class UserRentMonthSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# class RentalAdminOperationType(serializers.ModelSerializer):
-#     class Meta:
-#         model = RentalAdminOperationType
-#         fields = '__all__'
-
-
 class RentalAdminOperationRecordsSerializer(serializers.ModelSerializer):
     class Meta:
         model = RentalAdminOperationRecords
