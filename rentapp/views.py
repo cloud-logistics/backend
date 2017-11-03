@@ -138,10 +138,10 @@ def get_site_stream(request, id):
                 typestr = '出库'
 
             ret_data.append({'timestamp': timestr, 'box_id': box_id, 'type': typestr})
-            resp = {'site_id': str(id), 'siteHistory': ret_data}
+        resp = {'site_id': str(id), 'siteHistory': ret_data}
     except Exception, e:
         log.error(e.message)
-        response_msg = e.message
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return JsonResponse(resp, safe=True, status=status.HTTP_200_OK)

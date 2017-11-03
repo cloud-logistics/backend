@@ -17,7 +17,7 @@ from util import logger
 from util.cid import generate_cid
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from models import ContainerRentInfo
-from serializers import SiteInfoSerializer
+from serializers import SiteInfoSerializer, BoxTypeInfoSerializer
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework_jwt.settings import api_settings
@@ -29,7 +29,7 @@ import urllib
 import urllib2
 import json
 import random
-from monservice.models import BoxInfo, BoxTypeInfo, SiteInfo, City, Province, Nation
+from monservice.models import BoxInfo, BoxTypeInfo, SiteInfo, City, Province, Nation, Manufacturer, ProduceArea, Hardware, Battery
 
 log = logger.get_logger('monservice.view.py')
 file_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + 'mock_data.json'
@@ -678,15 +678,20 @@ def basic_info_config(request):
         rfid = to_str(data['rfid'])                             # RFID
         date_of_production = to_str(data['manufactureTime'])    # 生产日期
         battery_info = data['batteryInfo']                      # 电源信息
+        bat = Battery.objects.get(id=battery_info)
         manufacturer = data['factory']                          # 生产厂家
+        man = Manufacturer.objects.get(id=manufacturer)
         produce_area = data['factoryLocation']                  # 生产地点
+        pro = ProduceArea.objects.get(id=produce_area)
         hardware_info = data['hardwareInfo']                    # 智能硬件信息
+        hard = Hardware.objects.get(id=hardware_info)
         category = data['containerType']
+
         container_id = new_containerid(str(category))           # 生成云箱id
 
         box_type = BoxTypeInfo.objects.get(id=category)
-        box = BoxInfo(deviceid=container_id, type=box_type, date_of_production=date_of_production, manufacturer=manufacturer,
-                      produce_area=produce_area, hardware=hardware_info, battery=battery_info, carrier=1, tid=rfid)
+        box = BoxInfo(deviceid=container_id, type=box_type, date_of_production=date_of_production, manufacturer=man,
+                      produce_area=pro, hardware=hard, battery=bat, carrier=1, tid=rfid)
         box.save()
 
     except Exception, e:
@@ -749,6 +754,28 @@ def remove_basic_info(request, id):
     else:
         response_msg = {'status': 'OK', 'msg': 'delete box success'}
         return JsonResponse(response_msg, safe=False, status=status.HTTP_200_OK)
+
+
+
+# 根据堆场ID获取堆场内的云箱
+@csrf_exempt
+@api_view(['GET'])
+def get_site_boxes(request, id):
+    try:
+        site_info = SiteInfo.objects.get(id=id)
+    except SiteInfo.DoesNotExist:
+        return JsonResponse({'code': '9999', 'msg': 'error'}, safe=True, status=status.HTTP_404_NOT_FOUND)
+    # 获取各种类型箱子的可用个数
+    box_counts = []
+    type_list = BoxTypeInfo.objects.all()
+    for _type in type_list:
+        box_num = BoxInfo.objects.filter(siteinfo=site_info, type=_type).count()
+        box_counts.append({'box_type': BoxTypeInfoSerializer(_type).data, 'box_num': box_num})
+    return JsonResponse(
+        {'site_info': SiteInfoSerializer(site_info).data, 'box_counts': box_counts},
+        safe=True,
+        status=status.HTTP_200_OK)
+
 
 
 @csrf_exempt
@@ -1429,6 +1456,7 @@ def get_lnglat(request):
     return JsonResponse({'position_name': position_name,
                          'longitude': data['longitude'], 'latitude': data['latitude']},
                         safe=True, status=status.HTTP_200_OK)
+
 
 # 根据经纬度查询地名
 @csrf_exempt

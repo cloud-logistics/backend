@@ -4,6 +4,7 @@
 from django.conf.urls import url
 from monservice import views
 from monservice.view import site
+from monservice.view import dispatch
 
 urlpatterns = [
     url(r'^auth$', views.verify_user),
@@ -33,9 +34,12 @@ urlpatterns = [
     url(r'^getSecurityConfig$', views.get_security_config),       # 获取运行安全参数
 
     url(r'^sites$', site.add_site),                              # 增加堆场
-    url(r'^sites/(?P<id>\d+)/', site.delete_site),               # 删除堆场
+    url(r'^sites/(?P<id>\d+)$', site.delete_site),               # 删除堆场
     url(r'^sites/(?P<id>\d+)', site.modify_site),                # 修改堆场
     url(r'^allsites$', site.get_sites),                          # 查询堆场
+    url(r'^boxbysite/(?P<id>\d+)', site.get_site_boxes),         # 查询堆场箱子
+    url(r'^dispatch$', dispatch.get_dispatches),                  # 获取调度
+    url(r'^dispatch/', dispatch.create_dispatches),               # 加入调度
 
     url(r'^nationlist$', views.get_nation_list),                          # 获取国家列表
     url(r'^provincelist/(?P<nation_id>\d+)$', views.get_province_list),   # 根据国家获取省列表
