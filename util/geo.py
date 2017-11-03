@@ -44,6 +44,7 @@ def cal_position(value):
     else:
         return value
 
+
 # 根据地点名称获取经纬度
 def get_lng_lat(address):
     lng = 0
@@ -63,8 +64,40 @@ def get_lng_lat(address):
         lat = response_dic['results'][0]['geometry']['location']['lat']
     else:
         log.info("req response: %s" % response_dic)
+        return {'longitude': 0, 'latitude': 0}
+    return {'longitude': lng, 'latitude': lat}
 
-    return {'lng': lng, 'lat': lat}
+
+# 根据经纬度获取地名
+def get_position_name(longitude, latitude):
+    try:
+        values = {}
+        values['latlng'] = latitude + ',' + longitude
+        values['key'] = "AIzaSyDD2vDhoHdl8eJAIyWPv0Jw7jeO6VtlRF8"
+        values['language'] = 'zh-cn'
+        params = urllib.urlencode(values)
+        url = "https://ditu.google.cn/maps/api/geocode/json"
+        geturl = url + "?" + params
+        request = urllib2.Request(geturl)
+        response = urllib2.urlopen(request)
+        response_dic = json.loads(response.read())
+
+        address_list = []
+        log.debug('google api response: %s' % response_dic)
+        if response_dic['status'] == 'OK':
+            size = len(response_dic['results'])
+            for i in range(size):
+                address_list.append(response_dic['results'][i]['formatted_address'])
+        else:
+            log.info("req response: %s" % response_dic)
+
+        if len(address_list) > 0:
+            return address_list[0]
+        else:
+            return ''
+    except Exception, e:
+        log.error(e.message)
+        return ''
 
 
 # 根据两个地点名称获取之间的距离

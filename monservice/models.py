@@ -239,6 +239,21 @@ class BoxInfo(models.Model):
     siteinfo = models.ForeignKey(SiteInfo, related_name='box_site_fk', null=True)
 
 
+# 传感器数据
+class SensorData(models.Model):
+    timestamp = models.IntegerField()
+    deviceid = models.CharField(max_length=48)
+    temperature = models.CharField(max_length=10)
+    humidity = models.CharField(max_length=10)
+    longitude = models.CharField(max_length=20)
+    latitude = models.CharField(max_length=20)
+    speed = models.CharField(max_length=20)
+    collide = models.CharField(max_length=10)
+    light = models.CharField(max_length=10)
+    legacy = models.TextField(default='')
+    endpointid = models.CharField(max_length=48)
+
+
 # 仓库各类型可用箱子数量
 class SiteBoxStock(models.Model):
     stock_id = models.AutoField(primary_key=True)
