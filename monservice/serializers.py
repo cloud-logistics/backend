@@ -81,7 +81,7 @@ class SiteInfoMoreSerializer(serializers.ModelSerializer):
 class SiteBareInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteInfo
-        fields = ('id', 'location', 'site_code')
+        fields = ('id', 'location', 'longitude', 'latitude', 'site_code')
 
 
 class SiteDispatchSerializer(serializers.ModelSerializer):

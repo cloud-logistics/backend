@@ -29,8 +29,21 @@ def add_site(request):
     try:
         data = json.loads(request.body)
         location = to_str(data['location'])             # 堆场名称
+
+        if location == '':
+            response_msg = {'status': 'ERROR', 'msg': 'location is empty.'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
         longtitude = to_str(data['longitude'])          # 经度
+        if longtitude == '':
+            response_msg = {'status': 'ERROR', 'msg': 'longtitude is empty.'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
         latitude = to_str(data['latitude'])             # 纬度
+
+        if latitude == '':
+            response_msg = {'status': 'ERROR', 'msg': 'latitude is empty.'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
         site_code = to_str(data['site_code'])           # 堆场代码
         volume = data['volume']                 # 堆场箱子容量
         city_id = data['city_id']                       # 城市
