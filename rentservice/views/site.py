@@ -63,7 +63,7 @@ def get_site_by_province(request, province, city):
         site_list = SiteInfo.objects.filter(city=_city).order_by('id')
     res_site = []
     for item in site_list:
-        # 获取每个堆场的各箱子类型的数量
+        # 获取每个堆场的各箱子类型的数目
         site_box_num = SiteBoxStock.objects.filter(site=item)
         res_site.append(
             {'id': item.id, 'location': item.location, 'latitude': item.latitude, 'longitude': item.longitude,
