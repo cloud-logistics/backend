@@ -183,10 +183,12 @@ def enterprise_user_detail(request, user_id):
     try:
         user = EnterpriseUser.objects.get(user_id=user_id)
         ser_user = EnterpriseUserSerializer(user)
+        ret = ser_user.data
+        ret['group'] = user.group.group
     except EnterpriseUser.DoesNotExist:
         return JsonResponse(retcode(errcode("9999", "查询用户信息失败"), "9999", "查询用户信息失败"), safe=True,
                             status=status.HTTP_400_BAD_REQUEST)
-    return JsonResponse(retcode(ser_user.data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+    return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
 
 def update_redis_token(user_token, group):

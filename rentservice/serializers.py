@@ -16,11 +16,18 @@ from models import UserRentDay
 from models import UserRentMonth
 from models import RentalAdminOperationRecords
 from monservice.models import BoxTypeInfo
+from monservice.models import SiteInfo
 
 
 class BoxTypeInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = BoxTypeInfo
+        fields = '__all__'
+
+
+class SiteInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteInfo
         fields = '__all__'
 
 
@@ -60,6 +67,16 @@ class EnterpriseUserSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class EnterpriseUserForeignKeySerializer(serializers.ModelSerializer):
+    group = AccessGroupSerializer(read_only=True)['group']
+    enterprise = EnterpriseInfoSerializer(read_only=True)['enterprise_id']
+
+    class Meta:
+        model = EnterpriseUser
+        fields = ('user_id', 'user_name', 'user_password', 'register_time', 'status', 'avatar_url',
+                  'user_phone', 'user_email', 'enterprise', 'user_token', 'role', 'group')
+
+
 class UserAppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAppointment
@@ -90,12 +107,6 @@ class UserRentMonthSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserRentMonth
         fields = '__all__'
-
-
-# class RentalAdminOperationType(serializers.ModelSerializer):
-#     class Meta:
-#         model = RentalAdminOperationType
-#         fields = '__all__'
 
 
 class RentalAdminOperationRecordsSerializer(serializers.ModelSerializer):

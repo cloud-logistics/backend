@@ -9,6 +9,8 @@ from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rentservice.models import EnterpriseUser, AuthUserGroup, AccessGroup
 from rentservice.utils.retcode import *
+from rest_framework.settings import api_settings
+from rentservice.serializers import AccessGroupSerializer
 import uuid
 
 
@@ -61,7 +63,7 @@ def auth(request):
 
     try:
         user = EnterpriseUser.objects.get(user_name=username, user_password=password)
-    except EnterpriseUser.DoesNotExist:
+    except EnterpriseUser.DoesNotExist, e:
         log.error(repr(e))
         return JsonResponse(retcode({}, "0403", '用户不存在'), safe=True, status=status.HTTP_403_FORBIDDEN)
     try:
@@ -75,3 +77,29 @@ def auth(request):
     ret['group'] = access_group.group
     ret['user_id'] = user.user_id
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def list_group(request):
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    try:
+        access_group_ret = AccessGroup.objects.all()
+        page = paginator.paginate_queryset(access_group_ret, request)
+        access_group_ser = AccessGroupSerializer(page, many=True)
+    except Exception, e:
+        log.error(repr(e))
+    return paginator.get_paginated_response(access_group_ser.data)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def group_detail(request, access_group_id):
+    try:
+        group = AccessGroup.objects.get(access_group_id=access_group_id)
+        ser_group = AccessGroupSerializer(group)
+    except EnterpriseUser.DoesNotExist:
+        return JsonResponse(retcode(errcode("9999", "查询用户信息失败"), "9999", "查询用户信息失败"), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    return JsonResponse(retcode(ser_group.data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)

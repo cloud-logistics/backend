@@ -72,6 +72,7 @@ class SiteBoxStockSerializer(serializers.ModelSerializer):
 
 class SiteInfoMoreSerializer(serializers.ModelSerializer):
     box_num = SiteBoxStockSerializer(many=True)
+    city = CitySerializer()
 
     class Meta:
         model = SiteInfo
