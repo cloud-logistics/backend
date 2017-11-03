@@ -38,7 +38,6 @@ def get_site_list(request, latitude, longitude):
     for item in site_list:
         # 获取每个堆场的各箱子类型的数量
         site_box_num = SiteBoxStock.objects.filter(site=item)
-        print site_box_num
         res_site.append(
             {'id': item.id, 'location': item.location, 'latitude': item.latitude, 'longitude': item.longitude,
              'site_code': item.site_code, 'city': item.city, 'nation': item.nation, 'province': item.province,
@@ -62,8 +61,16 @@ def get_site_by_province(request, province, city):
         site_list = SiteInfo.objects.filter(province=_province).order_by('id')
     elif _province != 0 and _city != 0:
         site_list = SiteInfo.objects.filter(city=_city).order_by('id')
-    page = paginator.paginate_queryset(site_list, request)
-    ret_ser = SiteInfoSerializer(page, many=True)
+    res_site = []
+    for item in site_list:
+        # 获取每个堆场的各箱子类型的数目
+        site_box_num = SiteBoxStock.objects.filter(site=item)
+        res_site.append(
+            {'id': item.id, 'location': item.location, 'latitude': item.latitude, 'longitude': item.longitude,
+             'site_code': item.site_code, 'city': item.city, 'nation': item.nation, 'province': item.province,
+             'box_num': site_box_num})
+    page = paginator.paginate_queryset(res_site, request)
+    ret_ser = SiteInfoMoreSerializer(page, many=True)
     return paginator.get_paginated_response(ret_ser.data)
 
 
