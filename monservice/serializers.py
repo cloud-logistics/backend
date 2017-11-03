@@ -7,6 +7,7 @@ from models import City
 from models import BoxTypeInfo
 from models import BoxInfo
 from models import Province
+from models import SiteBoxStock
 
 
 class ContainerRentInfoSerializer(serializers.ModelSerializer):
@@ -50,4 +51,20 @@ class SiteHistorySerializer(serializers.ModelSerializer):
 class BoxTypeInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = BoxTypeInfo
+        fields = '__all__'
+
+
+class SiteBoxStockSerializer(serializers.ModelSerializer):
+    box_type = BoxTypeInfoSerializer()
+
+    class Meta:
+        model = SiteBoxStock
+        fields = '__all__'
+
+
+class SiteInfoMoreSerializer(serializers.ModelSerializer):
+    box_num = SiteBoxStockSerializer(many=True)
+
+    class Meta:
+        model = SiteInfo
         fields = '__all__'
