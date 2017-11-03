@@ -17,7 +17,7 @@ from util import logger
 from util.cid import generate_cid
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from models import ContainerRentInfo
-from serializers import SiteInfoSerializer
+from serializers import SiteInfoSerializer, BoxTypeInfoSerializer
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework_jwt.settings import api_settings
@@ -765,6 +765,28 @@ def remove_basic_info(request, id):
         return JsonResponse(response_msg, safe=False, status=status.HTTP_200_OK)
 
 
+
+# 根据堆场ID获取堆场内的云箱
+@csrf_exempt
+@api_view(['GET'])
+def get_site_boxes(request, id):
+    try:
+        site_info = SiteInfo.objects.get(id=id)
+    except SiteInfo.DoesNotExist:
+        return JsonResponse({'code': '9999', 'msg': 'error'}, safe=True, status=status.HTTP_404_NOT_FOUND)
+    # 获取各种类型箱子的可用个数
+    box_counts = []
+    type_list = BoxTypeInfo.objects.all()
+    for _type in type_list:
+        box_num = BoxInfo.objects.filter(siteinfo=site_info, type=_type).count()
+        box_counts.append({'box_type': BoxTypeInfoSerializer(_type).data, 'box_num': box_num})
+    return JsonResponse(
+        {'site_info': SiteInfoSerializer(site_info).data, 'box_counts': box_counts},
+        safe=True,
+        status=status.HTTP_200_OK)
+
+
+
 @csrf_exempt
 def options_to_show(request):
     final_response = {}
@@ -1458,4 +1480,7 @@ def get_lnglat(request):
         log.info("req response: %s" % response_dic)
         return JsonResponse({'position_name': position_name,
                              'longitude': 0, 'latitude': 0}, safe=True, status=status.HTTP_200_OK)
+
+
+
 

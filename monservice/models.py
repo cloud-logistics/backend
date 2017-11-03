@@ -201,15 +201,38 @@ class BoxTypeInfo(models.Model):
     width = models.FloatField()
     height = models.FloatField()
 
+# 制造商
+class Manufacturer(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=128)
+
+
+# 生产地
+class ProduceArea(models.Model):
+    id = models.AutoField(primary_key=True)
+    address = models.CharField(max_length=128)
+
+
+# 硬件
+class Hardware(models.Model):
+    id = models.AutoField(primary_key=True)
+    hardware_detail = models.CharField(max_length=128)
+
+
+# 电源
+class Battery(models.Model):
+    id = models.AutoField(primary_key=True)
+    battery_detail = models.CharField(max_length=128)
+
 
 class BoxInfo(models.Model):
     deviceid = models.CharField(max_length=48, primary_key=True)
     type = models.ForeignKey(BoxTypeInfo, related_name='box_info_box_type_fk')
     date_of_production = models.CharField(max_length=128)
-    manufacturer = models.IntegerField()
-    produce_area = models.IntegerField()
-    hardware = models.IntegerField()
-    battery = models.IntegerField()
+    manufacturer = models.ForeignKey(Manufacturer, related_name='box_info_box_man_fk')
+    produce_area = models.ForeignKey(ProduceArea, related_name='box_info_box_pro_fk')
+    hardware = models.ForeignKey(Hardware, related_name='box_info_box_hard_fk')
+    battery = models.ForeignKey(Battery, related_name='box_info_box_bat_fk')
     carrier = models.IntegerField()
     tid = models.CharField(max_length=48)
     ava_flag = models.CharField(max_length=1, default='Y')
@@ -226,3 +249,15 @@ class SiteBoxStock(models.Model):
 
     class Meta:
         unique_together = ('site', 'box_type',)
+
+
+# 堆场调度信息
+class SiteDispatch(models.Model):
+    did = models.AutoField(primary_key=True)
+    start = models.ForeignKey(SiteInfo, related_name='start_site_fk')
+    finish = models.ForeignKey(SiteInfo, related_name='finish_site_fk')
+    count = models.IntegerField(default=0)
+    status = models.CharField(max_length=20, default='undispatch')
+    create_date = models.DateField()
+
+
