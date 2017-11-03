@@ -12,12 +12,12 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from util.db import query_list, save_to_db, delete_from_db
-from util.geo import cal_position
+from util.geo import cal_position, get_lng_lat, get_position_name
 from util import logger
 from util.cid import generate_cid
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from models import ContainerRentInfo
-from serializers import SiteInfoSerializer
+from serializers import SiteInfoSerializer, BoxTypeInfoSerializer
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework_jwt.settings import api_settings
@@ -70,17 +70,6 @@ def containers_overview(request):
         return JsonResponse(container_info_list, safe=False, status=status.HTTP_200_OK)
     except Exception, e:
         log.error('containers_overview response error, msg: ' + e.__str__())
-        return JsonResponse('', safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@csrf_exempt
-def satellites_overview(request):
-    try:
-        with open(str(file_path)) as f:
-            load_dict = json.load(f)
-        return JsonResponse(load_dict, safe=False, status=status.HTTP_200_OK)
-    except Exception, e:
-        log.error('satellites_overview response error, msg: ' + e.__str__())
         return JsonResponse('', safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -417,9 +406,6 @@ def basic_info(request):
                       'manufacturer_info.name, carrier_info.carrier_name, date_of_production '
                       'from iot.box_info box_info '
                       'left join iot.box_type_info on box_info.type = box_type_info.id '
-                      'left join iot.box_order_relation box_order_relation on box_order_relation.deviceid = box_info.deviceid '
-                      'left join iot.order_info order_info on order_info.trackid = box_order_relation.trackid '
-                      'left join iot.carrier_info on order_info.carrierid = carrier_info.id '
                       'left join iot.produce_area_info produce_area_info on box_info.produce_area = produce_area_info.id '
                       'left join iot.manufacturer_info manufacturer_info on box_info.manufacturer = manufacturer_info.id '
                       'group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
@@ -763,6 +749,28 @@ def remove_basic_info(request, id):
     else:
         response_msg = {'status': 'OK', 'msg': 'delete box success'}
         return JsonResponse(response_msg, safe=False, status=status.HTTP_200_OK)
+
+
+
+# 根据堆场ID获取堆场内的云箱
+@csrf_exempt
+@api_view(['GET'])
+def get_site_boxes(request, id):
+    try:
+        site_info = SiteInfo.objects.get(id=id)
+    except SiteInfo.DoesNotExist:
+        return JsonResponse({'code': '9999', 'msg': 'error'}, safe=True, status=status.HTTP_404_NOT_FOUND)
+    # 获取各种类型箱子的可用个数
+    box_counts = []
+    type_list = BoxTypeInfo.objects.all()
+    for _type in type_list:
+        box_num = BoxInfo.objects.filter(siteinfo=site_info, type=_type).count()
+        box_counts.append({'box_type': BoxTypeInfoSerializer(_type).data, 'box_num': box_num})
+    return JsonResponse(
+        {'site_info': SiteInfoSerializer(site_info).data, 'box_counts': box_counts},
+        safe=True,
+        status=status.HTTP_200_OK)
+
 
 
 @csrf_exempt
@@ -1439,23 +1447,42 @@ def get_city_list(request, province_id):
 @api_view(['POST'])
 def get_lnglat(request):
     position_name = json.loads(request.body)['position_name']
-    values = {}
-    values['address'] = to_str(position_name)
-    values['key'] = "AIzaSyDD2vDhoHdl8eJAIyWPv0Jw7jeO6VtlRF8"
-    params = urllib.urlencode(values)
-    url = "https://ditu.google.cn/maps/api/geocode/json"
-    geturl = url + "?" + params
-    request = urllib2.Request(geturl)
-    response = urllib2.urlopen(request)
-    response_dic = json.loads(response.read())
+    data = get_lng_lat(to_str(position_name))
+    return JsonResponse({'position_name': position_name,
+                         'longitude': data['longitude'], 'latitude': data['latitude']},
+                        safe=True, status=status.HTTP_200_OK)
 
-    if response_dic['status'] == 'OK':
-        longitude = str(response_dic['results'][0]['geometry']['location']['lng'])
-        latitude = str(response_dic['results'][0]['geometry']['location']['lat'])
-        return JsonResponse({'position_name': position_name,
-                             'longitude': longitude, 'latitude': latitude}, safe=True, status=status.HTTP_200_OK)
-    else:
-        log.info("req response: %s" % response_dic)
-        return JsonResponse({'position_name': position_name,
-                             'longitude': 0, 'latitude': 0}, safe=True, status=status.HTTP_200_OK)
 
+# 根据经纬度查询地名
+@csrf_exempt
+@api_view(['POST'])
+def get_position(request):
+    longitude = json.loads(request.body)['longitude']
+    latitude = json.loads(request.body)['latitude']
+    position_name = get_position_name(longitude, latitude)
+    if position_name <> '':
+        city_data = City.objects.extra(select=None,
+                                       where=['POSITION(city_name IN %s) > 0',
+                                              'POSITION(nation_name IN %s) > 0',
+                                              'POSITION(state_name IN %s) > 0',
+                                              ], params=[position_name, position_name, position_name])
+        if len(city_data) > 0:
+            nation_id = city_data[0].nation_id
+            province_id = city_data[0].province_id
+            city_id = city_data[0].id
+            nation_name = city_data[0].nation_name
+            province_name = city_data[0].state_name
+            city_name = city_data[0].city_name
+
+        else:
+            nation_id = 0
+            province_id = 0
+            city_id = 0
+            nation_name = ''
+            province_name = ''
+            city_name = ''
+
+    return JsonResponse({'position_name': position_name, 'nation_id': nation_id,
+                         'province_id': province_id, 'city_id': city_id,
+                         'nation_name': nation_name, 'province_name': province_name,
+                         'city_name': city_name}, safe=True, status=status.HTTP_200_OK)

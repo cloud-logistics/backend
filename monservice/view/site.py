@@ -5,9 +5,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
-from monservice.serializers import SiteInfoSerializer
+from monservice.serializers import SiteFullInfoSerializer, BoxFullInfoSerializer
 import json
-from monservice.models import SiteInfo, City, Province, Nation
+from monservice.models import SiteInfo, City, Province, Nation, BoxTypeInfo, BoxInfo
 from util import logger
 from rest_framework.settings import api_settings
 
@@ -51,7 +51,6 @@ def add_site(request):
     else:
         response_msg = {'status': 'OK', 'msg': 'add site success'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
-
 
 # 删除堆场
 @csrf_exempt
@@ -112,7 +111,7 @@ def get_sites(request):
         paginator = pagination_class()
         sites = SiteInfo.objects.all().order_by('id')
         page = paginator.paginate_queryset(sites, request)
-        ret_ser = SiteInfoSerializer(page, many=True)
+        ret_ser = SiteFullInfoSerializer(page, many=True)
 
     except Exception, e:
         log.error(e.message)
@@ -120,3 +119,22 @@ def get_sites(request):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return paginator.get_paginated_response(ret_ser.data, 'OK', 'query sites success')
+
+
+# 根据堆场ID获取堆场内的云箱
+@csrf_exempt
+@api_view(['GET'])
+def get_site_boxes(request, id):
+    try:
+        pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+        paginator = pagination_class()
+        boxes = BoxInfo.objects.filter(siteinfo_id=id).order_by('deviceid')
+        page = paginator.paginate_queryset(boxes, request)
+        ret_ser = BoxFullInfoSerializer(page, many=True)
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'code': 'ERROR', 'message': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return paginator.get_paginated_response(ret_ser.data, 'OK', 'query sites box success')
