@@ -12,8 +12,8 @@
 
 ```
 {
-    "username": "mark4",
-    "password": "123456",
+    "user_name": "mark4",
+    "user_password": "123456",
     "avatar_url": "http://www.xxx.com",
     "user_phone": "18011112222",
     "user_email": "12345@qq.com",
@@ -51,8 +51,8 @@
 
 ```
 {
-    "username": "mark2",
-    "password": "123456",
+    "user_name": "mark2",
+    "user_password": "123456",
     "avatar_url": "http://www.xxx.com",
     "user_phone": "18011113332",
     "user_email": "test@qq.com",
@@ -113,7 +113,7 @@
 
 #### URL
 
-`container／api/v1/cloudbox/rentservice/enterpriseuser/list/`
+`container／api/v1/cloudbox/rentservice/enterpriseuser/list`
 
 #### Parameter
 

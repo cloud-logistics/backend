@@ -153,7 +153,7 @@
 
 #### URL
 
-`container／api/v1/cloudbox/rentservice/enterprise/enterpriseinfo/{enterprise_id}/`
+`container／api/v1/cloudbox/rentservice/enterprise/enterpriseinfo/detail/{enterprise_id}/`
 
 #### Parameter
 

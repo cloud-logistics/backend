@@ -30,11 +30,11 @@ def add_enterprise_user(request):
     ret = {}
     data = JSONParser().parse(request)
     try:
-        username = data['username']
+        user_name = data['user_name']
     except Exception:
         return JsonResponse(retcode({}, "9999", '注册姓名不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
-        password = data['password']
+        user_password = data['user_password']
     except Exception:
         return JsonResponse(retcode({}, "9999", '注册密码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
@@ -73,14 +73,14 @@ def add_enterprise_user(request):
             return JsonResponse(retcode({}, "9999", '企业用户群组不存在'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         try:
-            usr = EnterpriseUser.objects.get(user_name=username)
+            usr = EnterpriseUser.objects.get(user_name=user_name)
             if usr:
                 log.error("Enterprise User exists already and return 500 error")
                 return JsonResponse(retcode({}, "0500", '用户名已存在'), safe=True,
                                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except EnterpriseUser.DoesNotExist:
                 with transaction.atomic():
-                    new_user = EnterpriseUser(user_id=uuid.uuid1(), user_name=username, user_password=password,
+                    new_user = EnterpriseUser(user_id=uuid.uuid1(), user_name=user_name, user_password=user_password,
                                               status='', avatar_url=avatar_url, user_phone=user_phone,
                                               user_email=user_email, register_time=datetime.datetime.now(tz=tz),
                                               enterprise=enterprise, user_token=uuid.uuid4().hex, role=role,
@@ -102,11 +102,11 @@ def update_enterprise_user(request):
     ret = {}
     data = JSONParser().parse(request)
     try:
-        username = data['username']
+        user_name = data['user_name']
     except Exception:
         return JsonResponse(retcode({}, "9999", '注册姓名不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
-        password = data['password']
+        user_password = data['user_password']
     except Exception:
         return JsonResponse(retcode({}, "9999", '注册密码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
@@ -133,8 +133,8 @@ def update_enterprise_user(request):
     try:
         user = EnterpriseUser.objects.get(user_id=user_id)
         enterprise = EnterpriseInfo.objects.get(enterprise_id=enterprise_id)
-        user.user_name = username
-        user.user_password = password
+        user.user_name = user_name
+        user.user_password = user_password
         user.avatar_url = avatar_url
         user.user_phone = user_phone
         user.user_email = user_email
