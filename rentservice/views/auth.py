@@ -73,4 +73,5 @@ def auth(request):
     ret = {}
     ret['user_token'] = user.user_token
     ret['group'] = access_group.group
+    ret['user_id'] = user.user_id
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
