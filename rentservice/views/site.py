@@ -12,6 +12,9 @@ from monservice.models import BoxInfo
 from monservice.serializers import SiteInfoSerializer
 from monservice.serializers import BoxTypeInfoSerializer
 from rentservice.utils.retcode import *
+from monservice.models import SiteBoxStock
+from monservice.serializers import SiteBoxStockSerializer
+from monservice.serializers import SiteInfoMoreSerializer
 import pytz
 
 log = logger.get_logger(__name__)
@@ -33,11 +36,15 @@ def get_site_list(request, latitude, longitude):
         ''', [_lat, _lat, _lng])
     res_site = []
     for item in site_list:
+        # 获取每个堆场的各箱子类型的数量
+        site_box_num = SiteBoxStock.objects.filter(site=item)
+        print site_box_num
         res_site.append(
             {'id': item.id, 'location': item.location, 'latitude': item.latitude, 'longitude': item.longitude,
-             'site_code': item.site_code, 'city': item.city, 'nation': item.nation, 'province': item.province})
+             'site_code': item.site_code, 'city': item.city, 'nation': item.nation, 'province': item.province,
+             'box_num': site_box_num})
     page = paginator.paginate_queryset(res_site, request)
-    ret_ser = SiteInfoSerializer(page, many=True)
+    ret_ser = SiteInfoMoreSerializer(page, many=True)
     return paginator.get_paginated_response(ret_ser.data)
 
 
