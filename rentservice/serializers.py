@@ -60,6 +60,16 @@ class EnterpriseUserSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class EnterpriseUserForeignKeySerializer(serializers.ModelSerializer):
+    group = AccessGroupSerializer(read_only=True)['group']
+    enterprise = EnterpriseInfoSerializer(read_only=True)['enterprise_id']
+
+    class Meta:
+        model = EnterpriseUser
+        fields = ('user_id', 'user_name', 'user_password', 'register_time', 'status', 'avatar_url',
+                  'user_phone', 'user_email', 'enterprise', 'user_token', 'role', 'group')
+
+
 class UserAppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAppointment
