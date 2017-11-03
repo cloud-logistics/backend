@@ -38,7 +38,6 @@ def get_site_list(request, latitude, longitude):
     for item in site_list:
         # 获取每个堆场的各箱子类型的数量
         site_box_num = SiteBoxStock.objects.filter(site=item)
-        print site_box_num
         res_site.append(
             {'id': item.id, 'location': item.location, 'latitude': item.latitude, 'longitude': item.longitude,
              'site_code': item.site_code, 'city': item.city, 'nation': item.nation, 'province': item.province,
