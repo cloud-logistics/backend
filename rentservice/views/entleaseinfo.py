@@ -16,6 +16,7 @@ log = logger.get_logger(__name__)
 tz = pytz.timezone('Asia/Shanghai')
 
 
+# 企业查询在运云箱订单
 @csrf_exempt
 @api_view(['GET'])
 def get_enterprise_lease_process_list(request, enterprise_id):
@@ -26,12 +27,13 @@ def get_enterprise_lease_process_list(request, enterprise_id):
     except EnterpriseInfo.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "企业用户不存在"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     # 获取所有企业下所有用户的在运的订单
-    process_list = RentLeaseInfo.objects.filter(on_site__isnull=True,user_id__enterprise=enterprise)
+    process_list = RentLeaseInfo.objects.filter(on_site__isnull=True, user_id__enterprise=enterprise)
     page = paginator.paginate_queryset(process_list, request)
     ret_ser = RentLeaseInfoSerializer(page, many=True)
     return paginator.get_paginated_response(ret_ser.data)
 
 
+# 企业查询历史云箱订单
 @csrf_exempt
 @api_view(['GET'])
 def get_enterprise_lease_finish_list(request, enterprise_id):
