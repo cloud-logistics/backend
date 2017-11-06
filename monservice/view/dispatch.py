@@ -26,11 +26,26 @@ ave = 0.5
 @api_view(['GET'])
 def get_dispatches(request):
     try:
-        dispatches = SiteDispatch.objects.all().order_by('did')
-
+        dispatches = SiteDispatch.objects.filter(create_date__gte=datetime.date.today()).order_by('did')
         if len(dispatches) == 0:
             dispatches = generate_dispatches()
 
+        ser_dispatches = SiteDispatchSerializer(dispatches, many=True)
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'code': 'ERROR', 'message': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'dispatches': ser_dispatches.data, 'status':'OK', 'msg': 'query dispatches success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def get_dispatches_history(request):
+    try:
+        dispatches = SiteDispatch.objects.all().order_by('did')
         ser_dispatches = SiteDispatchSerializer(dispatches, many=True)
 
     except Exception, e:
@@ -50,9 +65,6 @@ def create_dispatches(request):
         start_id = data['start_id']
         finish_id = data['finish_id']
         count = data['count']
-
-        # start_site = SiteInfo.objects.get(id=start_id)
-        # finish_site = SiteInfo.objects.get(id=finish_id)
         dispatch = SiteDispatch(count=count, start_id=start_id, finish_id=finish_id, create_date=datetime.date.today())
         dispatch.save()
 
@@ -68,8 +80,8 @@ def create_dispatches(request):
 class DSite:
     def __init__(self, id, long, lat, volume, avanum):
         self.id = id
-        self.long = long
-        self.lat = lat
+        self.longitude = long
+        self.latitude = lat
         self.volume = volume
         self.avanum = avanum
 
@@ -78,14 +90,14 @@ def generate_dispatches():
     dsites = []
     sites = SiteInfo.objects.all()
     for site in sites:
-        stocks = SiteBoxStock.objects.filter(site_id=site.did)
+        stocks = SiteBoxStock.objects.filter(site_id=site.id)
         avanum = 0
         for stock in stocks:
             avanum = avanum + stock.ava_num
-        dsite = DSite(site.did, site.longitude, site.latitude, site.volume, avanum)
+        dsite = DSite(site.id, site.longitude, site.latitude, site.volume, avanum)
         dsites.append(dsite)
     get_dispatch(dsites)
-    return SiteDispatch.objects.filter(create_time__gte=datetime.date.today()).order_by('did')
+    return SiteDispatch.objects.filter(create_date__gte=datetime.date.today()).order_by('did')
 
 
 def get_dispatch(sites):
@@ -94,17 +106,13 @@ def get_dispatch(sites):
         high_sites += ave_sites
 
     for low_site in low_sites:
-        short_dis = 0.0
-        index = 0
+        dis_list = []
         for high_site in high_sites:
             dis = cal_distance(low_site, high_site)
-            if index == 0:
-                short_dis = dis
-            else:
-                if dis < short_dis:
-                    short_dis = dis
-                    index += 1
-        near_high_site = high_sites[index]
+            dis_list.append(dis)
+
+        val, idx = min((val, idx) for (idx, val) in enumerate(dis_list))
+        near_high_site = high_sites[idx]
 
         low_sites.remove(low_site)
         high_sites.remove(near_high_site)
@@ -115,8 +123,8 @@ def get_dispatch(sites):
         if need_count < offer_count:
             count = need_count
         else:
-            count = low_site.volume.low
-        save_dispatch(low_site.id, near_high_site.id, count)
+            count = low_site.volume * low
+        save_dispatch(near_high_site.id, low_site.id, count)
 
 
 def cal_distance(start_site, finish_site):
