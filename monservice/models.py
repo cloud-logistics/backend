@@ -275,3 +275,27 @@ class SiteDispatch(models.Model):
     count = models.IntegerField(default=0)
     status = models.CharField(max_length=20, default='undispatch')
     create_date = models.DateField()
+
+
+# 系统用户组
+class SysGroup(models.Model):
+    group_id = models.AutoField(primary_key=True)
+    group_name = models.CharField(max_length=50)
+
+
+# 系统用户
+class SysUser(models.Model):
+    user_id = models.AutoField(primary_key=True)
+    user_name = models.CharField(max_length=20)
+    user_password = models.CharField(max_length=20)
+    user_token = models.CharField(max_length=64, )
+    sys_group = models.ForeignKey(SysGroup, related_name='user_group_fk', null=True)
+
+
+# 系统用户组可访问url
+class SysAccessUrl(models.Model):
+    access_url_id = models.AutoField(primary_key=True)
+    access_url = models.CharField(max_length=128)
+    sys_group = models.ForeignKey(SysGroup, related_name='url_group_fk', null=True)
+
+
