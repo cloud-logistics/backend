@@ -375,11 +375,11 @@ pathValue `site_id` 获取仓库的详情，同时获取该仓库各种类型箱
 ```
 {
     "message": "Success",
-    "code": "000000",
+    "code": "0000",
     "data": {
         "box_counts": [
             {
-                "box_num": 2,
+                "stock_id": 1,
                 "box_type": {
                     "id": 1,
                     "box_type_name": "冷藏箱",
@@ -399,10 +399,13 @@ pathValue `site_id` 获取仓库的详情，同时获取该仓库各种类型箱
                     "length": 11,
                     "width": 1.2,
                     "height": 0.8
-                }
+                },
+                "ava_num": 100,
+                "reserve_num": 2,
+                "site": 1
             },
             {
-                "box_num": 2,
+                "stock_id": 2,
                 "box_type": {
                     "id": 2,
                     "box_type_name": "冷冻箱",
@@ -422,10 +425,13 @@ pathValue `site_id` 获取仓库的详情，同时获取该仓库各种类型箱
                     "length": 11,
                     "width": 1.2,
                     "height": 0.8
-                }
+                },
+                "ava_num": 100,
+                "reserve_num": 4,
+                "site": 1
             },
             {
-                "box_num": 2,
+                "stock_id": 3,
                 "box_type": {
                     "id": 3,
                     "box_type_name": "医药箱",
@@ -445,78 +451,36 @@ pathValue `site_id` 获取仓库的详情，同时获取该仓库各种类型箱
                     "length": 11,
                     "width": 1.2,
                     "height": 0.8
-                }
-            },
-            {
-                "box_num": 0,
-                "box_type": {
-                    "id": 4,
-                    "box_type_name": "普通箱",
-                    "box_type_detail": "",
-                    "interval_time": 30,
-                    "temperature_threshold_min": 2,
-                    "temperature_threshold_max": 8,
-                    "humidity_threshold_min": 0,
-                    "humidity_threshold_max": 30,
-                    "collision_threshold_min": 0,
-                    "collision_threshold_max": 100,
-                    "battery_threshold_min": 0,
-                    "battery_threshold_max": 100,
-                    "operation_threshold_min": 0,
-                    "operation_threshold_max": 100,
-                    "price": 50,
-                    "length": 11,
-                    "width": 1.2,
-                    "height": 0.8
-                }
-            },
-            {
-                "box_num": 0,
-                "box_type": {
-                    "id": 5,
-                    "box_type_name": "特殊箱",
-                    "box_type_detail": "",
-                    "interval_time": 30,
-                    "temperature_threshold_min": -30,
-                    "temperature_threshold_max": 50,
-                    "humidity_threshold_min": 0,
-                    "humidity_threshold_max": 30,
-                    "collision_threshold_min": 0,
-                    "collision_threshold_max": 100,
-                    "battery_threshold_min": 0,
-                    "battery_threshold_max": 100,
-                    "operation_threshold_min": 0,
-                    "operation_threshold_max": 100,
-                    "price": 15,
-                    "length": 11,
-                    "width": 1.2,
-                    "height": 0.8
-                }
+                },
+                "ava_num": 100,
+                "reserve_num": 0,
+                "site": 1
             }
         ],
         "site_info": {
-            "id": 14,
+            "id": 1,
             "city": {
-                "id": 308,
-                "city_name": "西安",
-                "state_name": "陕西",
+                "id": 1,
+                "city_name": "北京",
+                "state_name": "北京",
                 "nation_name": "中国",
-                "longitude": "108.93977",
-                "latitude": "34.341574",
+                "longitude": "116.4073963",
+                "latitude": "39.9041999",
                 "area_name": "亚洲",
                 "culture": "",
                 "taboo": "",
                 "picture_url": "",
-                "sorted_key": "x",
+                "sorted_key": "b",
                 "flag": 0,
                 "nation": 1,
-                "province": 27
+                "province": 1
             },
-            "location": "西安堆场",
-            "latitude": "34.211539",
-            "longitude": "108.838780",
-            "site_code": "XA001",
-            "province": 27,
+            "location": "北京朝阳区堆场",
+            "latitude": "39.92111",
+            "longitude": "116.46111",
+            "site_code": "BJ001",
+            "volume": 0,
+            "province": 1,
             "nation": 1
         }
     }
