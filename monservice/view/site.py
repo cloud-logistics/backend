@@ -10,6 +10,10 @@ import json
 from monservice.models import SiteInfo, City, Province, Nation, BoxTypeInfo, BoxInfo, SiteBoxStock
 from util import logger
 from rest_framework.settings import api_settings
+from monservice.models import SiteHistory
+import time
+import datetime
+from django.db import transaction
 
 log = logger.get_logger('monservice.site.py')
 
@@ -180,5 +184,55 @@ def get_box_by_allsite(request):
         response_msg = {'sites': res_site, 'status': 'OK', 'msg': 'query distribution success'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
+
+# 获取某个堆场箱子进出流水
+@api_view(['GET'])
+def get_site_stream(request, id):
+    try:
+        ret_data = []
+        data = SiteHistory.objects.filter(site_id=id)
+        for record in data:
+            ts = record.timestamp
+            box_id = record.box_id
+            type = record.op_type
+            timestr = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+
+            # 操作类型：1表示入仓，0表示出仓
+            if type == 1:
+                typestr = '入库'
+            else:
+                typestr = '出库'
+
+            ret_data.append({'timestamp': timestr, 'box_id': box_id, 'type': typestr})
+        resp = {'site_id': str(id), 'siteHistory': ret_data}
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return JsonResponse(resp, safe=True, status=status.HTTP_200_OK)
+
+
+# 箱子入库、出库接口
+@api_view(['POST'])
+def box_inout(request):
+    try:
+        data = json.loads(request.body)
+        site_id = str(data['site_id'])  # 堆场id
+        boxes = data['boxes']  # 箱子数组
+        ts = str(time.time())[0:10]
+        with transaction.atomic():
+            for box in boxes:
+                box_id = str(box['box_id'])  # 箱子id
+                type = str(box['type'])  # 操作类型：1表示入仓，0表示出仓
+                history = SiteHistory(timestamp=ts, site_id=site_id, box_id=box_id, op_type=type)
+                history.save()
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'post box inout success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
