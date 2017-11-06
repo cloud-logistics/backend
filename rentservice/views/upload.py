@@ -6,6 +6,7 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 import os
 from rentservice.utils import logger
+from rentservice.utils.retcode import retcode, errcode
 import uuid
 from qiniu import Auth, put_file, etag, urlsafe_base64_encode
 import qiniu.config
@@ -53,5 +54,5 @@ class FileUploadView(views.APIView):
         except Exception, e:
             log.error(repr(e))
             ret['error'] = e
-            return Response(data=ret, status=500)
-        return Response(data=ret, status=200)
+            return Response(data=errcode('0500', ret), status=500)
+        return Response(data=retcode(ret, "0000", "Succ"), status=200)
