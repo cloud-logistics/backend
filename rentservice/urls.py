@@ -49,5 +49,4 @@ urlpatterns = [
     # 预约详情查询
     url(r'^rentservice/userinfo/list/(?P<user_id>[0-9a-zA-Z-]+)/finished', userinfo.get_finished_order_list),
     # 预约详情查询
-
 ]
