@@ -49,7 +49,7 @@ def add_site(request):
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
         site_code = to_str(data['site_code'])           # 堆场代码
-        volume = data['volume']                 # 堆场箱子容量
+        volume = data['volume']                         # 堆场箱子容量
         city_id = data['city_id']                       # 城市
         province_id = data['province_id']               # 省
         nation_id = data['nation_id']                   # 国家
@@ -60,6 +60,8 @@ def add_site(request):
         site = SiteInfo(location=location, latitude=latitude, longitude=longtitude, site_code=site_code,
                         city= city, province=province, nation=nation, volume=volume)
         site.save()
+
+        initialize_box_num(site.id)
 
     except Exception, e:
         log.error(e.message)
@@ -186,6 +188,7 @@ def get_box_by_allsite(request):
 
 
 # 获取某个堆场箱子进出流水
+@csrf_exempt
 @api_view(['GET'])
 def get_site_stream(request, id):
     try:
@@ -214,6 +217,7 @@ def get_site_stream(request, id):
 
 
 # 箱子入库、出库接口
+@csrf_exempt
 @api_view(['POST'])
 def box_inout(request):
     try:
@@ -227,6 +231,16 @@ def box_inout(request):
                 type = str(box['type'])  # 操作类型：1表示入仓，0表示出仓
                 history = SiteHistory(timestamp=ts, site_id=site_id, box_id=box_id, op_type=type)
                 history.save()
+
+                # 更新仓库箱子可用数量
+                box = BoxInfo.objects.get(deviceid=box_id)
+                stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
+                if type == '1':
+                    stock.ava_num += 1
+                else:
+                    stock.ava_num -= 1
+                stock.save()
+
     except Exception, e:
         log.error(e.message)
         response_msg = {'msg': e.message, 'status': 'ERROR'}
@@ -234,5 +248,49 @@ def box_inout(request):
     else:
         response_msg = {'status': 'OK', 'msg': 'post box inout success'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+# 箱子进出仓库
+def enter_leave_site(data):
+    try:
+        site_id = str(data['site_id'])  # 堆场id
+        boxes = data['boxes']  # 箱子数组
+        ts = str(time.time())[0:10]
+        with transaction.atomic():
+            for box in boxes:
+                box_id = str(box['box_id'])  # 箱子id
+                type = str(box['type'])  # 操作类型：1表示入仓，0表示出仓
+                history = SiteHistory(timestamp=ts, site_id=site_id, box_id=box_id, op_type=type)
+                history.save()
+
+                # 更新仓库箱子可用数量
+                box = BoxInfo.objects.get(deviceid=box_id)
+                stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
+                if type == '1':
+                    stock.ava_num += 1
+                else:
+                    stock.ava_num -= 1
+                stock.save()
+    except Exception, e:
+        log.error(e.message)
+
+
+# 创建仓库时，初始化箱子可用数
+def initialize_box_num(site_id):
+    try:
+        types = BoxTypeInfo.objects.all()
+        with transaction.atomic():
+            for t in types:
+                stock = SiteBoxStock(site_id=site_id, box_type=t)
+                stock.save()
+    except Exception, e:
+        log.error(e.message)
+
+
+
+
+
+
+
 
 
