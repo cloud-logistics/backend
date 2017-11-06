@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from monservice.serializers import SiteFullInfoSerializer, BoxFullInfoSerializer
 import json
-from monservice.models import SiteInfo, City, Province, Nation, BoxTypeInfo, BoxInfo
+from monservice.models import SiteInfo, City, Province, Nation, BoxTypeInfo, BoxInfo, SiteBoxStock
 from util import logger
 from rest_framework.settings import api_settings
 
@@ -151,6 +151,34 @@ def get_site_boxes(request, id):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return paginator.get_paginated_response(ret_ser.data, 'OK', 'query sites box success')
+
+
+# 仓库箱子热力图
+@csrf_exempt
+@api_view(['GET'])
+def get_box_by_allsite(request):
+
+    try:
+        site_list = SiteInfo.objects.all().order_by('id')
+        res_site = []
+        for item in site_list:
+            stocks = SiteBoxStock.objects.filter(site=item)
+            site_box_num = 0
+            for stock in stocks:
+                site_box_num += stock.ava_num
+
+            res_site.append(
+                {'id': item.id, 'location': item.location, 'latitude': item.latitude, 'longitude': item.longitude,
+                 'site_code': item.site_code, 'box_num': site_box_num})
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'code': 'ERROR', 'message': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    else:
+        response_msg = {'sites': res_site, 'status': 'OK', 'msg': 'query distribution success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
 

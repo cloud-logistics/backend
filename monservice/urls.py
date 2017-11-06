@@ -39,7 +39,8 @@ urlpatterns = [
     url(r'^allsites$', site.get_sites),                          # 查询堆场
     url(r'^boxbysite/(?P<id>\d+)', site.get_site_boxes),         # 查询堆场箱子
     url(r'^dispatch$', dispatch.get_dispatches),                  # 获取调度
-    url(r'^dispatch/', dispatch.create_dispatches),         # 加入调度
+    url(r'^dispatch/', dispatch.create_dispatches),               # 加入调度
+    url(r'^distribution$', site.get_box_by_allsite),          # 获取热力图数据
 
     url(r'^nationlist$', views.get_nation_list),                          # 获取国家列表
     url(r'^provincelist/(?P<nation_id>\d+)$', views.get_province_list),   # 根据国家获取省列表
