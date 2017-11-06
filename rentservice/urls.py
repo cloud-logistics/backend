@@ -12,6 +12,7 @@ from rentservice.views import boxrentservice
 from rentservice.views import appointment
 from rentservice.views import userinfo
 from rentservice.views import upload
+from rentservice.views import entleaseinfo
 
 urlpatterns = [
     url(r'^rentservice/enterprise/enterpriseinfo/addenterpriseinfo/$', enterprise.add_enterprise_info),  # 企业信息增加接口
@@ -47,8 +48,15 @@ urlpatterns = [
     url(r'^rentservice/appointment/(?P<appointment_id>[0-9a-zA-Z-]+)/detail$', appointment.get_appointment_detail),
     # 预约详情查询
     url(r'^rentservice/userinfo/list/(?P<user_id>[0-9a-zA-Z-]+)/process', userinfo.get_process_order_list),
-    # 预约详情查询
+    # 承运人的在运箱子查询
     url(r'^rentservice/userinfo/list/(?P<user_id>[0-9a-zA-Z-]+)/finished', userinfo.get_finished_order_list),
     # 预约详情查询
     url(r'^rentservice/upload/(?P<filename>[^/]+)$', upload.FileUploadView.as_view()), #新增上传接口
+    # 承运人的历史箱子查询
+    url(r'^rentservice/enterlease/list/(?P<enterprise_id>[0-9a-zA-Z-]+)/process',
+        entleaseinfo.get_enterprise_lease_process_list),
+    # 承运人的在运箱子查询
+    url(r'^rentservice/enterlease/list/(?P<enterprise_id>[0-9a-zA-Z-]+)/finished',
+        entleaseinfo.get_enterprise_lease_finish_list),
+    # 承运人的历史箱子查询
 ]
