@@ -42,7 +42,6 @@ urlpatterns = [
     # 用户详情
     url(r'^rentservice/regions/provinces', regions.get_province_list),  # 获取省列表
     url(r'^rentservice/regions/cities/(?P<province_id>[0-9]+)$', regions.get_city_list),  # 获取制定省的市列表
-    url(r'^rentservice/boxrentservice/order$', boxrentservice.rent_boxes_order),  # 租箱
     url(r'^rentservice/appointment/create', appointment.create_appointment),  # 承租方预约
     url(r'^rentservice/appointment/(?P<user_id>[0-9a-zA-Z-]+)/list$', appointment.get_list_by_user),  # 承租方预约列表查询
     url(r'^rentservice/appointment/(?P<appointment_id>[0-9a-zA-Z-]+)/detail$', appointment.get_appointment_detail),
@@ -59,4 +58,6 @@ urlpatterns = [
     url(r'^rentservice/enterlease/list/(?P<enterprise_id>[0-9a-zA-Z-]+)/finished',
         entleaseinfo.get_enterprise_lease_finish_list),
     # 承运人的历史箱子查询
+    url(r'^rentservice/boxrentservice/createorder$', boxrentservice.rent_boxes_order),  # 租箱
+    url(r'^rentservice/boxrentservice/finishorder$', boxrentservice.finish_boxes_order),  # 还箱
 ]

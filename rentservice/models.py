@@ -98,6 +98,7 @@ class RentLeaseInfo(models.Model):
     off_site = models.ForeignKey(SiteInfo, null=True, related_name='off_site_fk')
     on_site = models.ForeignKey(SiteInfo, null=True, related_name='on_site_fk')
     rent = models.BigIntegerField(default=0)
+    rent_status = models.IntegerField(default=0)
 
 
 class UserRentDay(models.Model):
