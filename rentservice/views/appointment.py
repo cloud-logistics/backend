@@ -122,7 +122,7 @@ def get_list_by_user(request, user_id):
                         status=status.HTTP_200_OK)
 
 
-# 预约单详情查询
+# 预约单详情查询detail
 @csrf_exempt
 @api_view(['GET'])
 def get_appointment_detail(request, appointment_id):
