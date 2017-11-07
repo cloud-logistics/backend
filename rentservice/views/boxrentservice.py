@@ -26,16 +26,6 @@ def rent_boxes_order(request):
     ret = {}
     data = JSONParser().parse(request)
     try:
-        rent_admin_id = data['rent_admin_id']
-    except Exception:
-        return JsonResponse(retcode(errcode("9999", '租赁操作员id不能为空'), "9999", '租赁操作员id不能为空'), safe=True,
-                            status=status.HTTP_400_BAD_REQUEST)
-    try:
-        rent_user_id = data['rent_user_id']
-    except Exception:
-        return JsonResponse(retcode(errcode("9999", '租赁用户id不能为空'), "9999", '租赁用户id不能为空'), safe=True,
-                            status=status.HTTP_400_BAD_REQUEST)
-    try:
         site_id = data['site_id']
     except Exception:
         return JsonResponse(retcode(errcode("9999", '堆场id不能为空'), "9999", '堆场id不能为空'), safe=True,
@@ -52,16 +42,6 @@ def rent_boxes_order(request):
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        try:
-            rent_service_admin = RentalServiceAdmin.objects.get(user_id=rent_admin_id)
-        except RentalServiceAdmin.DoesNotExist:
-            return JsonResponse(retcode(errcode("9999", '租赁操作员不存在'), "9999", '租赁操作员不存在'), safe=True,
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        try:
-            enterprise_user = EnterpriseUser.objects.get(user_id=rent_user_id)
-        except EnterpriseUser.DoesNotExist:
-            return JsonResponse(retcode(errcode("9999", '租赁用户不存在'), "9999", '租赁用户不存在'), safe=True,
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         try:
             site = SiteInfo.objects.get(id=site_id)
         except SiteInfo.DoesNotExist:
@@ -83,9 +63,7 @@ def rent_boxes_order(request):
         with transaction.atomic():
             for item in box_info_list:
                 lease_info = RentLeaseInfo(lease_info_id=uuid.uuid1(), user_id=enterprise_user,
-                                           lease_start_time=datetime.datetime.now(tz=timezone),
-                                           lease_admin_on=rent_service_admin, box=item,
-                                           on_site=site)
+                                           lease_start_time=datetime.datetime.now(tz=timezone), box=item, on_site=site)
                 lease_info.save()
                 #SiteBoxStock update
                 site_box_stock = SiteBoxStock.objects.get(site=site, box_type=item.type)
@@ -131,7 +109,7 @@ def finish_boxes_order(request):
         box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list)
         rent_info_list = RentLeaseInfo.objects.filter(box_id__in=box_id_list, rent_status=0)
         for item in rent_info_list:
-            item.rent_flag = 1
+            item.rent_status = 1
             item.lease_end_time = datetime.datetime.now(tz=timezone)
             item.save()
         #update
