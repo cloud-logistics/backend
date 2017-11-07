@@ -99,6 +99,8 @@ def create_appointment(request):
 @csrf_exempt
 @api_view(['GET'])
 def get_list_by_user(request, user_id):
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
     try:
         user = EnterpriseUser.objects.get(user_id=user_id)
     except EnterpriseUser.DoesNotExist:
@@ -132,9 +134,9 @@ def get_list_by_user(request, user_id):
                     'appointment_time': appointment_item.appointment_time,
                     'appointment_code': appointment_item.appointment_code, 'flag': appointment_item.flag,
                     'info': res_app_list})
-
-    return JsonResponse(retcode(AppointmentResSerializer(ret, many=True).data, "0000", "Success"), safe=True,
-                        status=status.HTTP_200_OK)
+    page = paginator.paginate_queryset(ret, request)
+    ret_ser = AppointmentResSerializer(page, many=True)
+    return paginator.get_paginated_response(ret_ser.data)
 
 
 # 预约单详情查询detail
