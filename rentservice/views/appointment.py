@@ -3,6 +3,7 @@
 
 from django.http import JsonResponse
 from rest_framework.parsers import JSONParser
+from rest_framework.settings import api_settings
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -117,7 +118,8 @@ def get_list_by_user(request, user_id):
                 res_app_list.append({'site': SiteInfoSerializer(detail.site_id).data,
                                      'box_info': [AppointmentDetailSerializer(detail).data]})
         ret.append({'appointment': UserAppointmentSerializer(appointment_item).data, 'info': res_app_list})
-    return JsonResponse(retcode(ret, "0000", "Success"), safe=True, status=status.HTTP_200_OK)
+    return JsonResponse(retcode(ret, "0000", "Success"), safe=True,
+                        status=status.HTTP_200_OK)
 
 
 # 预约单详情查询
