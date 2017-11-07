@@ -108,9 +108,11 @@ def finish_boxes_order(request):
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list)
         rent_info_list = RentLeaseInfo.objects.filter(box_id__in=box_id_list, rent_status=0)
+        lease_info_list = []
         for item in rent_info_list:
             item.rent_status = 1
             item.lease_end_time = datetime.datetime.now(tz=timezone)
+            lease_info_list.append(item.lease_info_id)
             item.save()
         #update
         for item in box_info_list:
@@ -122,4 +124,5 @@ def finish_boxes_order(request):
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0500", '归还云箱失败'), "0500", '归还云箱失败'), safe=True,
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    ret['rent_lease_info_id_list'] = lease_info_list
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
