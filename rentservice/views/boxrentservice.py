@@ -48,7 +48,7 @@ def rent_boxes_order(request):
             return JsonResponse(retcode(errcode("9999", '仓库不存在'), "9999", '仓库不存在'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         try:
-            user_appoint = UserAppointment.objects.get(appointment_id=appoint_id)
+            user_appoint = UserAppointment.objects.get(appointment_id=appoint_id, flag=0)
         except UserAppointment.DoesNotExist:
             return JsonResponse(retcode(errcode("9999", '预约单不存在'), "9999", '预约单不存在'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -77,6 +77,9 @@ def rent_boxes_order(request):
             for appoint_detail in appoint_detail_queryset:
                 appoint_detail.flag = 1
                 appoint_detail.save()
+            #预约单更新为已完成
+            user_appoint.flag = 1
+            user_appoint.save()
         ret['rent_lease_info_id_list'] = lease_info_list
     except Exception, e:
         log.error(repr(e))
@@ -107,7 +110,11 @@ def finish_boxes_order(request):
             return JsonResponse(retcode(errcode("9999", '仓库不存在'), "9999", '仓库不存在'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list)
-        rent_info_list = RentLeaseInfo.objects.filter(box_id__in=box_id_list, rent_status=0)
+        try:
+            rent_info_list = RentLeaseInfo.objects.filter(box_id__in=box_id_list, rent_status=0)
+        except RentLeaseInfo.DoesNotExist:
+            return JsonResponse(retcode(errcode("9999", '租赁信息不存在'), "9999", '租赁信息不存在'), safe=True,
+                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         lease_info_list = []
         for item in rent_info_list:
             item.rent_status = 1
