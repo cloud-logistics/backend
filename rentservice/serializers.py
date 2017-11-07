@@ -102,6 +102,8 @@ class AppointmentDetailSerializer(serializers.ModelSerializer):
 
 class RentLeaseInfoSerializer(serializers.ModelSerializer):
     box = BoxInfoSerializer()
+    on_site = SiteInfoSerializer()
+    off_site = SiteInfoSerializer()
 
     class Meta:
         model = RentLeaseInfo
