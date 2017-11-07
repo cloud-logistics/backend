@@ -126,3 +126,19 @@ class RentalAdminOperationRecordsSerializer(serializers.ModelSerializer):
     class Meta:
         model = RentalAdminOperationRecords
         fields = '__all__'
+
+
+class AppSiteSerializer(serializers.ModelSerializer):
+    box_info = AppointmentDetailSerializer(many=True)
+
+    class Meta:
+        model = SiteInfo
+        fields = '__all__'
+
+
+class AppointmentResSerializer(serializers.ModelSerializer):
+    info = AppSiteSerializer(many=True)
+
+    class Meta:
+        model = UserAppointment
+        fields = '__all__'

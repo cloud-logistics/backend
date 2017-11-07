@@ -164,7 +164,8 @@ class ContainerRentInfo(models.Model):
 
 class SiteInfo(models.Model):
     id = models.AutoField(primary_key=True)
-    location = models.CharField(max_length=128, default='')
+    name = models.CharField(max_length=128, default='')
+    location = models.TextField(default='')
     latitude = models.CharField(max_length=16, default='0.0')
     longitude = models.CharField(max_length=16, default='0.0')
     site_code = models.CharField(max_length=48, default='')

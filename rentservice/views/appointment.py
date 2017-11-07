@@ -19,6 +19,7 @@ from rentservice.serializers import AppointmentDetailSerializer
 from monservice.models import SiteInfo
 from monservice.models import BoxTypeInfo
 from monservice.serializers import SiteInfoSerializer
+from rentservice.serializers import AppointmentResSerializer
 import datetime
 import uuid
 import pytz
@@ -98,6 +99,8 @@ def create_appointment(request):
 @csrf_exempt
 @api_view(['GET'])
 def get_list_by_user(request, user_id):
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
     try:
         user = EnterpriseUser.objects.get(user_id=user_id)
     except EnterpriseUser.DoesNotExist:
@@ -111,15 +114,29 @@ def get_list_by_user(request, user_id):
         detail_list = AppointmentDetail.objects.filter(appointment_id=appointment_item)
         for detail in detail_list:
             if detail.site_id.id in tmp_list:
+                # res_app_list[tmp_list.index(detail.site_id.id)]['box_info'].append(
+                #     AppointmentDetailSerializer(detail).data)
                 res_app_list[tmp_list.index(detail.site_id.id)]['box_info'].append(
-                    AppointmentDetailSerializer(detail).data)
+                    detail)
             else:
                 tmp_list.append(detail.site_id.id)
-                res_app_list.append({'site': SiteInfoSerializer(detail.site_id).data,
-                                     'box_info': [AppointmentDetailSerializer(detail).data]})
-        ret.append({'appointment': UserAppointmentSerializer(appointment_item).data, 'info': res_app_list})
-    return JsonResponse(retcode(ret, "0000", "Success"), safe=True,
-                        status=status.HTTP_200_OK)
+                # res_app_list.append({'site': SiteInfoSerializer(detail.site_id).data,
+                #                      'box_info': [AppointmentDetailSerializer(detail).data]})
+                res_app_list.append(
+                    {'id': detail.site_id.id, 'location': detail.site_id.location, 'latitude': detail.site_id.latitude,
+                     'longitude': detail.site_id.longitude, 'site_code': detail.site_id.site_code,
+                     'city': detail.site_id.city, 'province': detail.site_id.province, 'nation': detail.site_id.nation,
+                     'volume': detail.site_id.volume,
+                     'box_info': [detail]})
+        # ret.append({'appointment': UserAppointmentSerializer(appointment_item).data, 'info': res_app_list})
+
+        ret.append({'appointment_id': appointment_item.appointment_id, 'user_id': appointment_item.user_id,
+                    'appointment_time': appointment_item.appointment_time,
+                    'appointment_code': appointment_item.appointment_code, 'flag': appointment_item.flag,
+                    'info': res_app_list})
+    page = paginator.paginate_queryset(ret, request)
+    ret_ser = AppointmentResSerializer(page, many=True)
+    return paginator.get_paginated_response(ret_ser.data)
 
 
 # 预约单详情查询detail
