@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from monservice.serializers import SiteFullInfoSerializer, BoxFullInfoSerializer
 import json
-from monservice.models import SiteInfo, City, Province, Nation, BoxTypeInfo, BoxInfo, SiteBoxStock
+from monservice.models import SiteInfo, City, Province, Nation, BoxTypeInfo, BoxInfo, SiteBoxStock, SiteDispatch
 from util import logger
 from rest_framework.settings import api_settings
 from monservice.models import SiteHistory
@@ -260,7 +260,7 @@ def enter_leave_site(data):
             for box in boxes:
                 box_id = str(box['box_id'])  # 箱子id
                 type = str(box['type'])  # 操作类型：1表示入仓，0表示出仓
-                history = SiteHistory(timestamp=ts, site_id=site_id, box_id=box_id, op_type=type)
+                history = SiteHistory(timestamp=ts, site_id=site_id, box_deviceid=box_id, op_type=type)
                 history.save()
 
                 # 更新仓库箱子可用数量
@@ -285,6 +285,81 @@ def initialize_box_num(site_id):
                 stock.save()
     except Exception, e:
         log.error(e.message)
+
+
+
+# 调度出仓接口
+@csrf_exempt
+@api_view(['POST'])
+def dispatchout(request):
+    try:
+        data = json.loads(request.body)
+        dispatch_id = str(data['dispatch_id'])  # 调度id
+        dispatch = SiteDispatch.objects.get(did=dispatch_id)
+        dispatch.status = 'dispatching'
+        site = dispatch.start
+        dispatch.save()
+
+        boxes = data['boxes']                   # 箱子数组
+        ts = str(time.time())[0:10]
+        with transaction.atomic():
+            for box in boxes:
+                box_id = str(box['box_id'])     # 箱子id
+                type = '0'                      # 操作类型：1表示入仓，0表示出仓
+                history = SiteHistory(timestamp=ts, site=site, box_deviceid=box_id, op_type=type)
+                history.save()
+
+                # 更新仓库箱子可用数量
+                box = BoxInfo.objects.get(deviceid=box_id)
+                stock = SiteBoxStock.objects.get(site=site, box_type=box.type)
+                stock.ava_num -= 1
+                stock.save()
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'post box inout success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+
+# 调度入仓接口
+@csrf_exempt
+@api_view(['POST'])
+def dispatchin(request):
+    try:
+        data = json.loads(request.body)
+        dispatch_id = str(data['dispatch_id'])  # 调度id
+        dispatch = SiteDispatch.objects.get(did=dispatch_id)
+        site = dispatch.start
+        dispatch.status = 'dispatched'
+        dispatch.save()
+
+        boxes = data['boxes']                   # 箱子数组
+        ts = str(time.time())[0:10]
+        with transaction.atomic():
+            for box in boxes:
+                box_id = str(box['box_id'])     # 箱子id
+                type = '0'                      # 操作类型：1表示入仓，0表示出仓
+                history = SiteHistory(timestamp=ts, site=site, box_deviceid=box_id, op_type=type)
+                history.save()
+
+                # 更新仓库箱子可用数量
+                box = BoxInfo.objects.get(deviceid=box_id)
+                stock = SiteBoxStock.objects.get(site=site, box_type=box.type)
+                stock.ava_num -= 1
+                stock.save()
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'post box inout success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
 
 
 
