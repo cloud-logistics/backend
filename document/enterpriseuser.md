@@ -113,12 +113,12 @@
 
 #### URL
 
-`container／api/v1/cloudbox/rentservice/enterpriseuser/list`
+`container／api/v1/cloudbox/rentservice/enterpriseuser/list/{group}`
 
 #### Parameter
 
 ```
-无
+group 企业群组名 默认只有：admin（超级管理员)/rentuser(企业用户）／rentadmin(企业管理员）
 ```
 
 #### Return
@@ -143,7 +143,7 @@
                 "user_token": "58ba6f474e5844d093af285270e8f02a",
                 "role": "admin",
                 "enterprise": "dae79623-bea8-11e7-a2b6-9801a7b3c9f3",
-                "group": "6bfa276b-ba23-11e7-87ef-9801a7b3c9f3"
+                "group": "rentuser"
             },
             {
                 "user_id": "3e9a30b0-bf98-11e7-987e-9801a7b3c9f3",
@@ -157,7 +157,7 @@
                 "user_token": "13470786b77c43f0a767fbc414aff4ee",
                 "role": "admin",
                 "enterprise": "dae79623-bea8-11e7-a2b6-9801a7b3c9f3",
-                "group": "6bfa276b-ba23-11e7-87ef-9801a7b3c9f3"
+                "group": "rentuser"
             }
         ],
         "links": {
