@@ -275,8 +275,8 @@ class SiteDispatch(models.Model):
 class SiteHistory(models.Model):
     id = models.AutoField(primary_key=True)
     timestamp = models.IntegerField()
-    site = models.ForeignKey(SiteInfo, related_name='site_history_site_fk')
-    box = models.ForeignKey(BoxInfo, related_name='site_history_box_fk')
+    site = models.ForeignKey(SiteInfo, related_name='site_history_site_fk', null=True)
+    box = models.ForeignKey(BoxInfo, related_name='site_history_box_fk', null=True)
     op_type = models.IntegerField(default=0)
 
 
