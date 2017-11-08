@@ -227,9 +227,9 @@ def box_inout(request):
         ts = str(time.time())[0:10]
         with transaction.atomic():
             for box in boxes:
-                box_id = str(box['box_id'])  # 箱子id
-                type = str(box['type'])  # 操作类型：1表示入仓，0表示出仓
-                history = SiteHistory(timestamp=ts, site_id=site_id, box_id=box_id, op_type=type)
+                box_id = str(box['box_id'])     # 箱子id
+                type = str(box['type'])         # 操作类型：1表示入仓，0表示出仓
+                history = SiteHistory(timestamp=ts, site_id=site_id, box_deviceid=box_id, op_type=type)
                 history.save()
 
                 # 更新仓库箱子可用数量
@@ -237,8 +237,11 @@ def box_inout(request):
                 stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
                 if type == '1':
                     stock.ava_num += 1
+                    box.ava_flag = 'Y'
                 else:
                     stock.ava_num -= 1
+                    box.ava_flag = 'N'
+                box.save()
                 stock.save()
 
     except Exception, e:
@@ -263,14 +266,19 @@ def enter_leave_site(data):
                 history = SiteHistory(timestamp=ts, site_id=site_id, box_deviceid=box_id, op_type=type)
                 history.save()
 
-                # 更新仓库箱子可用数量
+                # 更新箱子状态
                 box = BoxInfo.objects.get(deviceid=box_id)
+                # 更新仓库箱子可用数量
                 stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
                 if type == '1':
+                    box.ava_flag = 'Y'
                     stock.ava_num += 1
                 else:
+                    box.ava_flag = 'N'
                     stock.ava_num -= 1
+                box.save()
                 stock.save()
+
     except Exception, e:
         log.error(e.message)
 
