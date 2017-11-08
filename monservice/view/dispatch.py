@@ -58,6 +58,25 @@ def get_dispatches_history(request):
 
 
 @csrf_exempt
+@api_view(['GET'])
+def get_dispatch_by_site(request, site_id):
+    try:
+        dispatches = SiteDispatch.objects.filter(start_id=site_id, status='undispatch').order_by('did')
+
+        if len(dispatches) == 0:
+            response_msg = {'result': 'False', 'code': '999999', 'msg': 'no dispatch for this site'}
+        else:
+            dis = dispatches[0]
+            response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success', 'dispatch_id': dis.did, 'count': dis.count}
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'result': 'False', 'code': '999999', 'message': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
 @api_view(['POST'])
 def create_dispatches(request):
     try:
@@ -75,6 +94,8 @@ def create_dispatches(request):
     else:
         response_msg = {'status':'OK', 'msg': 'query dispatches success'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
 
 
 class DSite:
