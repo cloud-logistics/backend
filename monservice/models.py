@@ -175,13 +175,6 @@ class SiteInfo(models.Model):
     volume = models.IntegerField(default=0)
 
 
-class SiteHistory(models.Model):
-    timestamp = models.IntegerField()
-    site_id = models.IntegerField()
-    box_id = models.CharField(max_length=48, default='')
-    op_type = models.IntegerField(default=0)
-
-
 class BoxTypeInfo(models.Model):
     id = models.AutoField(primary_key=True)
     box_type_name = models.CharField(max_length=128, default='')
@@ -276,6 +269,15 @@ class SiteDispatch(models.Model):
     count = models.IntegerField(default=0)
     status = models.CharField(max_length=20, default='undispatch')
     create_date = models.DateField()
+
+
+# 仓库进出流水
+class SiteHistory(models.Model):
+    id = models.AutoField(primary_key=True)
+    timestamp = models.IntegerField()
+    site = models.ForeignKey(SiteInfo, related_name='site_history_site_fk')
+    box = models.ForeignKey(BoxInfo, related_name='site_history_box_fk')
+    op_type = models.IntegerField(default=0)
 
 
 # 系统用户组

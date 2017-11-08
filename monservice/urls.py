@@ -45,6 +45,10 @@ urlpatterns = [
     url(r'^siteStream/(?P<id>\d+)/', site.get_site_stream),      # 查询堆场进出箱子流水
     url(r'^boxinout$', site.box_inout),                          # 箱子进出仓库接口
 
+    url(r'^querydispatch/(?P<site_id>\d+)/', dispatch.get_dispatch_by_site),      # 查询堆场调度信息
+    url(r'^dispatchout$', site.dispatchout),                        # 调度出仓接口
+    url(r'^dispatchin$', site.dispatchin),                          # 调度入仓接口
+
     url(r'^nationlist$', views.get_nation_list),                          # 获取国家列表
     url(r'^provincelist/(?P<nation_id>\d+)$', views.get_province_list),   # 根据国家获取省列表
     url(r'^citylist/(?P<province_id>\d+)$', views.get_city_list),         # 根据省获取城市列表
