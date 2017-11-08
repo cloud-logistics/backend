@@ -225,5 +225,42 @@
 ```
 
 
+### 4. 云箱进出仓接口
+
+#### 方法：
+
+`POST`
+
+#### URL：
+
+`container/api/v1/cloudbox/boxinout`
+
+#### BODY:
+
+```
+{
+"site_id": "7",
+"boxes": [
+	{"box_id": "HNAF0000284",
+	 "type": "1"
+	},
+	{"box_id": "HNAR0000247",
+	 "type": "1"
+	}
+	]
+}
+```
+
+
+#### 响应：
+
+```
+{
+    "status": "OK",
+    "msg": "post box inout success"
+}
+```
+
+
 
 
