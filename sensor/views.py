@@ -101,7 +101,7 @@ def parse(msg):
 
 
 def build_sql(data_list):
-    sql = 'insert into iot.sensor_data(timestamp, deviceid, temperature, humidity, latitude, longitude, ' \
+    sql = 'insert into iot.monservice_sensor_data(timestamp, deviceid, temperature, humidity, latitude, longitude, ' \
           'speed, collide, light, endpointid) values '
     size = data_list.__len__()
 
@@ -263,7 +263,7 @@ def build_precintl_sql(data):
         lat = location_data['lat']
         long = location_data['long']
 
-    sql = 'insert into iot.sensor_data(timestamp, deviceid, temperature, humidity, latitude, longitude, ' \
+    sql = 'insert into iot.monservice_sensor_data(timestamp, deviceid, temperature, humidity, latitude, longitude, ' \
           'speed, collide, light, endpointid) values '
     sql = sql + '(' + str(data['utc']) + ',\'' + \
                 str(data['deviceid']) + '\',\'' + \
@@ -286,7 +286,7 @@ def build_precintl_sql(data):
 # 根据历史坐标计算平均速度
 def get_speed(deviceid, lat, long, ts):
     last_data = query_list('select longitude,latitude,timestamp '
-                             'from iot.sensor_data where deviceid = \'' + deviceid + '\' and longitude <> \'0\' and latitude <> \'0\' order by timestamp desc limit 2')
+                             'from iot.monservice_sensor_data where deviceid = \'' + deviceid + '\' and longitude <> \'0\' and latitude <> \'0\' order by timestamp desc limit 2')
 
     if lat == '0' and long == '0':
         if len(last_data) == 2:
@@ -319,7 +319,7 @@ def get_location(deviceid, lat, long):
     last_lat = '0'
     last_long = '0'
     last_data = query_list('select latitude, longitude '
-                           'from iot.sensor_data where deviceid = \'' + deviceid + '\' and longitude <> \'0\' and latitude <> \'0\' order by timestamp desc limit 1')
+                           'from iot.monservice_sensor_data where deviceid = \'' + deviceid + '\' and longitude <> \'0\' and latitude <> \'0\' order by timestamp desc limit 1')
 
     if len(last_data) > 0:
         last_lat = last_data[0][0]
