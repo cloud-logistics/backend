@@ -34,8 +34,10 @@ urlpatterns = [
     # 获取堆场列表
     url(r'^rentservice/site/detail/(?P<site_id>[0-9a-zA-Z-]+)$', site.get_site_detail),  # 获取堆场详情
     url(r'^rentservice/boxtype/list', boxtype.get_box_type_list),  # 获取箱子类型
-    url(r'^rentservice/enterpriseuser/addenterpriseuser/$', enterpriseuser.add_enterprise_user),  # 用户信息添加
-    url(r'^rentservice/enterpriseuser/updateenterpriseuser/$', enterpriseuser.update_enterprise_user),  # 用户信息修改
+    url(r'^rentservice/enterpriseuser/addenterpriseuser/$', enterpriseuser.add_enterprise_admin),  # 添加管理员用户
+    url(r'^rentservice/enterpriseuser/updateenterpriseuser/$', enterpriseuser.update_enterprise_admin),  # 修改管理员用户
+    url(r'^rentservice/enterpriseuser/adduser/$', enterpriseuser.add_enterprise_user),  # 添加普通用户
+    url(r'^rentservice/enterpriseuser/updateuser/$', enterpriseuser.update_enterprise_user),  # 普通用户修改
     url(r'^rentservice/enterpriseuser/(?P<user_id>[0-9a-zA-Z-]+)/$', enterpriseuser.del_enterprise_user),  # 删除用户
     url(r'^rentservice/enterpriseuser/list$', enterpriseuser.list_enterprise_user),  # 用户列表
     url(r'^rentservice/enterpriseuser/detail/(?P<user_id>[0-9a-zA-Z-]+)/$', enterpriseuser.enterprise_user_detail),

@@ -68,6 +68,9 @@ class EnterpriseUser(models.Model):
     user_token = models.CharField(max_length=64, default='')
     role = models.CharField(max_length=16, default='user')
     group = models.ForeignKey(AccessGroup, null=True)
+    user_real_name = models.CharField(max_length=48, default='')
+    user_gender = models.CharField(max_length=8, default='')
+    user_nickname = models.CharField(max_length=48, default='')
 
 
 class UserAppointment(models.Model):
