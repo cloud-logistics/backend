@@ -10,6 +10,7 @@ from models import Province
 from models import SiteBoxStock
 from models import SiteDispatch
 from models import Manufacturer, ProduceArea, Hardware, Battery
+from models import SysGroup, SysUser, SysAccessUrl
 
 
 class ContainerRentInfoSerializer(serializers.ModelSerializer):
@@ -138,4 +139,22 @@ class SiteFullInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SiteInfo
+        fields = '__all__'
+
+
+class SysGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SysGroup
+        fields = '__all__'
+
+
+class SysUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SysUser
+        fields = '__all__'
+
+
+class SysAccessUrlSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SysAccessUrl
         fields = '__all__'
