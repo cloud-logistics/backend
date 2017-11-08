@@ -165,11 +165,16 @@ def del_enterprise_user(request, user_id):
 
 @csrf_exempt
 @api_view(['GET'])
-def list_enterprise_user(request):
+def list_enterprise_user(request, group):
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
     try:
-        enterpise_user_ret = EnterpriseUser.objects.all()
+        try:
+            obj_group = AccessGroup.objects.get(group=group)
+        except AccessGroup.DoesNotExist:
+            return JsonResponse(retcode(errcode("9999", '企业用户群组不存在'), "9999", '企业用户群组不存在'), safe=True,
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        enterpise_user_ret = EnterpriseUser.objects.filter(group=obj_group)
         page = paginator.paginate_queryset(enterpise_user_ret, request)
         enterprise_user_ser = EnterpriseUserSerializer(page, many=True)
     except Exception, e:
