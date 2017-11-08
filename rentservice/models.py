@@ -68,6 +68,9 @@ class EnterpriseUser(models.Model):
     user_token = models.CharField(max_length=64, default='')
     role = models.CharField(max_length=16, default='user')
     group = models.ForeignKey(AccessGroup, null=True)
+    user_real_name = models.CharField(max_length=48, default='')
+    user_gender = models.CharField(max_length=8, default='')
+    user_nickname = models.CharField(max_length=48, default='')
 
 
 class UserAppointment(models.Model):
@@ -98,6 +101,7 @@ class RentLeaseInfo(models.Model):
     off_site = models.ForeignKey(SiteInfo, null=True, related_name='off_site_fk')
     on_site = models.ForeignKey(SiteInfo, null=True, related_name='on_site_fk')
     rent = models.BigIntegerField(default=0)
+    rent_status = models.IntegerField(default=0)
 
 
 class UserRentDay(models.Model):
