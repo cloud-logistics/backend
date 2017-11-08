@@ -29,7 +29,7 @@ import urllib
 import urllib2
 import json
 import random
-from monservice.models import BoxInfo, BoxTypeInfo, SiteInfo, City, Province, Nation, Manufacturer, ProduceArea, Hardware, Battery
+from monservice.models import *
 
 log = logger.get_logger('monservice.view.py')
 file_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + 'mock_data.json'
@@ -48,13 +48,13 @@ def containers_overview(request):
         container_info_list = []
         data = query_list('select box_info.deviceid,box_type_info.box_type_name, '
                           'C.latitude,C.longitude '
-                          'from iot.box_info box_info '
-                          'left join iot.box_type_info box_type_info '
-                          'on box_info.type = box_type_info.id ' 
+                          'from iot.monservice_boxinfo box_info '
+                          'left join iot.monservice_boxtypeinfo box_type_info '
+                          'on box_info.type_id = box_type_info.id ' 
                           'left join '
                           '(select B.* from (select max(timestamp) as timestamp ,deviceid ' 
-                          'from iot.sensor_data group by deviceid) A ' 
-                          'left join iot.sensor_data B '
+                          'from iot.monservice_sensordata group by deviceid) A ' 
+                          'left join iot.monservice_sensordata B '
                           'on A.timestamp = B.timestamp and A.deviceid = B.deviceid) C '
                           'on box_info.deviceid = C.deviceid '
                           'order by deviceid asc')
@@ -176,7 +176,8 @@ def realtime_message(request):
         latitude = cal_position(sensor_data[0][3])
         speed = sensor_data[0][4]
         collide = sensor_data[0][5]
-        num_of_door_open = sensor_data[0][6]
+        light = sensor_data[0][6]  # 表示电量
+        num_of_door_open = 5
 
     else:
         temperature = ZERO
@@ -185,6 +186,7 @@ def realtime_message(request):
         latitude = ZERO
         speed = ZERO
         collide = ZERO
+        light = ZERO   # 表示电量
         num_of_door_open = ZERO
 
     # 获取箱子阈值
@@ -241,7 +243,7 @@ def realtime_message(request):
         humidity_status = STATUS_ABNORMAL
 
     # 计算电量是否咋正常范围
-    battery = 0.6           # 后续需要修改为真实值
+    battery = light           # 后续需要修改为真实值, 目前使用light字段表示电量
     if float(battery_threshold_min) <= float(battery) <= float(battery_threshold_max):
         battery_status = STATUS_NORMAL
     else:
@@ -591,20 +593,14 @@ def status_summary(request):
         id = ''
         log.error(e.message)
 
-    sql = 'select box_info.deviceid,C.timestamp,carrier_info.carrier_name,C.longitude,C.latitude,' \
+    sql = 'select box_info.deviceid,C.timestamp,C.longitude,C.latitude,' \
           'C.speed,C.temperature,C.humidity,C.collide,C.light ' \
           'from iot.box_info box_info ' \
-          'left join iot.box_order_relation box_order_relation ' \
-          'on box_info.deviceid = box_order_relation.deviceid and box_info.type = ' + str(container_type)
 
     if id is not None and id != '':
         sql = sql + ' and box_info.deviceid = \'' + id + '\' '
 
-    sql = sql + 'inner join iot.order_info order_info ' \
-                'on box_order_relation.trackid=order_info.trackid ' \
-                'inner join iot.carrier_info carrier_info ' \
-                'on carrier_info.id = order_info.carrierid ' \
-                'left join ( select B.* from ' \
+    sql = sql + ' left join ( select B.* from ' \
                 '(select max(timestamp) as timestamp ,deviceid from iot.sensor_data '
 
     if id is not None and id != '':
@@ -616,8 +612,9 @@ def status_summary(request):
     if id is not None and id != '':
         sql = sql + 'where B.deviceid = \'' + id + '\''
 
-    sql = sql + ') C on C.deviceid=box_info.deviceid group by box_info.deviceid,C.timestamp,carrier_info.carrier_name,' \
-                'C.longitude,C.latitude,C.speed,C.temperature,C.humidity,C.collide,C.light'
+    sql = sql + ') C on C.deviceid=box_info.deviceid and box_info.type = ' + str(container_type) + \
+          'group by box_info.deviceid,C.timestamp, ' \
+          'C.longitude,C.latitude,C.speed,C.temperature,C.humidity,C.collide,C.light'
 
     data = query_list(sql)
 
@@ -626,27 +623,21 @@ def status_summary(request):
     for item in data:
         deviceid = item[0]
         timestamp = item[1]
-        carrier_name = item[2]
-        longitude = cal_position(item[3])
-        latitude = cal_position(item[4])
-        speed = float(item[5])
-        temperature = float(item[6])
-        humidity = float(item[7])
-        collide = float(item[8])
-        num_of_door_open = int(item[9])
-
-        # 判断箱子在运还是停靠
-        if carrier_name is not None:
-            shipping_status = IN_TRANSPORT
-        else:
-            shipping_status = ANCHORED
+        longitude = cal_position((item[2], '0')[item[2] is None])
+        latitude = cal_position((item[3], '0')[item[3] is None])
+        speed = float((item[4], 0)[item[4] is None])
+        temperature = float((item[5], 0)[item[4] is None])
+        humidity = float((item[6], 0)[item[4] is None])
+        collide = float((item[7], 0)[item[4] is None])
+        light = float((item[8], 0)[item[4] is None])
+        num_of_door_open = 5
 
         location_name = gps_info_trans("%s,%s" % (latitude, longitude))
 
-        element = {'containerId': deviceid, 'currentStatus': shipping_status, 'position':
-            {'lng': longitude, 'lat': latitude}, 'locationName': location_name, 'carrier': carrier_name,
+        element = {'containerId': deviceid, 'position':
+            {'lng': longitude, 'lat': latitude}, 'locationName': location_name,
                    'speed': speed, 'temperature': temperature, 'humidity': humidity, 'num_of_collide': collide,
-                   'num_of_door_open': num_of_door_open, 'robot_operation_status': '装箱', 'battery': 0.6}
+                   'num_of_door_open': num_of_door_open, 'robot_operation_status': '装箱', 'battery': light}
 
         ret_data.append(element)
 
@@ -1016,22 +1007,25 @@ def return_container(request):
 
 @api_view(['POST'])
 def verify_user(request):
-    req_param_str_utf8 = to_str(request.body)
-    req_param = json.loads(req_param_str_utf8)
-    user = authenticate(username=req_param['username'], password=req_param['password'])
-    ret_dict ={}
-    if user is not None:
-        u = User.objects.get(username=req_param['username'])
-        if u.has_perm('monservice.view_containerrentinfo'):
+    ret_dict = {}
+    req_param = JSONParser().parse(request)
+    try:
+        username = req_param['username']
+    except Exception:
+        return JsonResponse('username should not be empty ', safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        password = req_param['password']
+    except Exception:
+        return JsonResponse('password should not be empty ', safe=True, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = SysUser.objects.filter(username=username, password=password)
+        if user is not None:
             ret_dict['role'] = 'carrier'
-        else:
-            ret_dict['role'] = 'admin'
-        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-        jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
-        payload = jwt_payload_handler(u)
-        token = jwt_encode_handler(payload)
-        ret_dict['token'] = token
-        return JsonResponse(ret_dict, safe=True, status=status.HTTP_200_OK)
+            ret_dict['token'] = user.user_token
+            return JsonResponse(ret_dict, safe=True, status=status.HTTP_200_OK)
+    except SysUser.DoesNotExist:
+        return JsonResponse('用户不存在', safe=True, status=status.HTTP_403_FORBIDDEN)
 
 
 # 向终端发送command
@@ -1491,3 +1485,4 @@ def get_position(request):
                          'province_id': province_id, 'city_id': city_id,
                          'nation_name': nation_name, 'province_name': province_name,
                          'city_name': city_name}, safe=True, status=status.HTTP_200_OK)
+
