@@ -30,9 +30,10 @@ def generate_sid(nation, city):
     return site_code
 
 
-# to complete odd check
 def is_binary_odd(num):
-    if num % 2 == 0:
+    binary = "{0:b}".format(num)
+    ones = binary.count('1')
+    if ones % 2 == 0:
         return False
     else:
         return True
