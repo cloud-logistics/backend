@@ -4,7 +4,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/dispatch`
+`container/api/v1/cloudbox/monservice/dispatch`
 
 #### 方法：
 
@@ -58,7 +58,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/disHistory`
+`container/api/v1/cloudbox/monservice/disHistory`
 
 #### 方法：
 
@@ -73,57 +73,46 @@
 ```
 {
     "status": "OK",
-    "msg": "query dispatches success",
-    "dispatches": [
-        {
-            "did": 7,
-            "start": {
-                "id": 7,
-                "location": "潍坊堆场",
-                "longitude": "119.160459",
-                "latitude": "36.710008",
-                "site_code": "WF001"
-            },
-            "finish": {
-                "id": 8,
-                "location": "滨州堆场",
-                "longitude": "117.970763",
-                "latitude": "37.381072",
-                "site_code": "BZ001"
-            },
-            "count": 2,
-            "status": "undispatch",
-            "create_date": "2017-11-03"
+    "msg": "query dispatches history success",
+    "data": {
+        "count": 1,
+        "limit": 10,
+        "results": [
+            {
+                "did": 13,
+                "start": {
+                    "id": 10,
+                    "location": "廊坊堆场",
+                    "longitude": "116.684922",
+                    "latitude": "39.537800",
+                    "site_code": "LF001"
+                },
+                "finish": {
+                    "id": 30,
+                    "location": "test1234",
+                    "longitude": "120.00",
+                    "latitude": "40.00",
+                    "site_code": "TS1111"
+                },
+                "count": 100,
+                "status": "undispatch",
+                "create_date": "2017-11-09"
+            }
+        ],
+        "links": {
+            "previous": null,
+            "next": null
         },
-        {
-            "did": 8,
-            "start": {
-                "id": 9,
-                "location": "沧州堆场",
-                "longitude": "116.838607",
-                "latitude": "38.306742",
-                "site_code": "CZ001"
-            },
-            "finish": {
-                "id": 10,
-                "location": "廊坊堆场",
-                "longitude": "116.684922",
-                "latitude": "39.537800",
-                "site_code": "LF001"
-            },
-            "count": 5,
-            "status": "undispatch",
-            "create_date": "2017-11-03"
-        }
-    ]
+        "offset": 0
+    }
 }
 ```
 
-### 1. 手持机定时查询运营平台获取调度信息接口：
+### 3. 手持机定时查询运营平台获取调度信息接口：
 
 #### URL：
 
-` http://106.2.20.186:8000/container/api/v1/cloudbox/querydispatch/{site_id}`
+` http://106.2.20.186:8000/container/api/v1/cloudbox/monservice/querydispatch/{site_id}`
 
 #### 方法：
 
@@ -147,7 +136,7 @@
 
 ```
 
-### 2. 调度出仓接口
+### 4. 调度出仓接口
 
 #### 方法：
 
@@ -155,7 +144,7 @@
 
 #### URL：
 
-`http://106.2.20.186:8000/container/api/v1/cloudbox/dispatchout`
+`http://106.2.20.186:8000/container/api/v1/cloudbox/monservice/dispatchout`
 
 #### BODY:
 
@@ -181,7 +170,7 @@
 ```
 
 
-### 3. 调度入仓接口
+### 5. 调度入仓接口
 
 #### 方法：
 
@@ -189,7 +178,7 @@
 
 #### URL：
 
-`http://106.2.20.186:8000/container/api/v1/cloudbox/dispatchin`
+`http://106.2.20.186:8000/container/api/v1/cloudbox/monservice/dispatchin`
 
 #### BODY:
 
@@ -214,7 +203,7 @@
 ```
 
 
-### 4. 云箱进出仓接口
+### 6. 云箱进出仓接口
 
 #### 方法：
 
@@ -222,9 +211,11 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/boxinout`
+`container/api/v1/cloudbox/monservice/boxinout`
 
 #### BODY:
+
+##### type：1 入仓， 0 出仓
 
 ```
 {
