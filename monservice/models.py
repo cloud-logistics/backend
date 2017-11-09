@@ -120,6 +120,7 @@ class Nation(models.Model):
     nation_name = models.CharField(max_length=100, default='')
     pic_url = models.CharField(max_length=200, default='')
     sorted_key = models.CharField(max_length=10, default='')
+    nation_code = models.CharField(max_length=10, default='')  # 国家编码
 
 
 # 省
@@ -144,6 +145,7 @@ class City(models.Model):
     nation = models.ForeignKey(Nation, related_name='city_fk')
     sorted_key = models.CharField(max_length=10, default='')
     flag = models.IntegerField(default=0)  # 酒店
+    city_code = models.CharField(max_length=10, default='')
     province = models.ForeignKey(Province, related_name='city_province_fk', null=True)
 
 
@@ -300,5 +302,12 @@ class SysAccessUrl(models.Model):
     access_url_id = models.AutoField(primary_key=True)
     access_url = models.CharField(max_length=128)
     sys_group = models.ForeignKey(SysGroup, related_name='url_group_fk', null=True)
+
+
+# 堆场编码
+class SiteCode(models.Model):
+    id = models.AutoField(primary_key=True)
+    pre_code = models.CharField(max_length=20)
+    max = models.IntegerField(default=0)
 
 

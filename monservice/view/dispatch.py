@@ -49,15 +49,20 @@ def get_dispatches(request):
 def get_dispatches_history(request):
     try:
         dispatches = SiteDispatch.objects.all().order_by('did')
-        ser_dispatches = SiteDispatchSerializer(dispatches, many=True)
+        if len(dispatches) == 0:
+            dispatches = generate_dispatches()
+
+        pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+        paginator = pagination_class()
+        page = paginator.paginate_queryset(dispatches, request)
+        ret_ser = SiteDispatchSerializer(page, many=True)
 
     except Exception, e:
         log.error(e.message)
         response_msg = {'code': 'ERROR', 'message': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'dispatches': ser_dispatches.data, 'status':'OK', 'msg': 'query dispatches success'}
-        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+        return paginator.get_paginated_response(ret_ser.data, 'OK', 'query dispatch history success')
 
 
 @csrf_exempt
