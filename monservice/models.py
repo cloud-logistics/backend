@@ -247,7 +247,7 @@ class SensorData(models.Model):
     speed = models.CharField(max_length=20)
     collide = models.CharField(max_length=10)
     light = models.CharField(max_length=10)
-    legacy = models.TextField(default='')
+    legacy = models.TextField(null=True)
     endpointid = models.CharField(max_length=48)
 
 

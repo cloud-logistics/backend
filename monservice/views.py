@@ -11,16 +11,11 @@ import redis
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
-from util.db import query_list, save_to_db, delete_from_db
+from util.db import query_list, save_to_db
 from util.geo import cal_position, get_lng_lat, get_position_name
 from util import logger
 from util.cid import generate_cid
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from models import ContainerRentInfo
-from serializers import SiteInfoSerializer, BoxTypeInfoSerializer
-from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
-from rest_framework_jwt.settings import api_settings
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -29,7 +24,9 @@ import urllib
 import urllib2
 import json
 import random
+from monservice.serializers import *
 from monservice.models import *
+
 
 log = logger.get_logger('monservice.view.py')
 file_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + 'mock_data.json'
@@ -405,13 +402,13 @@ def alarm_monitor(request):
 def basic_info(request):
 
     data = query_list('select box_info.deviceid, box_type_info.box_type_name, produce_area_info.address, '
-                      'manufacturer_info.name, carrier_info.carrier_name, date_of_production '
+                      'manufacturer_info.name, date_of_production '
                       'from iot.box_info box_info '
                       'left join iot.box_type_info on box_info.type = box_type_info.id '
                       'left join iot.produce_area_info produce_area_info on box_info.produce_area = produce_area_info.id '
                       'left join iot.manufacturer_info manufacturer_info on box_info.manufacturer = manufacturer_info.id '
                       'group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
-                      'carrier_name, date_of_production')
+                      'date_of_production')
     ret_list = []
     for item in data:
         dicitem = {}
@@ -419,8 +416,7 @@ def basic_info(request):
         dicitem['containerType'] = to_str(item[1])
         dicitem['factoryLocation'] = to_str(item[2])
         dicitem['factory'] = to_str(item[3])
-        dicitem['carrier'] = to_str(item[4])
-        dicitem['factoryDate'] = to_str(item[5])
+        dicitem['factoryDate'] = item[4]
         ret_list.append(dicitem)
 
     ret_dic = {'basicInfo': ret_list}
@@ -1019,7 +1015,7 @@ def verify_user(request):
         return JsonResponse('password should not be empty ', safe=True, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        user = SysUser.objects.filter(username=username, password=password)
+        user = SysUser.objects.get(user_name=username, user_password=password)
         if user is not None:
             ret_dict['role'] = 'carrier'
             ret_dict['token'] = user.user_token

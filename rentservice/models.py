@@ -79,6 +79,7 @@ class UserAppointment(models.Model):
     appointment_time = models.DateTimeField(default=datetime.datetime.today())
     appointment_code = models.CharField(max_length=48, default='')
     flag = models.IntegerField(default=0)
+    cancel_time = models.DateTimeField(default=datetime.datetime.now(), null=True)
 
 
 class AppointmentDetail(models.Model):
