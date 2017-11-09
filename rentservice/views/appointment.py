@@ -38,6 +38,10 @@ def create_appointment(request):
     except Exception:
         return JsonResponse(retcode({}, "9999", "请输入承运用户id"), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
+        cancel_time = data['cancel_time']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", "请输入预约时间"), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
         site_total = data['site_total']
         if len(site_total) == 0:
             raise Exception
@@ -53,8 +57,11 @@ def create_appointment(request):
             code = get_appointment_code()
             # 生成预约单
             appointment_id = str(uuid.uuid1())
+            # 获取取消时间
+            _cancel_time = datetime.datetime.fromtimestamp(cancel_time)
             appointment_model = UserAppointment(appointment_id=appointment_id, appointment_code=code,
-                                                appointment_time=datetime.datetime.today(), user_id=user_model)
+                                                appointment_time=datetime.datetime.today(), user_id=user_model,
+                                                cancel_time=_cancel_time)
             appointment_model.save()
             # 循环获取每个堆场的请求
             detail_list = []
@@ -160,6 +167,34 @@ def get_appointment_detail(request, appointment_id):
                                  'box_info': [AppointmentDetailSerializer(detail).data]})
     ret = {'appointment': UserAppointmentSerializer(appointment).data, 'info': res_app_list}
     return JsonResponse(retcode(ret, "0000", "Success"), safe=True, status=status.HTTP_200_OK)
+
+
+# 取消预约
+@csrf_exempt
+@api_view(['POST'])
+def cancel_appointment(request):
+    data = JSONParser().parse(request)
+    try:
+        appointment = UserAppointment.objects.get(appointment_id=data['appointment_id'])
+    except UserAppointment.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "预约单不存在"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    # 获取预约单详情，并根据预约单详情将已经预留的数量回退
+    detail_list = AppointmentDetail.objects.filter(appointment_id=appointment)
+    try:
+        with transaction.atomic():
+            # 根据detail更新site stock的数量
+            for detail in detail_list:
+                stock = SiteBoxStock.objects.get(site=detail.site_id, box_type=detail.box_type)
+                stock.reserve_num -= detail.box_num
+                stock.save()
+            # 更新appointment的flag为2（已取消）
+            appointment.flag = 2
+            appointment.save()
+    except Exception as e:
+        log.error(repr(e))
+        return JsonResponse(retcode({}, "9999", "取消预约失败"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return JsonResponse(retcode(UserAppointmentSerializer(appointment).data, "0000", "Success"), safe=True,
+                        status=status.HTTP_200_OK)
 
 
 # 获取预约码

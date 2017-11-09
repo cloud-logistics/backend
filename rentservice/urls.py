@@ -13,6 +13,7 @@ from rentservice.views import appointment
 from rentservice.views import userinfo
 from rentservice.views import upload
 from rentservice.views import entleaseinfo
+from rentservice.views import boxinfo
 
 urlpatterns = [
     url(r'^rentservice/enterprise/enterpriseinfo/addenterpriseinfo/$', enterprise.add_enterprise_info),  # 企业信息增加接口
@@ -52,7 +53,7 @@ urlpatterns = [
     # 承运人的在运箱子查询
     url(r'^rentservice/userinfo/list/(?P<user_id>[0-9a-zA-Z-]+)/finished', userinfo.get_finished_order_list),
     # 预约详情查询
-    url(r'^rentservice/upload/(?P<filename>[^/]+)$', upload.FileUploadView.as_view()), #新增上传接口
+    url(r'^rentservice/upload/(?P<filename>[^/]+)$', upload.FileUploadView.as_view()),  # 新增上传接口
     # 承运人的历史箱子查询
     url(r'^rentservice/enterlease/list/(?P<enterprise_id>[0-9a-zA-Z-]+)/process',
         entleaseinfo.get_enterprise_lease_process_list),
@@ -62,4 +63,7 @@ urlpatterns = [
     # 承运人的历史箱子查询
     url(r'^rentservice/boxrentservice/createorder$', boxrentservice.rent_boxes_order),  # 租箱
     url(r'^rentservice/boxrentservice/finishorder$', boxrentservice.finish_boxes_order),  # 还箱
+    url(r'^rentservice/userinfo/(?P<user_id>[0-9a-zA-Z-]+)/dash$', userinfo.get_dash_data),  # app获取dash信息
+    url(r'^rentservice/appointment/cancel', appointment.cancel_appointment),  # 取消预约
+    url(r'^rentservice/boxinfo/query', boxinfo.get_box_info_list),  # 查询箱子list
 ]

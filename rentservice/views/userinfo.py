@@ -10,6 +10,7 @@ from rentservice.utils.retcode import *
 from rentservice.models import EnterpriseUser
 from rentservice.models import RentLeaseInfo
 from rentservice.serializers import RentLeaseInfoSerializer
+from rentservice.models import UserAppointment
 import pytz
 
 log = logger.get_logger(__name__)
@@ -48,3 +49,22 @@ def get_finished_order_list(request, user_id):
     page = paginator.paginate_queryset(lease_list, request)
     ret_ser = RentLeaseInfoSerializer(page, many=True)
     return paginator.get_paginated_response(ret_ser.data)
+
+
+# 用户面板数据统计（未完成的预约单数量，在运的箱子数量，通知数量）
+@csrf_exempt
+@api_view(['GET'])
+def get_dash_data(request, user_id):
+    try:
+        user = EnterpriseUser.objects.get(user_id=user_id)
+    except EnterpriseUser.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "运输用户不存在"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    # 获取未完成预约单数量
+    appointment_count = UserAppointment.objects.filter(user_id=user, flag=0).count()
+    # 获取在运箱子数量
+    box_count = RentLeaseInfo.objects.filter(user_id=user, on_site__isnull=True).count()
+    # 获取通知数量 todo
+    notify_count = 0
+    return JsonResponse(
+        retcode({'appointment_count': appointment_count, 'box_count': box_count, 'notify_count': notify_count}, '0000',
+                'Success'), safe=True, status=status.HTTP_200_OK)
