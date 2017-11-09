@@ -120,42 +120,11 @@ def realtime_message(request):
         return JsonResponse(json.loads(mock_json), safe=True, status=status.HTTP_200_OK)
 
     # 获取承运方
-    carrier_data = query_list('select carrier_info.carrier_name,order_info.srcid,order_info.dstid '
-                              'from iot.order_info order_info '
-                              'left join iot.box_order_relation box_order_relation on order_info.trackid = box_order_relation.trackid '
-                              'left join iot.carrier_info carrier_info on order_info.carrierid = carrier_info.id '
-                              'where box_order_relation.deviceid =  \'' + id + '\' '
-                              'group by carrier_info.carrier_name,order_info.srcid,order_info.dstid')
-    if len(carrier_data) > 0:
-        carrier_name = carrier_data[0][0]
-        srcid = carrier_data[0][1]
-        dstid = carrier_data[0][2]
-    else:
-        carrier_name = NOT_APPLICABLE
-        srcid = ZERO
-        dstid = ZERO
-
-    # 获取起始点经纬度
-    src_site_data = query_list('select latitude,longitude from iot.site_info where id = ' + str(srcid) + '')
-    if len(src_site_data) > 0:
-        src_latitude = src_site_data[0][0]
-        src_longitude = src_site_data[0][1]
-    else:
-        src_latitude = ZERO
-        src_longitude = ZERO
-
-    # 获取结束点经纬度
-    dst_site_data = query_list('select latitude,longitude from iot.site_info where id = ' + str(dstid) + '')
-    if len(dst_site_data) > 0:
-        dst_latitude = dst_site_data[0][0]
-        dst_longitude = dst_site_data[0][1]
-    else:
-        dst_latitude = ZERO
-        dst_longitude = ZERO
+    carrier_name = 'NA'
 
     # 获取云箱型号
-    box_type_data = query_list('select box_type_info.box_type_name from iot.box_info box_info '
-                               'left join iot.box_type_info box_type_info on box_info.type = box_type_info.id '
+    box_type_data = query_list('select box_type_info.box_type_name from iot.monservice_boxinfo box_info '
+                               'left join iot.monservice_boxtype_info box_type_info on box_info.type = box_type_info.id '
                                'where box_info.deviceid = \'' + id + '\' group by box_type_info.box_type_name')
 
     if len(box_type_data) > 0:
@@ -165,7 +134,7 @@ def realtime_message(request):
 
     # 获取传感器数据
     sensor_data = query_list('select temperature,humidity,longitude,latitude,speed,collide,light,timestamp '
-                             'from iot.sensor_data where deviceid = \'' + id + '\' order by timestamp desc limit 1')
+                             'from iot.monservice_sensordata where deviceid = \'' + id + '\' order by timestamp desc limit 1')
     if len(sensor_data) > 0:
         temperature = sensor_data[0][0]
         humidity = sensor_data[0][1]
@@ -192,8 +161,8 @@ def realtime_message(request):
                                 'collision_threshold_max,collision_threshold_min,'
                                 'battery_threshold_max,battery_threshold_min,'
                                 'operation_threshold_max,operation_threshold_min ' \
-                                'from iot.box_info box_info ' \
-                                'INNER join iot.box_type_info box_type_info on box_info.type = box_type_info.id '
+                                'from iot.monservice_boxinfo box_info ' \
+                                'INNER join iot.monservice_boxtype_info box_type_info on box_info.type = box_type_info.id '
                                 'where deviceid = \'' + id + '\'')
 
     if len(threshold_data) > 0:
@@ -221,11 +190,7 @@ def realtime_message(request):
         operation_threshold_min = ZERO
 
     # 计算箱子在运还是停靠
-    if not is_same_position(longitude, latitude, src_longitude, src_latitude) and \
-            not is_same_position(longitude, latitude, dst_longitude, dst_latitude):
-        shipping_status = IN_TRANSPORT
-    else:
-        shipping_status = ANCHORED
+    shipping_status = IN_TRANSPORT
 
     # 计算温度是否在正常范围
     if float(temperature_threshold_min) <= float(temperature) <= float(temperature_threshold_max):
@@ -281,46 +246,8 @@ def realtime_position(request):
         id = NOT_APPLICABLE
         log.error(e.message)
 
-    data = query_list(
-        'select box_info.deviceid, carrier_info.carrier_name, site_info_src.location, site_info_dst.location '
-        'from iot.box_info box_info '
-        'left join iot.box_order_relation relation on box_info.deviceid = relation.deviceid '
-        'left join iot.order_info order_info on order_info.trackid = relation.trackid '
-        'left join iot.carrier_info carrier_info on carrier_info.id = order_info.carrierid '
-        'left join iot.site_info site_info_src on site_info_src.id = order_info.srcid '
-        'left join iot.site_info site_info_dst on site_info_dst.id = order_info.dstid '
-        'where box_info.deviceid = \'' + id + '\' '
-        'group by box_info.deviceid,carrier_info.carrier_name, site_info_src.location, site_info_dst.location')
-
-    if len(data) > 0:
-        clientid = to_str(data[0][0])
-        carrier = to_str(data[0][1])
-        origination = to_str(data[0][2])
-        destination = to_str(data[0][3])
-    else:
-        clientid = NOT_APPLICABLE
-        carrier = NOT_APPLICABLE
-        origination = NOT_APPLICABLE
-        destination = NOT_APPLICABLE
-
-    ori_data = query_list('select latitude, longitude from iot.site_info where location = \'' + origination + '\'')
-    dst_data = query_list('select latitude, longitude from iot.site_info where location = \'' + destination + '\'')
-    if len(ori_data) > 0:
-        ori_latitude = float(to_str(ori_data[0][0]))
-        ori_longitude = float(to_str(ori_data[0][1]))
-    else:
-        ori_latitude = ZERO
-        ori_longitude = ZERO
-
-    if len(dst_data) > 0:
-        dst_latitude = float(to_str(dst_data[0][0]))
-        dst_longitude = float(to_str(dst_data[0][1]))
-    else:
-        dst_latitude = ZERO
-        dst_longitude = ZERO
-
-    cur_data = query_list('select latitude,longitude from iot.sensor_data '
-                          'where deviceid = \'' + clientid + '\' '
+    cur_data = query_list('select latitude,longitude from iot.monservice_sensordata '
+                          'where deviceid = \'' + id + '\' '
                           'and latitude <> \'0\' and longitude <> \'0\' order by timestamp desc limit 1')
     if len(cur_data) > 0:
         cur_latitude = cal_position(cur_data[0][0])
@@ -328,17 +255,9 @@ def realtime_position(request):
     else:
         cur_latitude = ZERO
         cur_longitude = ZERO
-    start_location_name = gps_info_trans("%s,%s" % (ori_latitude, ori_longitude))
-    end_location_name = gps_info_trans("%s,%s" % (dst_latitude, dst_longitude))
     cur_location_name = gps_info_trans("%s,%s" % (cur_latitude, cur_longitude))
-    ret_data = {'containerInfo': {'containerId': clientid, 'carrier': carrier},
-                'startPosition': {'lng': ori_longitude, 'lat': ori_latitude},
-                'startLocationName': start_location_name,
-                'currentPosition': {'lng': cur_longitude, 'lat': cur_latitude},
-                'currentLocationName': cur_location_name,
-                'endPosition': {'lng': dst_longitude, 'lat': dst_latitude},
-                'endLocationName': end_location_name
-                }
+    ret_data = {'currentPosition': {'lng': cur_longitude, 'lat': cur_latitude},
+                'currentLocationName': cur_location_name}
 
     return JsonResponse(ret_data, safe=True, status=status.HTTP_200_OK)
 
@@ -355,14 +274,13 @@ def alarm_monitor(request):
         log.error(e.message)
     data = query_list('select alarm_info.deviceid,alert_level_info.level,alarm_info.timestamp,'
                       'alert_code_info.description,alarm_info.code,alarm_info.status,'
-                      'carrier_info.carrier_name,alarm_info.longitude,alarm_info.latitude,'
+                      'alarm_info.longitude,alarm_info.latitude,'
                       'alarm_info.speed,alarm_info.temperature,alarm_info.humidity,'
                       'alarm_info.num_of_collide,alarm_info.num_of_door_open,'
                       'alarm_info.battery,alarm_info.robert_operation_status,alarm_info.endpointid '
-                      'from iot.alarm_info alarm_info '
-                      'left join iot.alert_level_info alert_level_info on alarm_info.level = alert_level_info.id '
-                      'left join iot.alert_code_info alert_code_info on alarm_info.code = alert_code_info.errcode '
-                      'left join iot.carrier_info carrier_info on carrier_info.id = carrier '
+                      'from iot.monservice_alarminfo alarm_info '
+                      'left join iot.monservice_alertlevelinfo alert_level_info on alarm_info.level = alert_level_info.id '
+                      'left join iot.monservice_alertcodeinfo alert_code_info on alarm_info.code = alert_code_info.errcode '
                       'where alarm_info.alarm_status = 1 and alert_code_info.id = ' + str(alert_type_id) +
                       ' and (alarm_info.deviceid = \'' + to_str(deviceid) + '\' or \'' + deviceid + '\'= \'\') '
                       'order by timestamp desc')
@@ -375,21 +293,20 @@ def alarm_monitor(request):
         error_description = record[3]
         error_code = record[4]
         ship_status = record[5]
-        carrier_name = record[6]
-        longitude = cal_position(record[7])
-        latitude = cal_position(record[8])
-        speed = record[9]
-        temperature = record[10]
-        humidity = record[11]
-        num_of_collide = record[12]
-        num_of_door_open = record[13]
-        battery = record[14]
-        robert_operation_status = record[15]
-        endpointid = record[16]
+        longitude = cal_position(record[6])
+        latitude = cal_position(record[7])
+        speed = record[8]
+        temperature = record[9]
+        humidity = record[10]
+        num_of_collide = record[11]
+        num_of_door_open = record[12]
+        battery = record[13]
+        robert_operation_status = record[14]
+        endpointid = record[15]
         location_name = gps_info_trans("%s,%s" % (latitude, longitude))
         ret_data.append({'containerId': deviceid, 'alertTime': timestamp, 'alertLevel': level,
                          'alertType': error_description, 'alertCode': str(error_code), 'status': ship_status,
-                         'carrier': carrier_name, 'position': {'lng': float(longitude), 'lat': float(latitude)},
+                         'position': {'lng': float(longitude), 'lat': float(latitude)},
                          'speed': float(speed), 'temperature': float(temperature), 'humidity': float(humidity),
                          'num_of_collide': float(num_of_collide), 'num_of_door_open': float(num_of_door_open),
                          'battery': float(battery), 'robertOperationStatus': robert_operation_status,
@@ -400,13 +317,12 @@ def alarm_monitor(request):
 # 基础信息查询
 @csrf_exempt
 def basic_info(request):
-
     data = query_list('select box_info.deviceid, box_type_info.box_type_name, produce_area_info.address, '
                       'manufacturer_info.name, date_of_production '
-                      'from iot.box_info box_info '
-                      'left join iot.box_type_info on box_info.type = box_type_info.id '
-                      'left join iot.produce_area_info produce_area_info on box_info.produce_area = produce_area_info.id '
-                      'left join iot.manufacturer_info manufacturer_info on box_info.manufacturer = manufacturer_info.id '
+                      'from iot.monservice_boxinfo box_info '
+                      'left join iot.monservice_boxtypeinfo on box_info.type = box_type_info.id '
+                      'left join iot.monservice_produceareainfo produce_area_info on box_info.produce_area = produce_area_info.id '
+                      'left join iot.monservice_manufacturerinfo manufacturer_info on box_info.manufacturer = manufacturer_info.id '
                       'group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
                       'date_of_production')
     ret_list = []
@@ -420,7 +336,6 @@ def basic_info(request):
         ret_list.append(dicitem)
 
     ret_dic = {'basicInfo': ret_list}
-
     return JsonResponse(ret_dic, safe=True, status=status.HTTP_200_OK)
 
 
@@ -436,11 +351,11 @@ def history_path(request):
                 request_starttime = get_utc(param_dic['startTime'])
                 request_endtime = get_utc(param_dic['endTime'])
                 query_template = '''select srcid, dstid, starttime, endtime
-                        from iot.order_info where iot.order_info.trackid
-                        in (select trackid from iot.box_order_relation
+                        from iot.monservice_orderinfo where iot.monservice_orderinfo.trackid
+                        in (select trackid from iot.monservice_boxorderrelation
                         where iot.box_order_relation.deviceid = '%s')''' % param_dic['containerId']
                 order_info_query_list = query_list(query_template)
-                site_info_query_list = query_list('select id, latitude, longitude from iot.site_info')
+                site_info_query_list = query_list('select id, latitude, longitude from iot.monservice_siteinfo')
                 site_info_dic = {}
                 '''
                 site info dic
@@ -496,86 +411,6 @@ def history_path(request):
         return JsonResponse(final_response, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@csrf_exempt
-def history_message(request):
-    param = to_str(request.body)
-    param_dic = {}
-    final_response = {}
-    json_record_list = []
-    container_id_final = ""
-    container_type_final = ""
-    query_start_time = 0
-    query_end_time = 0
-    if param:
-        try:
-            param_dic = json.loads(param)
-            if key_exists('containerId', param_dic):
-                container_id = param_dic['containerId']
-                if key_exists('containerType', param_dic):
-                    container_type = int(param_dic['containerType'])
-                    sql = "select deviceid from iot.box_info where type = %s " % container_type
-                    deviceid_tuple_list = query_list(sql)
-                    deviceid_list = []
-                    for item in deviceid_tuple_list:
-                        if item[0]:
-                            deviceid_list.append(item[0])
-                    if container_id in deviceid_list:
-                        container_id_final = container_id
-                    #
-                    sql_query_box_type_info = "select box_type_name from iot.box_type_info where id=%s " % container_type
-                    box_type_name_tuple_list = query_list(sql_query_box_type_info)
-                    for item in box_type_name_tuple_list:
-                        if item[0]:
-                            container_type_final = item[0]
-
-                else:
-                    container_id_final = container_id
-            if key_exists('startTime', param_dic) and key_exists('endTime', param_dic):
-                query_start_time_str = param_dic['startTime']
-                query_end_time_str = param_dic['endTime']
-                if len(query_start_time_str) > 10:
-                    query_start_time = int(query_start_time_str) / 1000
-                else:
-                    query_start_time = int(query_start_time_str)
-                if len(query_end_time_str) > 10:
-                    query_end_time = int(query_end_time_str) / 1000
-                else:
-                    query_end_time = int(query_end_time_str)
-            history_sql_template = "select deviceid, timestamp, temperature, humidity, longitude, latitude, speed, collide, light, legacy" \
-                                   " from iot.sensor_data where deviceid = '%s' and timestamp >= %d and timestamp < %d limit 100"
-            query_result_tuple_list = query_list(history_sql_template % (container_id_final, query_start_time, query_end_time))
-            log.debug("query_result_tuple_list:%s" % query_result_tuple_list)
-            for query_tuple in query_result_tuple_list:
-                detail_message_dict = {}
-                each_record_dicteach_record_dict = {}
-                detail_message_dict['device_id'] = query_tuple[0]
-                detail_message_dict['utc'] = query_tuple[1]
-                detail_message_dict['temp'] = query_tuple[2]
-                detail_message_dict['humi'] = query_tuple[3]
-                detail_message_dict['longitude'] = query_tuple[4]
-                detail_message_dict['latitude'] = query_tuple[5]
-                detail_message_dict['speed'] = query_tuple[6]
-                detail_message_dict['collide'] = query_tuple[7]
-                detail_message_dict['light'] = query_tuple[8]
-                detail_message_dict['legacy'] = query_tuple[9]
-                detail_message_str = base64.b64encode(json.dumps(detail_message_dict))
-                each_record_dicteach_record_dict['record'] = detail_message_str
-                each_record_dicteach_record_dict['containerId'] = container_id_final
-                each_record_dicteach_record_dict['containerType'] = container_type_final
-                each_record_dicteach_record_dict['time'] = detail_message_dict['utc']
-                each_record_dicteach_record_dict['messageType'] = to_str("标准报文")
-                json_record_list.append(each_record_dicteach_record_dict)
-            #final
-            final_response['result'] = json_record_list
-            log.debug(json.dumps(final_response))
-            return JsonResponse(final_response, safe=True, status=status.HTTP_200_OK)
-        except Exception, e:
-            log.error(repr(traceback.print_exc()))
-            return JsonResponse(final_response, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
-        return JsonResponse(final_response, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 # 云箱状态汇总
 # @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
 # @permission_classes((IsAuthenticated,))
@@ -591,18 +426,18 @@ def status_summary(request):
 
     sql = 'select box_info.deviceid,C.timestamp,C.longitude,C.latitude,' \
           'C.speed,C.temperature,C.humidity,C.collide,C.light ' \
-          'from iot.box_info box_info ' \
+          'from iot.monservice_boxinfo box_info ' \
 
     if id is not None and id != '':
         sql = sql + ' and box_info.deviceid = \'' + id + '\' '
 
     sql = sql + ' left join ( select B.* from ' \
-                '(select max(timestamp) as timestamp ,deviceid from iot.sensor_data '
+                '(select max(timestamp) as timestamp ,deviceid from iot.monservice_sensordata '
 
     if id is not None and id != '':
         sql = sql + 'where deviceid = \'' + id + '\' '
 
-    sql = sql + 'group by deviceid) A left join iot.sensor_data B ' \
+    sql = sql + 'group by deviceid) A left join iot.monservice_sensordata B ' \
                 'on A.timestamp = B.timestamp and A.deviceid = B.deviceid '
 
     if id is not None and id != '':
@@ -640,20 +475,12 @@ def status_summary(request):
     return JsonResponse({"boxStatus": ret_data}, safe=True, status=status.HTTP_200_OK)
 
 
-# 基础信息管理
-@csrf_exempt
-def basic_info_manage(request):
-    pass
-
-
-
 def new_containerid(category):
     sql = '''select nextval('iot.monservice_box_id_seq') from iot.monservice_box_id_seq'''
     id_query = query_list(sql)
     sn = id_query[0][0]
     cid = generate_cid(sn, category)
     return cid
-
 
 
 # 云箱基础信息录入
@@ -743,7 +570,6 @@ def remove_basic_info(request, id):
         return JsonResponse(response_msg, safe=False, status=status.HTTP_200_OK)
 
 
-
 # 根据堆场ID获取堆场内的云箱
 @csrf_exempt
 @api_view(['GET'])
@@ -764,7 +590,6 @@ def get_site_boxes(request, id):
         status=status.HTTP_200_OK)
 
 
-
 @csrf_exempt
 def options_to_show(request):
     final_response = {}
@@ -774,16 +599,16 @@ def options_to_show(request):
         if req_param['requiredOptions']:
             for item in req_param['requiredOptions']:
                 if item == 'alertLevel':
-                    alert_level_list = query_list('select id,level from iot.alert_level_info')
+                    alert_level_list = query_list('select id,level from iot.monservice_alertlevelinfo')
                     final_response['alertLevel'] = strip_tuple(alert_level_list)
                 if item == 'alertCode':
-                    alert_code_list = query_list('select id,errcode from iot.alert_code_info')
+                    alert_code_list = query_list('select id,errcode from iot.monservice_alertcodeinfo')
                     final_response['alertCode'] = strip_tuple(alert_code_list)
                 if item == 'alertType':
-                    alert_type_list = query_list('select id, description as type from iot.alert_code_info')
+                    alert_type_list = query_list('select id, description as type from iot.monservice_alertcodeinfo')
                     final_response['alertType'] = strip_tuple(alert_type_list)
                 if item == 'containerType':
-                    container_type_list = query_list('select id,box_type_name from iot.box_type_info')
+                    container_type_list = query_list('select id,box_type_name from iot.monservice_boxtypeinfo')
                     final_response['containerType'] = strip_tuple(container_type_list)
                 if item == 'currentStatus':
                     status_list = []
@@ -791,29 +616,26 @@ def options_to_show(request):
                     status_list.append(to_str(ANCHORED))
                     final_response['currentStatus'] = status_list
                 if item == 'location':
-                    location_list = query_list('select id,location from iot.site_info')
+                    location_list = query_list('select id,location from iot.monservice_siteinfo')
                     final_response['location'] = strip_tuple(location_list)
-                if item == 'carrier':
-                    carrier_list = query_list('select id,carrier_name from iot.carrier_info')
-                    final_response['carrier'] = strip_tuple(carrier_list)
                 if item == 'factory':
-                    factory_list = query_list('select id,name from iot.manufacturer_info')
+                    factory_list = query_list('select id,name from iot.monservice_manufacturer_info')
                     final_response['factory'] = strip_tuple(factory_list)
                 if item == 'factoryLocation':
-                    location_list = query_list('select id,address from iot.produce_area_info')
+                    location_list = query_list('select id,address from iot.monservice_produceareainfo')
                     final_response['factoryLocation'] = strip_tuple(location_list)
                 if item == 'batteryInfo':
-                    batteryinfo_list = query_list('select id,battery_detail from iot.battery_info')
+                    batteryinfo_list = query_list('select id,battery_detail from iot.monservice_battery')
                     final_response['batteryInfo'] = strip_tuple(batteryinfo_list)
                 if item == 'maintenanceLocation':
-                    location_list = query_list('select id,location from iot.maintenance_info')
+                    location_list = query_list('select id,location from iot.monservice_maintenanceinfo')
                     final_response['maintenanceLocation'] = strip_tuple(location_list)
                 if item == 'intervalTime':
-                    interval_time_list = query_list('select id,interval_time_min from iot.interval_time_info')
+                    interval_time_list = query_list('select id,interval_time_min from iot.monservice_intervaltimeinfo')
                     # interval time type is integer
                     final_response['intervalTime'] = strip_tuple(interval_time_list)
                 if item == 'hardwareInfo':
-                    hardware_info_list = query_list('select id,hardware_detail from iot.hardware_info')
+                    hardware_info_list = query_list('select id,hardware_detail from iot.monservice_hardwareinfo')
                     final_response['hardwareInfo'] = strip_tuple(hardware_info_list)
             log.debug(json.dumps(final_response))
             return JsonResponse(final_response, safe=True, status=status.HTTP_200_OK)
@@ -822,6 +644,7 @@ def options_to_show(request):
     else:
         return JsonResponse(req_param, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 @csrf_exempt
 def security_config(request):
     final_response = {}
@@ -829,10 +652,10 @@ def security_config(request):
     req_param = json.loads(req_param_str_utf8)
     append_sql = lambda x,y : x + y + ','
     final_append_sql = lambda x, y: x + y
-    sql_template = '''update iot.box_type_info set %s'''
+    sql_template = '''update iot.monservice_boxtypeinfo set %s'''
     column_string = ''
     if req_param:
-        container_type_list = query_list('select id from iot.box_type_info')
+        container_type_list = query_list('select id from iot.monservice_boxtypeinfo')
         final_type_list = strip_tuple(container_type_list, 0)
         log.info("safe_param_to_set: final_type_list = %s" % final_type_list)
         log.info("safe_param_to_set: containerType = %s" % req_param['containerType'])
@@ -840,7 +663,7 @@ def security_config(request):
             insert_key_list = req_param.keys()
             if 'intervalTime' in insert_key_list:
                 # column_string = column_string + 'intervalTime' + ','
-                interval_value_list = query_list("select interval_time_min from iot.interval_time_info where id = '%s'"
+                interval_value_list = query_list("select interval_time_min from iot.monservice_intervaltimeinfo where id = '%s'"
                                         % req_param['intervalTime'])
                 log.info("interval_value_list = %s" % interval_value_list)
                 interval_time_list = strip_tuple(interval_value_list, 0)
@@ -891,114 +714,6 @@ def security_config(request):
             return JsonResponse(req_param, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return JsonResponse(req_param, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# 我的云箱
-@api_view(['GET'])
-# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-# @permission_classes((IsAuthenticated,))
-def mycontainers(request):
-    user = request.user
-    data = query_list('select deviceid,starttime,endtime,carrier_info.carrier_name '
-                       'from iot.monservice_containerrentinfo rentinfo '
-                       'left join iot.carrier_info carrier_info on rentinfo.carrier = carrier_info.id '
-                       'where owner = \'' + str(user) + '\' and rentstatus = 1 ')
-    log.info("mycontainer req user is %s" % request.user)
-    final_response = {}
-    container_info_list = []
-    for item in data:
-        container_dict = {}
-        container_dict['containerId'] = item[0]
-        container_dict['leaseStartTime'] = "%s000" % item[1]
-        container_dict['leaseEndTime'] = "%s000" % item[2]
-        gps_dic = get_current_gpsinfo(item[0])
-        container_dict['position'] = gps_dic
-        container_dict['carrier'] = item[3]
-        container_dict['locationName'] = gps_info_trans("%s,%s" % (gps_dic['lat'], gps_dic['lng']))
-        container_info_list.append(container_dict)
-    final_response['mycontainers'] = container_info_list
-    return JsonResponse(final_response, safe=True, status=status.HTTP_200_OK)
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def containers_on_release(request):
-    pass
-
-
-#可租赁云箱
-@api_view(['GET'])
-def containers_available(request):
-    container_info_list = []
-    final_response = {}
-    data = query_list('select A.deviceid,box_type_info.box_type_name from '
-                      '(select box_info.deviceid,box_info.type from iot.box_info box_info where box_info.deviceid not in '
-                      '(select deviceid from iot.monservice_containerrentinfo where rentstatus = 1)) A '
-                      'left join iot.box_type_info box_type_info on A.type = box_type_info.id order by deviceid asc')
-
-    for item in data:
-        container_dict = {}
-        container_dict['containerId'] = item[0]
-        gps_dic = get_current_gpsinfo(item[0])
-        container_dict['position'] = gps_dic
-        container_dict['containerType'] = item[1]
-        container_dict['locationName'] = gps_info_trans("%s,%s" % (gps_dic['lat'], gps_dic['lng']))
-        container_info_list.append(container_dict)
-
-    final_response['availablecontainers'] = container_info_list
-    return JsonResponse(final_response, safe=True, status=status.HTTP_200_OK)
-
-
-# 我要租赁云箱
-@api_view(['POST'])
-# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-# @permission_classes((IsAuthenticated,))
-def rent(request):
-    user = str(request.user)
-    body = json.loads(request.body)
-    container_type = to_str(body['containerType'])
-    if container_type == '标准云箱':
-        container_type = '1'
-    start_time = str(to_str(body['startTime']))
-    end_time = str(to_str(body['endTime']))
-    start_time = start_time[0:10]
-    end_time = end_time[0:10]
-    data = query_list('select A.deviceid,box_type_info.box_type_name,box_type_info.id from '
-                      '(select box_info.deviceid,box_info.type from iot.box_info box_info '
-                      'where box_info.deviceid not in '
-                      '(select deviceid from iot.monservice_containerrentinfo where rentstatus = 1)) A '
-                      'left join iot.box_type_info box_type_info on A.type = box_type_info.id '
-                      'where box_type_info.id = ' + container_type)
-
-    if len(data) > 0:
-        container_id = data[0][0]
-        save_to_db('insert into iot.monservice_containerrentinfo(deviceid,' 
-                   'starttime,endtime,carrier,type,owner,rentstatus)VALUES (' 
-                   '\'' + container_id + '\',' + start_time + ',' + end_time + ',' 
-                   '1, ' + container_type + ',\'' + user + '\',1)')
-        return JsonResponse({'status': 'OK', 'containerId': container_id}, safe=True, status=status.HTTP_200_OK)
-    else:
-        return JsonResponse({'status': 'NA'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
-
-
-# 归还云箱
-@api_view(['POST'])
-# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-# @permission_classes((IsAuthenticated,))
-def return_container(request):
-    user = str(request.user)
-    body = json.loads(request.body)
-    container_id = to_str(body['containerId'])
-
-    data = query_list('select count(1) as cnt from iot.monservice_containerrentinfo '
-                      'where rentstatus = 1 and deviceid = \'' + container_id + '\' and owner = \'' + user +'\'')
-    if data[0][0] > 0:
-        save_to_db('update iot.monservice_containerrentinfo set rentstatus = 0 '
-                   'where deviceid = \'' + container_id + '\' and owner = \'' + user + '\'')
-        return JsonResponse({'status': 'OK'}, safe=True, status=status.HTTP_200_OK)
-    else:
-        return JsonResponse({'status': 'NA'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
