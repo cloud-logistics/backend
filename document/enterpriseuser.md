@@ -118,7 +118,7 @@
 #### Parameter
 
 ```
-group 企业群组名 默认只有：admin（超级管理员)/rentuser(企业用户）／rentadmin(企业管理员）
+group 企业群组名 默认只有：admin（超级管理员)/rentuser(企业用户）／rentadmin(企业管理员）/all（所有群组的用户)
 ```
 
 #### Return
@@ -290,4 +290,58 @@ group 企业群组名 默认只有：admin（超级管理员)/rentuser(企业用
 1、该方法请求需要在header携带token
 2、enterprise_id 企业用户信息id必须存在，user_id的定义必须存在
 3、只允许修改参数里面的值，其他字段不能修改
+```
+### 查询企业的所有用户
+#### 方法
+`GET`
+
+#### URL
+
+`container／api/v1/cloudbox/rentservice/enterpriseuser/list/enterprise/{enterprise_id}`
+
+#### Parameter
+
+```
+enterprise_id
+```
+
+#### Return
+
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": {
+        "count": 34,
+        "limit": 10,
+        "results": [
+            {
+                "user_id": "3ccf0bca-bf98-11e7-b3ec-9801a7b3c9f3",
+                "user_name": "mark2",
+                "register_time": "2017-11-02T06:37:03.422609Z",
+                "status": "",
+                "avatar_url": "http://www.xxx.com",
+                "user_phone": "18011112222",
+                "user_email": "12345@qq.com",
+                "user_token": "58ba6f474e5844d093af285270e8f02a",
+                "role": "admin",
+                "user_real_name": "",
+                "user_gender": "",
+                "user_nickname": "",
+                "enterprise": "dae79623-bea8-11e7-a2b6-9801a7b3c9f3",
+                "group": "admin"
+            }
+        ],
+        "links": {
+            "previous": null,
+            "next": "http://127.0.0.1:8000/container/api/v1/cloudbox/rentservice/enterpriseuser/list/enterprise/dae79623-bea8-11e7-a2b6-9801a7b3c9f3?limit=10&offset=10"
+        },
+        "offset": 0
+    }
+}
+```
+####说明
+```
+1、该方法请求需要在header携带token
+2、enterprise_id 企业用户信息id必须存在
 ```
