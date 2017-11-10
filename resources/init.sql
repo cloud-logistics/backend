@@ -434,17 +434,17 @@ ALTER TABLE iot.path_detail
 
 
 
-insert into iot.alert_level_info(level) values('通知');
-insert into iot.alert_level_info(level) values('告警');
-insert into iot.alert_level_info(level) values('错误');
-insert into iot.alert_level_info(level) values('严重');
+insert into iot.monservice_alertlevelinfo(level) values('通知');
+insert into iot.monservice_alertlevelinfo(level) values('告警');
+insert into iot.monservice_alertlevelinfo(level) values('错误');
+insert into iot.monservice_alertlevelinfo(level) values('严重');
 
-insert into iot.alert_code_info (errcode,description) values(1001,'温度过高');
-insert into iot.alert_code_info (errcode,description) values(1002,'温度过低');
-insert into iot.alert_code_info (errcode,description) values(2001,'湿度过高');
-insert into iot.alert_code_info (errcode,description) values(2002,'湿度过低');
-insert into iot.alert_code_info (errcode,description) values(3001,'碰撞次数过多');
-insert into iot.alert_code_info (errcode,description) values(4001,'电量过低');
-insert into iot.alert_code_info (errcode,description) values(5001,'开关门次数过多');
-insert into iot.alert_code_info (errcode,description) values(6001,'失联');
+insert into iot.monservice_alertcodeinfo (errcode,description) values(1001,'温度过高');
+insert into iot.monservice_alertcodeinfo (errcode,description) values(1002,'温度过低');
+insert into iot.monservice_alertcodeinfo (errcode,description) values(2001,'湿度过高');
+insert into iot.monservice_alertcodeinfo (errcode,description) values(2002,'湿度过低');
+insert into iot.monservice_alertcodeinfo (errcode,description) values(3001,'碰撞次数过多');
+insert into iot.monservice_alertcodeinfo (errcode,description) values(4001,'电量过低');
+insert into iot.monservice_alertcodeinfo (errcode,description) values(5001,'开关门次数过多');
+insert into iot.monservice_alertcodeinfo (errcode,description) values(6001,'失联');
 

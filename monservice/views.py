@@ -124,7 +124,7 @@ def realtime_message(request):
 
     # 获取云箱型号
     box_type_data = query_list('select box_type_info.box_type_name from iot.monservice_boxinfo box_info '
-                               'left join iot.monservice_boxtype_info box_type_info on box_info.type = box_type_info.id '
+                               'left join iot.monservice_boxtypeinfo box_type_info on box_info.type_id = box_type_info.id '
                                'where box_info.deviceid = \'' + id + '\' group by box_type_info.box_type_name')
 
     if len(box_type_data) > 0:
@@ -162,7 +162,7 @@ def realtime_message(request):
                                 'battery_threshold_max,battery_threshold_min,'
                                 'operation_threshold_max,operation_threshold_min ' \
                                 'from iot.monservice_boxinfo box_info ' \
-                                'INNER join iot.monservice_boxtype_info box_type_info on box_info.type = box_type_info.id '
+                                'INNER join iot.monservice_boxtypeinfo box_type_info on box_info.type_id = box_type_info.id '
                                 'where deviceid = \'' + id + '\'')
 
     if len(threshold_data) > 0:
@@ -320,9 +320,9 @@ def basic_info(request):
     data = query_list('select box_info.deviceid, box_type_info.box_type_name, produce_area_info.address, '
                       'manufacturer_info.name, date_of_production '
                       'from iot.monservice_boxinfo box_info '
-                      'left join iot.monservice_boxtypeinfo on box_info.type = box_type_info.id '
-                      'left join iot.monservice_produceareainfo produce_area_info on box_info.produce_area = produce_area_info.id '
-                      'left join iot.monservice_manufacturerinfo manufacturer_info on box_info.manufacturer = manufacturer_info.id '
+                      'left join iot.monservice_boxtypeinfo box_type_info on box_info.type_id = box_type_info.id '
+                      'left join iot.monservice_producearea produce_area_info on box_info.produce_area_id = produce_area_info.id '
+                      'left join iot.monservice_manufacturer manufacturer_info on box_info.manufacturer_id = manufacturer_info.id '
                       'group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
                       'date_of_production')
     ret_list = []
@@ -619,23 +619,22 @@ def options_to_show(request):
                     location_list = query_list('select id,location from iot.monservice_siteinfo')
                     final_response['location'] = strip_tuple(location_list)
                 if item == 'factory':
-                    factory_list = query_list('select id,name from iot.monservice_manufacturer_info')
+                    factory_list = query_list('select id,name from iot.monservice_manufacturer')
                     final_response['factory'] = strip_tuple(factory_list)
                 if item == 'factoryLocation':
-                    location_list = query_list('select id,address from iot.monservice_produceareainfo')
+                    location_list = query_list('select id,address from iot.monservice_producearea')
                     final_response['factoryLocation'] = strip_tuple(location_list)
                 if item == 'batteryInfo':
                     batteryinfo_list = query_list('select id,battery_detail from iot.monservice_battery')
                     final_response['batteryInfo'] = strip_tuple(batteryinfo_list)
                 if item == 'maintenanceLocation':
-                    location_list = query_list('select id,location from iot.monservice_maintenanceinfo')
-                    final_response['maintenanceLocation'] = strip_tuple(location_list)
+                    final_response['maintenanceLocation'] = strip_tuple([])
                 if item == 'intervalTime':
                     interval_time_list = query_list('select id,interval_time_min from iot.monservice_intervaltimeinfo')
                     # interval time type is integer
                     final_response['intervalTime'] = strip_tuple(interval_time_list)
                 if item == 'hardwareInfo':
-                    hardware_info_list = query_list('select id,hardware_detail from iot.monservice_hardwareinfo')
+                    hardware_info_list = query_list('select id,hardware_detail from iot.monservice_hardware')
                     final_response['hardwareInfo'] = strip_tuple(hardware_info_list)
             log.debug(json.dumps(final_response))
             return JsonResponse(final_response, safe=True, status=status.HTTP_200_OK)

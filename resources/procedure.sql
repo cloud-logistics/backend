@@ -26,7 +26,7 @@
       operation_threshold_min,operation_threshold_max
     FROM iot.monservice_boxinfo box_info
     INNER JOIN iot.monservice_boxtypeinfo box_type_info
-        ON box_info.type = box_type_info.id WHERE box_info.deviceid = NEW.deviceid
+        ON box_info.type_id = box_type_info.id WHERE box_info.deviceid = NEW.deviceid
     INTO v_temperature_threshold_min,v_temperature_threshold_max,
       v_humidity_threshold_min,v_humidity_threshold_max,
       v_collision_threshold_min,v_collision_threshold_max,
