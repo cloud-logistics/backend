@@ -169,19 +169,35 @@ def del_enterprise_user(request, user_id):
 def list_enterprise_user(request, group):
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
+    group_query_set = AccessGroup.objects.all()
+    group_map = {}
+    for item in group_query_set:
+        group_map[item.access_group_id] = item.group
     try:
-        try:
-            obj_group = AccessGroup.objects.get(group=group)
-        except AccessGroup.DoesNotExist:
-            return JsonResponse(retcode(errcode("9999", '企业用户群组不存在'), "9999", '企业用户群组不存在'), safe=True,
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        enterprise_user_ret = EnterpriseUser.objects.filter(group=obj_group)
-        page = paginator.paginate_queryset(enterprise_user_ret, request)
-        enterprise_user_ser = EnterpriseUserSerializer(page, many=True)
-        revised_enterprise_user_list = []
-        for item in enterprise_user_ser.data:
-            item['group'] = group
-            revised_enterprise_user_list.append(item)
+        if group == 'all':
+            enterprise_user_ret = EnterpriseUser.objects.all()
+            page = paginator.paginate_queryset(enterprise_user_ret, request)
+            enterprise_user_ser = EnterpriseUserSerializer(page, many=True)
+            revised_enterprise_user_list = []
+            for item in enterprise_user_ser.data:
+                group_id = item['group']
+                item['group'] = group_map[group_id]
+                revised_enterprise_user_list.append(item)
+        else:
+            try:
+                obj_group = AccessGroup.objects.get(group=group)
+            except AccessGroup.DoesNotExist:
+                return JsonResponse(retcode(errcode("9999", '企业用户群组不存在'), "9999", '企业用户群组不存在'), safe=True,
+                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            enterprise_user_ret = EnterpriseUser.objects.filter(group=obj_group)
+            page = paginator.paginate_queryset(enterprise_user_ret, request)
+            enterprise_user_ser = EnterpriseUserSerializer(page, many=True)
+            revised_enterprise_user_list = []
+            for item in enterprise_user_ser.data:
+                group_id = item['group']
+                item['group'] = group_map[group_id]
+                revised_enterprise_user_list.append(item)
+
     except Exception, e:
         log.error(repr(e))
     return paginator.get_paginated_response(revised_enterprise_user_list)
@@ -349,6 +365,29 @@ def update_enterprise_user(request):
     ret={}
     ret['user_id'] = user.user_id
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def list_enterprise_user_by_enterprise_id(request, enterprise_id):
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    group_query_set = AccessGroup.objects.all()
+    group_map = {}
+    for item in group_query_set:
+        group_map[item.access_group_id] = item.group
+    try:
+        enterprise_user_ret = EnterpriseUser.objects.filter(enterprise_id=enterprise_id)
+        page = paginator.paginate_queryset(enterprise_user_ret, request)
+        enterprise_user_ser = EnterpriseUserSerializer(page, many=True)
+        revised_enterprise_user_list = []
+        for item in enterprise_user_ser.data:
+            group_id = item['group']
+            item['group'] = group_map[group_id]
+            revised_enterprise_user_list.append(item)
+    except Exception, e:
+        log.error(repr(e))
+    return paginator.get_paginated_response(revised_enterprise_user_list)
 
 
 def update_redis_token(user_token, group):

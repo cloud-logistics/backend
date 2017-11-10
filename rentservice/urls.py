@@ -41,6 +41,8 @@ urlpatterns = [
     url(r'^rentservice/enterpriseuser/updateuser/$', enterpriseuser.update_enterprise_user),  # 普通用户修改
     url(r'^rentservice/enterpriseuser/(?P<user_id>[0-9a-zA-Z-]+)/$', enterpriseuser.del_enterprise_user),  # 删除用户
     url(r'^rentservice/enterpriseuser/list/(?P<group>[a-z]+)$', enterpriseuser.list_enterprise_user),  # 用户列表
+    url(r'^rentservice/enterpriseuser/list/enterprise/(?P<enterprise_id>[0-9a-zA-Z-]+)$',
+        enterpriseuser.list_enterprise_user_by_enterprise_id),  # 用户列表
     url(r'^rentservice/enterpriseuser/detail/(?P<user_id>[0-9a-zA-Z-]+)/$', enterpriseuser.enterprise_user_detail),
     # 用户详情
     url(r'^rentservice/regions/provinces', regions.get_province_list),  # 获取省列表
