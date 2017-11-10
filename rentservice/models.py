@@ -11,18 +11,18 @@ timezone = pytz.timezone('Asia/Shanghai')
 
 
 class AccessGroup(models.Model):
-    access_group_id = models.CharField(max_length=64, primary_key=True)
+    access_group_id = models.CharField(max_length=48, primary_key=True)
     group = models.CharField(max_length=32)
 
 
 class AuthUserGroup(models.Model):
-    auth_id = models.AutoField(primary_key=True)
+    auth_id = models.CharField(max_length=48, primary_key=True)
     user_token = models.CharField(max_length=64)
     group = models.ForeignKey(AccessGroup, related_name='auth_user_group_fk')
 
 
 class AccessUrlGroup(models.Model):
-    access_url_id = models.AutoField(primary_key=True)
+    access_url_id = models.CharField(max_length=48, primary_key=True)
     access_url_set = models.CharField(max_length=128)
     access_group = models.ForeignKey(AccessGroup, related_name='access_url_group_fk')
 
