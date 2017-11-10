@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from monservice.serializers import SiteInfoSerializer, SiteDispatchSerializer
 import json
-from monservice.models import SiteInfo, SiteDispatch, SiteBoxStock
+from monservice.models import SiteInfo, SiteDispatch, SiteBoxStock, BoxTypeInfo
 from util import logger
 from util.geo import get_distance
 import datetime
@@ -104,8 +104,6 @@ def create_dispatches(request):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
-
-
 class DSite:
     def __init__(self, id, long, lat, volume, avanum):
         self.id = id
@@ -113,6 +111,7 @@ class DSite:
         self.latitude = lat
         self.volume = volume
         self.avanum = avanum
+
 
 
 def generate_dispatches():
@@ -185,6 +184,77 @@ def save_dispatch(start_id, finish_id, count):
         log.error(e.message)
 
 
+class SiteWithType:
+    def __init__(self, id, long, lat, volume, avanum, box_type):
+        self.id = id
+        self.longitude = long
+        self.latitude = lat
+        self.volume = volume
+        self.avanum = avanum
+        self.type = box_type
 
 
+def generate_dis_type():
+    types = BoxTypeInfo.objects.all()
+    for t in types:
+        dsites = []
+        sites = SiteInfo.objects.all()
+        for site in sites:
+            stock = SiteBoxStock.objects.filter(site_id=site.id, box_type=t.id)
+            dsite = SiteWithType(site.id, site.longitude, site.latitude, site.volume, t.id, stock.ava_num)
+            dsites.append(dsite)
+        dispatch_type(dsites)
+
+
+def divide_type(sites):
+    low_sites = []
+    high_sites = []
+    ave_sites = []
+    for site in sites:
+        if site.avanum < site.volume * low / 5:
+            low_sites.append(site)
+        elif site.avanum > site.volume * high / 5:
+            high_sites.append(site)
+        else:
+            ave_sites.append(site)
+    return low_sites, high_sites, ave_sites
+
+
+def dispatch_type(sites):
+    low_sites, high_sites, ave_sites = divide_type(sites)
+    if len(low_sites) > len(high_sites):
+        high_sites += ave_sites
+
+    for low_site in low_sites:
+        dis_list = []
+        if len(high_sites) == 0:
+            break
+
+        for high_site in high_sites:
+            dis = cal_distance(low_site, high_site)
+            dis_list.append(dis)
+
+        val, idx = min((val, idx) for (idx, val) in enumerate(dis_list))
+        near_high_site = high_sites[idx]
+
+        low_sites.remove(low_site)
+        high_sites.remove(near_high_site)
+
+        need_count = low_site.volume * ave - low_site.avanum
+        offer_count = near_high_site.volume * high - near_high_site.avanum
+
+        if need_count < offer_count:
+            count = need_count
+        else:
+            count = low_site.volume * low
+        save_type_dispatch(near_high_site.id, low_site.id, near_high_site.type, count)
+
+
+def save_type_dispatch(start_id, finish_id, type_id, count):
+        try:
+            dispatch = SiteDispatch(start_id=start_id, finish_id=finish_id, type_id = type_id, count=count,
+                                    create_date=datetime.datetime.today())
+            dispatch.save()
+        except Exception, e:
+            log.error(e.message)
 

@@ -5,20 +5,17 @@ import json
 import os
 import time
 import datetime
-import base64
 import traceback
 import redis
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
+from django.db.models import Count
 from util.db import query_list, save_to_db
 from util.geo import cal_position, get_lng_lat, get_position_name
 from util import logger
 from util.cid import generate_cid
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 import urllib
 import urllib2
@@ -827,16 +824,25 @@ def operation_overview(request):
     container_num = query_list(sql_1)
     site_num = query_list(sql_2)
     volume = query_list(sql_3)
+    box_distribution = Province.objects.raw('select count(1) as cnt,monservice_province.province_id,province_name '
+                                           'from iot.monservice_boxinfo monservice_boxinfo '
+                                           'left join iot.monservice_siteinfo monservice_siteinfo '
+                                           'on monservice_boxinfo.siteinfo_id = monservice_siteinfo.id '
+                                           'left join iot.monservice_province monservice_province '
+                                           'on monservice_siteinfo.province_id = monservice_province.province_id '
+                                           'group by monservice_province.province_id,province_name')
+    distribution_dict = {}
+    for item in list(box_distribution):
+        cnt = item.cnt
+        province_name = item.province_name
+        if province_name is None:
+            province_name = '运输中'
+        distribution_dict[province_name] = cnt
+
     return JsonResponse({'container_num': container_num[0][0],
                          'site_num': site_num[0][0],
                          'volume': (volume[0][0], 0)[volume[0][0] is None],
-                         'container_location': {'China': 2000,
-                                                'USA': 2000,
-                                                'Europe': 1500,
-                                                'India': 1500,
-                                                'Japan': 1000,
-                                                'Canada': 500,
-                                                'other': 500}}, safe=True, status=status.HTTP_200_OK)
+                         'container_location': distribution_dict}, safe=True, status=status.HTTP_200_OK)
 
 
 # 云箱安全参数

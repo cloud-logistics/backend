@@ -238,9 +238,11 @@ def box_inout(request):
                 if type == '1':
                     stock.ava_num += 1
                     box.ava_flag = 'Y'
+                    box.siteinfo_id = site_id
                 else:
                     stock.ava_num -= 1
                     box.ava_flag = 'N'
+                    box.siteinfo = None
                 box.save()
                 stock.save()
 
@@ -272,9 +274,11 @@ def enter_leave_site(data):
                 stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
                 if type == '1':
                     box.ava_flag = 'Y'
+                    box.siteinfo_id = site_id
                     stock.ava_num += 1
                 else:
                     box.ava_flag = 'N'
+                    box.siteinfo = None
                     stock.ava_num -= 1
                 box.save()
                 stock.save()
@@ -321,6 +325,7 @@ def dispatchout(request):
                 box = BoxInfo.objects.get(deviceid=box_id)
                 stock = SiteBoxStock.objects.get(site=site, box_type=box.type)
                 box.ava_flag = 'N'
+                box.siteinfo = None
                 stock.ava_num -= 1
                 box.save()
                 stock.save()
@@ -360,6 +365,7 @@ def dispatchin(request):
                 box = BoxInfo.objects.get(deviceid=box_id)
                 stock = SiteBoxStock.objects.get(site=site, box_type=box.type)
                 box.ava_flag = 'Y'
+                box.siteinfo = site
                 stock.ava_num += 1
                 box.save()
                 stock.save()
