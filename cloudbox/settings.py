@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     # 'sensor.apps.QuickstartConfig',
     'monservice.apps.MonserviceConfig',
     'rentservice.apps.RentserviceConfig',
-    # 'rent_service.apps.RentServiceConfig'
+    'django_celery_beat',
+    'django_celery_results',
     'rest_framework',
     'rest_framework_jwt',
 ]
@@ -150,3 +151,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rentservice.utils.rentpagination.CustomPagination',
     'PAGE_SIZE': 10,
 }
+
+
+# celery settings
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_BACKEND = 'django-cache'
+CELERY_TIMEZONE = 'Asia/Shanghai'
