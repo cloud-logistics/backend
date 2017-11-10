@@ -20,12 +20,13 @@ from monservice.models import SiteInfo
 from monservice.models import BoxTypeInfo
 from monservice.serializers import SiteInfoSerializer
 from rentservice.serializers import AppointmentResSerializer
+from django.conf import settings
 import datetime
 import uuid
 import pytz
 
 log = logger.get_logger(__name__)
-tz = pytz.timezone('Asia/Shanghai')
+tz = pytz.timezone(settings.TIME_ZONE)
 
 
 # 创建预约单

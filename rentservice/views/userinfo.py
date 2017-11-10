@@ -12,9 +12,11 @@ from rentservice.models import RentLeaseInfo
 from rentservice.serializers import RentLeaseInfoSerializer
 from rentservice.models import UserAppointment
 import pytz
+from django.conf import settings
+
 
 log = logger.get_logger(__name__)
-tz = pytz.timezone('Asia/Shanghai')
+tz = pytz.timezone(settings.TIME_ZONE)
 
 
 @csrf_exempt

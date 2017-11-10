@@ -2,6 +2,7 @@ from __future__ import absolute_import, unicode_literals
 import os
 from celery import Celery
 from celery.schedules import crontab
+from django.conf import settings
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cloudbox.settings')
@@ -15,8 +16,8 @@ app = Celery('cloudbox')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Load task modules from all registered Django app configs.
-app.autodiscover_tasks()
-# app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+# app.autodiscover_tasks()
+app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 
 @app.on_after_configure.connect
@@ -29,6 +30,8 @@ def billing():
     from rentservice.models import RentLeaseInfo
     from rentservice.utils import logger
     import datetime
+    import pytz
+    tz = pytz.timezone(settings.TIME_ZONE)
     log = logger.get_logger(__name__)
     log.info("billing begin ...")
     rent_info_list = RentLeaseInfo.objects.filter(rent_status=0)

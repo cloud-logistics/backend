@@ -11,9 +11,11 @@ from rentservice.models import EnterpriseUser
 from rentservice.models import RentLeaseInfo
 from rentservice.serializers import RentLeaseInfoSerializer
 import pytz
+from django.conf import settings
+
 
 log = logger.get_logger(__name__)
-tz = pytz.timezone('Asia/Shanghai')
+tz = pytz.timezone(settings.TIME_ZONE)
 
 
 # 企业查询在运云箱订单

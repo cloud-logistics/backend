@@ -16,10 +16,11 @@ from rentservice.serializers import EnterpriseUserSerializer
 import uuid
 import datetime
 import pytz
+from django.conf import settings
 
 
 log = logger.get_logger(__name__)
-tz = pytz.timezone('Asia/Shanghai')
+tz = pytz.timezone(settings.TIME_ZONE)
 PERMISSION_GROUP_HASH = 'permissions_group_hash'
 # PERMISSION_URL_HASH = 'permissions_url_hash'
 

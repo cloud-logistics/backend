@@ -8,10 +8,11 @@ from rest_framework.decorators import api_view
 from monservice.models import BoxTypeInfo
 from monservice.serializers import BoxTypeInfoSerializer
 from rentservice.utils.retcode import *
+from django.conf import settings
 import pytz
 
 log = logger.get_logger(__name__)
-tz = pytz.timezone('Asia/Shanghai')
+tz = pytz.timezone(settings.TIME_ZONE)
 
 
 # 获取箱子类型的接口
