@@ -24,25 +24,19 @@
       collision_threshold_min,collision_threshold_max,
       battery_threshold_min,battery_threshold_max,
       operation_threshold_min,operation_threshold_max
-    FROM iot.box_info box_info
-    INNER JOIN iot.box_type_info box_type_info
-        ON box_info.type = box_type_info.id WHERE box_info.deviceid = NEW.deviceid
+    FROM iot.monservice_boxinfo box_info
+    INNER JOIN iot.monservice_boxtypeinfo box_type_info
+        ON box_info.type_id = box_type_info.id WHERE box_info.deviceid = NEW.deviceid
     INTO v_temperature_threshold_min,v_temperature_threshold_max,
       v_humidity_threshold_min,v_humidity_threshold_max,
       v_collision_threshold_min,v_collision_threshold_max,
       v_battery_threshold_min,v_battery_threshold_max,
       v_operation_threshold_min,v_operation_threshold_max;
 
-    /* 获取箱子承运人id
-    SELECT order_info.carrierid FROM iot.order_info order_info
-    INNER JOIN iot.box_order_relation box_order_relation
-    ON order_info.trackid = box_order_relation.trackid WHERE box_order_relation.deviceid = NEW.deviceid
-    GROUP BY order_info.carrierid INTO v_carrier_id;
-    */
     v_carrier_id := 1;
 
 
-    v_sql_insert := 'INSERT INTO iot.alarm_info(timestamp,
+    v_sql_insert := 'INSERT INTO iot.monservice_alarminfo(timestamp,
                                  deviceid,
                                  level,
                                  code,
@@ -77,7 +71,7 @@
         1 || ',''' ||
         NEW.endpointid || ''')';
 
-    v_sql_update := 'UPDATE iot.alarm_info SET timestamp = ' || NEW.timestamp || ',' ||
+    v_sql_update := 'UPDATE iot.monservice_alarminfo SET timestamp = ' || NEW.timestamp || ',' ||
                     'deviceid = ''' || NEW.deviceid || ''',' ||
                     'level = ' || '2' || ',' ||    /* 告警级别：1.通知 2.告警 3.错误 4.严重 */
                     'code = %code' || ',' ||
@@ -98,7 +92,7 @@
 
     /* 温度告警计算 */
     /* 获取箱子在告警表中的最后一条状态 */
-    SELECT id,alarm_status from iot.alarm_info
+    SELECT id,alarm_status from iot.monservice_alarminfo
     WHERE code >= 1000 AND code < 2000 AND deviceid = NEW.deviceid
     ORDER BY timestamp DESC LIMIT 1 INTO v_id ,v_alarm_status;
 
@@ -136,7 +130,7 @@
 
     /* 湿度告警计算 */
     /* 获取箱子在告警表中的最后一条状态 */
-    SELECT id,alarm_status from iot.alarm_info
+    SELECT id,alarm_status from iot.monservice_alarminfo
     WHERE code >= 2000 AND code < 3000 AND deviceid = NEW.deviceid
     ORDER BY timestamp DESC LIMIT 1 INTO v_id ,v_alarm_status;
 
@@ -172,7 +166,7 @@
 
     /* 碰撞次数告警计算 */
     /* 获取箱子在告警表中的最后一条状态 */
-    SELECT id,alarm_status from iot.alarm_info
+    SELECT id,alarm_status from iot.monservice_alarminfo
     WHERE code >= 3000 AND code < 4000 AND deviceid = NEW.deviceid
     ORDER BY timestamp DESC LIMIT 1 INTO v_id ,v_alarm_status;
 
@@ -198,7 +192,7 @@
 
     /* 开关箱次数告警计算 */
     /* 获取箱子在告警表中的最后一条状态 */
-    SELECT id,alarm_status from iot.alarm_info
+    SELECT id,alarm_status from iot.monservice_alarminfo
     WHERE code >= 5000 AND code < 6000 AND deviceid = NEW.deviceid
     ORDER BY timestamp DESC LIMIT 1 INTO v_id ,v_alarm_status;
 
@@ -230,8 +224,8 @@
   END;
 $tr_cal_alarm$ LANGUAGE 'plpgsql';
 
-DROP TRIGGER IF EXISTS tr_cal_alarm ON iot.sensor_data;
-CREATE TRIGGER tr_cal_alarm BEFORE INSERT ON iot.sensor_data FOR EACH ROW EXECUTE PROCEDURE iot.fn_cal_alarm();
+DROP TRIGGER IF EXISTS tr_cal_alarm ON iot.monservice_sensordata;
+CREATE TRIGGER tr_cal_alarm BEFORE INSERT ON iot.monservice_sensordata FOR EACH ROW EXECUTE PROCEDURE iot.fn_cal_alarm();
 
 
 /***
@@ -258,35 +252,30 @@ CREATE OR REPLACE FUNCTION iot.cal_missing_alarm() RETURNS void AS $$
       SELECT CASE WHEN (timestamp + interval_time * 60) < extract(epoch from now()) THEN 1 ELSE 0 END AS flag,
       timestamp,deviceid FROM (
       SELECT sensor_data.deviceid,max(timestamp) AS timestamp,interval_time
-      FROM iot.sensor_data sensor_data INNER JOIN
-      (SELECT deviceid,type FROM iot.box_info GROUP BY deviceid,type) device
+      FROM iot.monservice_sensordata sensor_data INNER JOIN
+      (SELECT deviceid,type FROM iot.monservice_boxinfo GROUP BY deviceid,type) device
       ON sensor_data.deviceid = device.deviceid
-      INNER JOIN iot.box_type_info box_type_info ON device.type = box_type_info.id
+      INNER JOIN iot.monservice_boxtypeinfo box_type_info ON device.type = box_type_info.id
       group by sensor_data.deviceid, interval_time) A
     LOOP
       /* 获取箱子当前温度、湿度等数据 */
-      SELECT temperature,humidity,longitude,latitude,speed,collide,endpointid FROM iot.sensor_data
+      SELECT temperature,humidity,longitude,latitude,speed,collide,endpointid FROM iot.monservice_sensordata
       WHERE timestamp = data_record.timestamp AND deviceid = data_record.deviceid LIMIT 1
       INTO v_temperature,v_humidity,v_longitude,v_latitude,v_speed,v_collide,v_endpointid;
 
       v_id := NULL;
       v_alarm_status := NULL;
       /* 获取箱子在告警表中记录等最后的状态 */
-      SELECT id,alarm_status FROM iot.alarm_info
+      SELECT id,alarm_status FROM iot.monservice_alarminfo
       WHERE deviceid = data_record.deviceid AND code = 6001 ORDER BY timestamp desc LIMIT 1
       INTO v_id,v_alarm_status;
 
       IF data_record.flag = 1 THEN
-        SELECT order_info.carrierid
-        FROM iot.box_order_relation box_order_relation
-        INNER JOIN iot.order_info order_info
-        ON box_order_relation.trackid = order_info.trackid
-        WHERE box_order_relation.deviceid = data_record.deviceid
-        GROUP BY order_info.carrierid LIMIT 1 INTO v_carrier;
+        v_carrier := 1;
 
         IF v_alarm_status IS NULL OR v_alarm_status = 0 THEN
           /* 告警表中无或告警表中已有数据且处于清除状态 */
-          INSERT INTO iot.alarm_info(timestamp,
+          INSERT INTO iot.monservice_alarminfo(timestamp,
                                      deviceid,
                                      level,
                                      code,
@@ -323,7 +312,7 @@ CREATE OR REPLACE FUNCTION iot.cal_missing_alarm() RETURNS void AS $$
 
         ELSEIF v_alarm_status = 1 THEN
           /* 告警表中已有告警，且是未清除状态 */
-          UPDATE iot.alarm_info SET timestamp = data_record.timestamp,
+          UPDATE iot.monservice_alarminfo SET timestamp = data_record.timestamp,
             level = 2,
             carrier = v_carrier,
             longitude = v_longitude,
@@ -342,7 +331,7 @@ CREATE OR REPLACE FUNCTION iot.cal_missing_alarm() RETURNS void AS $$
       ELSE
         /* 计算后标志是未告警，查看告警表中是否有告警，如果有则将告警清除 */
         IF v_alarm_status = 1 THEN
-          UPDATE iot.alarm_info SET timestamp = data_record.timestamp,
+          UPDATE iot.monservice_alarminfo SET timestamp = data_record.timestamp,
             level = 2,
             longitude = v_longitude,
             latitude = v_latitude,
@@ -399,7 +388,7 @@ CREATE OR REPLACE FUNCTION iot.fn_indicator_history(start_time INTEGER, end_time
     END LOOP;
 
     v_sql := v_sql || 'END AS hour,CAST(' || v_indicator ||
-      ' AS NUMERIC) FROM iot.sensor_data sensor_data WHERE timestamp >= ' || v_start_time ||' AND timestamp < ' || v_end_time ||
+      ' AS NUMERIC) FROM iot.monservice_sensordata sensor_data WHERE timestamp >= ' || v_start_time ||' AND timestamp < ' || v_end_time ||
       ' AND sensor_data.deviceid = ''' || v_deviceid || ''') A GROUP BY hour ORDER BY hour ASC';
 
     RAISE WARNING 'to print:%',v_sql;

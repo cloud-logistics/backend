@@ -68,6 +68,7 @@ def get_site_by_province(request, province, city):
         res_site.append(
             {'id': item.id, 'location': item.location, 'latitude': item.latitude, 'longitude': item.longitude,
              'site_code': item.site_code, 'city': item.city, 'nation': item.nation, 'province': item.province,
+             'name': item.name,
              'box_num': site_box_num})
     page = paginator.paginate_queryset(res_site, request)
     ret_ser = SiteInfoMoreSerializer(page, many=True)

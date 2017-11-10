@@ -8,7 +8,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/sites`
+`container/api/v1/cloudbox/monservice/sites`
 
 #### BODY:
 
@@ -45,7 +45,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/sites/{site_id}`
+`container/api/v1/cloudbox/monservice/sites/{site_id}`
 
 #### 方法：
 
@@ -80,7 +80,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/sites/{site_id}`
+`container/api/v1/cloudbox/monservice/sites/{site_id}`
 
 #### 方法：
 
@@ -102,7 +102,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/allsites?page=2`
+`container/api/v1/cloudbox/monservice/allsites?page=2`
 
 #### 方法：
 
@@ -207,7 +207,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/boxbysite/1`
+`container/api/v1/cloudbox/monservice/boxbysite/1`
 
 #### 方法：
 
@@ -379,7 +379,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/siteStream/1`
+`container/api/v1/cloudbox/monservice/siteStream/1`
 
 #### 方法：
 
@@ -415,7 +415,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/distribution`
+`container/api/v1/cloudbox/monservice/distribution`
 
 #### 方法：
 
