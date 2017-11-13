@@ -65,7 +65,7 @@ def rent_boxes_order(request):
         with transaction.atomic():
             for item in box_info_list:
                 lease_info = RentLeaseInfo(lease_info_id=uuid.uuid1(), user_id=enterprise_user,
-                                           lease_start_time=datetime.datetime.now(tz=timezone), box=item, on_site=site)
+                                           lease_start_time=datetime.datetime.now(tz=timezone), box=item, off_site=site)
                 lease_info.save()
                 #SiteBoxStock update
                 site_box_stock = SiteBoxStock.objects.get(site=site, box_type=item.type)
@@ -121,6 +121,7 @@ def finish_boxes_order(request):
         for item in rent_info_list:
             item.rent_status = 1
             item.lease_end_time = datetime.datetime.now(tz=timezone)
+            item.on_site = site
             lease_info_list.append(item.lease_info_id)
             item.save()
         #update
