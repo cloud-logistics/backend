@@ -44,6 +44,7 @@ urlpatterns = [
     url(r'^rentservice/enterpriseuser/list/enterprise/(?P<enterprise_id>[0-9a-zA-Z-]+)$',
         enterpriseuser.list_enterprise_user_by_enterprise_id),  # 用户列表
     url(r'^rentservice/enterpriseuser/detail/(?P<user_id>[0-9a-zA-Z-]+)/$', enterpriseuser.enterprise_user_detail),
+    url(r'^rentservice/enterpriseuser/fuzzyquery/$', enterpriseuser.enterprise_user_fuzzy_query),
     # 用户详情
     url(r'^rentservice/regions/provinces', regions.get_province_list),  # 获取省列表
     url(r'^rentservice/regions/cities/(?P<province_id>[0-9]+)$', regions.get_city_list),  # 获取制定省的市列表
