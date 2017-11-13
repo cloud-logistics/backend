@@ -81,6 +81,7 @@ def add_site(request):
 def delete_site(request, id):
     try:
         SiteInfo.objects.get(id=id).delete()
+        SiteBoxStock.objects.filter(site_id=id).delete()
 
     except Exception, e:
         log.error(e.message)
