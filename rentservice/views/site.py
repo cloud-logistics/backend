@@ -16,9 +16,10 @@ from monservice.models import SiteBoxStock
 from monservice.serializers import SiteBoxStockSerializer
 from monservice.serializers import SiteInfoMoreSerializer
 import pytz
+from django.conf import settings
 
 log = logger.get_logger(__name__)
-tz = pytz.timezone('Asia/Shanghai')
+tz = pytz.timezone(settings.TIME_ZONE)
 
 
 # 根据GPS定位信息获取距离最近的堆场

@@ -15,9 +15,11 @@ from django.db import transaction
 import uuid
 import datetime
 import pytz
+from django.conf import settings
+
 
 log = logger.get_logger(__name__)
-timezone = pytz.timezone('Asia/Shanghai')
+timezone = pytz.timezone(settings.TIME_ZONE)
 
 
 @csrf_exempt

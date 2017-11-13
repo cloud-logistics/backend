@@ -11,8 +11,6 @@ import uuid
 from qiniu import Auth, put_file, etag, urlsafe_base64_encode
 import qiniu.config
 
-
-
 log = logger.get_logger(__name__)
 
 

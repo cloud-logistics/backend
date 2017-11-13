@@ -5,20 +5,17 @@ import json
 import os
 import time
 import datetime
-import base64
 import traceback
 import redis
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
+from rest_framework import settings
 from util.db import query_list, save_to_db
 from util.geo import cal_position, get_lng_lat, get_position_name
 from util import logger
 from util.cid import generate_cid
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 import urllib
 import urllib2
@@ -264,59 +261,65 @@ def realtime_position(request):
 
 # 报警监控
 @csrf_exempt
-def alarm_monitor(request):
-    parameters = json.loads(request.body)
-    try:
-        alert_type_id = parameters['alertType']
-        deviceid = parameters['containerId']
-    except Exception, e:
-        deviceid = ''
-        log.error(e.message)
-    data = query_list('select alarm_info.deviceid,alert_level_info.level,alarm_info.timestamp,'
-                      'alert_code_info.description,alarm_info.code,alarm_info.status,'
-                      'alarm_info.longitude,alarm_info.latitude,'
-                      'alarm_info.speed,alarm_info.temperature,alarm_info.humidity,'
-                      'alarm_info.num_of_collide,alarm_info.num_of_door_open,'
-                      'alarm_info.battery,alarm_info.robert_operation_status,alarm_info.endpointid '
-                      'from iot.monservice_alarminfo alarm_info '
-                      'left join iot.monservice_alertlevelinfo alert_level_info on alarm_info.level = alert_level_info.id '
-                      'left join iot.monservice_alertcodeinfo alert_code_info on alarm_info.code = alert_code_info.errcode '
-                      'where alarm_info.alarm_status = 1 and alert_code_info.id = ' + str(alert_type_id) +
-                      ' and (alarm_info.deviceid = \'' + to_str(deviceid) + '\' or \'' + deviceid + '\'= \'\') '
-                      'order by timestamp desc')
+@api_view(['GET'])
+def alarm_monitor(request, container_id, alert_type_id):
+    deviceid = (container_id, '')[container_id == 'all']
+    data = AlarmInfo.objects.raw('select alarm_info.deviceid,alert_level_info.level,alarm_info.timestamp,'
+                                 'alert_code_info.description,alarm_info.code,alarm_info.status,'
+                                 'alarm_info.longitude,alarm_info.latitude,'
+                                 'alarm_info.speed,alarm_info.temperature,alarm_info.humidity,'
+                                 'alarm_info.num_of_collide,alarm_info.num_of_door_open,'
+                                 'alarm_info.battery,alarm_info.robert_operation_status,'
+                                 'alarm_info.endpointid, alarm_info.id '
+                                 'from iot.monservice_alarminfo alarm_info '
+                                 'left join iot.monservice_alertlevelinfo alert_level_info on alarm_info.level = alert_level_info.id '
+                                 'left join iot.monservice_alertcodeinfo alert_code_info on alarm_info.code = alert_code_info.errcode '
+                                 'where alarm_info.alarm_status = 1 and alert_code_info.id = ' + str(alert_type_id) +
+                                 ' and (alarm_info.deviceid = \'' + to_str(deviceid) + '\' or \'' + deviceid + '\'= \'\') '
+                                 'order by timestamp desc')
     ret_data = []
 
     for record in data:
-        deviceid = record[0]
-        level = record[1]
-        timestamp = record[2] * 1000        # 前端显示需要精确到毫秒
-        error_description = record[3]
-        error_code = record[4]
-        ship_status = record[5]
-        longitude = cal_position(record[6])
-        latitude = cal_position(record[7])
-        speed = record[8]
-        temperature = record[9]
-        humidity = record[10]
-        num_of_collide = record[11]
-        num_of_door_open = record[12]
-        battery = record[13]
-        robert_operation_status = record[14]
-        endpointid = record[15]
+        deviceid = record.deviceid
+        timestamp = record.timestamp * 1000        # 前端显示需要精确到毫秒
+        error_description = record.description
+        error_code = record.code
+        ship_status = record.status
+        longitude = cal_position(record.longitude)
+        latitude = cal_position(record.latitude)
+        speed = record.speed
+        temperature = record.temperature
+        humidity = record.humidity
+        num_of_collide = record.num_of_collide
+        num_of_door_open = record.num_of_door_open
+        battery = record.battery
+        robert_operation_status = record.robert_operation_status
+        endpointid = record.endpointid
         location_name = gps_info_trans("%s,%s" % (latitude, longitude))
-        ret_data.append({'containerId': deviceid, 'alertTime': timestamp, 'alertLevel': level,
-                         'alertType': error_description, 'alertCode': str(error_code), 'status': ship_status,
-                         'position': {'lng': float(longitude), 'lat': float(latitude)},
-                         'speed': float(speed), 'temperature': float(temperature), 'humidity': float(humidity),
-                         'num_of_collide': float(num_of_collide), 'num_of_door_open': float(num_of_door_open),
-                         'battery': float(battery), 'robertOperationStatus': robert_operation_status,
-                         'locationName': location_name, "endpointId": endpointid})
-    return JsonResponse({'alerts': ret_data}, safe=True, status=status.HTTP_200_OK)
+        ret_data.append({'timestamp': timestamp, 'deviceid': deviceid,
+                         'level': 1, 'status': '', 'carrier': 1, 'alarm_status': 1,
+                         'error_description': error_description, 'code': error_code,
+                         'longitude': longitude, 'latitude': latitude,
+                         'speed': speed, 'temperature': temperature,
+                         'humidity': humidity,
+                         'num_of_collide': num_of_collide,
+                         'num_of_door_open': num_of_door_open,
+                         'battery': battery, 'robert_operation_status': robert_operation_status,
+                         'location_name': location_name, "endpointid": endpointid})
+    pagination_class = settings.api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    page = paginator.paginate_queryset(ret_data, request)
+    ret_list = RetAlarmSerializer(page, many=True)
+    return paginator.get_paginated_response(ret_list.data, 'OK', 'query alarm success')
 
 
 # 基础信息查询
 @csrf_exempt
 def basic_info(request):
+    data = BoxInfo.objects.values('deviceid', 'type__box_type_name', 'produce_area__address',
+                                  'manufacturer__name', 'date_of_production').\
+        select_related('type').select_related('produce_area').select_related('manufacturer')
+
     data = query_list('select box_info.deviceid, box_type_info.box_type_name, produce_area_info.address, '
                       'manufacturer_info.name, date_of_production '
                       'from iot.monservice_boxinfo box_info '
@@ -827,16 +830,25 @@ def operation_overview(request):
     container_num = query_list(sql_1)
     site_num = query_list(sql_2)
     volume = query_list(sql_3)
+    box_distribution = Province.objects.raw('select count(1) as cnt,monservice_province.province_id,province_name '
+                                           'from iot.monservice_boxinfo monservice_boxinfo '
+                                           'left join iot.monservice_siteinfo monservice_siteinfo '
+                                           'on monservice_boxinfo.siteinfo_id = monservice_siteinfo.id '
+                                           'left join iot.monservice_province monservice_province '
+                                           'on monservice_siteinfo.province_id = monservice_province.province_id '
+                                           'group by monservice_province.province_id,province_name')
+    distribution_dict = {}
+    for item in list(box_distribution):
+        cnt = item.cnt
+        province_name = item.province_name
+        if province_name is None:
+            province_name = '运输中'
+        distribution_dict[province_name] = cnt
+
     return JsonResponse({'container_num': container_num[0][0],
                          'site_num': site_num[0][0],
                          'volume': (volume[0][0], 0)[volume[0][0] is None],
-                         'container_location': {'China': 2000,
-                                                'USA': 2000,
-                                                'Europe': 1500,
-                                                'India': 1500,
-                                                'Japan': 1000,
-                                                'Canada': 500,
-                                                'other': 500}}, safe=True, status=status.HTTP_200_OK)
+                         'container_location': distribution_dict}, safe=True, status=status.HTTP_200_OK)
 
 
 # 云箱安全参数
@@ -1191,8 +1203,10 @@ def get_position(request):
             province_name = ''
             city_name = ''
 
-    return JsonResponse({'position_name': position_name, 'nation_id': nation_id,
-                         'province_id': province_id, 'city_id': city_id,
-                         'nation_name': nation_name, 'province_name': province_name,
-                         'city_name': city_name}, safe=True, status=status.HTTP_200_OK)
+        return JsonResponse({'position_name': position_name, 'nation_id': nation_id,
+                             'province_id': province_id, 'city_id': city_id,
+                             'nation_name': nation_name, 'province_name': province_name,
+                             'city_name': city_name}, safe=True, status=status.HTTP_200_OK)
+    else:
+        return JsonResponse({'msg': 'location name not found'}, safe=True, status=status.HTTP_200_OK)
 

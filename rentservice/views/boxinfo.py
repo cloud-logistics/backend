@@ -14,12 +14,13 @@ from monservice.models import Province
 from monservice.models import City
 from monservice.models import SiteInfo
 from rentservice.serializers import BoxInfoSerializer
+from django.conf import settings
 import datetime
 import uuid
 import pytz
 
 log = logger.get_logger(__name__)
-tz = pytz.timezone('Asia/Shanghai')
+tz = pytz.timezone(settings.TIME_ZONE)
 
 
 # 云箱list查询（condition：province_id,city_id,site_id,ava_flag）
