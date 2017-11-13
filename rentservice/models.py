@@ -158,3 +158,19 @@ class AppointmentCodeSeq(models.Model):
 
     class Meta:
         db_table = u'iot.appointment_code'
+
+
+class SiteStat(models.Model):
+    stat_id = models.CharField(max_length=48, primary_key=True)
+    stat_day = models.CharField(max_length=10, default='')
+    total_in = models.IntegerField(default=0)
+    total_out = models.IntegerField(default=0)
+    site = models.ForeignKey(SiteInfo, related_name='stat_site_fk', null=True)
+
+
+class SiteStatDetail(models.Model):
+    detail_id = models.CharField(max_length=48, primary_key=True)
+    box_type = models.ForeignKey(BoxTypeInfo, related_name='stat_detail_box_type_fk', null=True)
+    box_in = models.IntegerField(default=0)
+    box_out = models.IntegerField(default=0)
+    sitestat = models.ForeignKey(SiteStat, related_name='detail_stat_fk', null=True)

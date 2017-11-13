@@ -18,6 +18,8 @@ from models import RentalAdminOperationRecords
 from monservice.models import BoxTypeInfo
 from monservice.models import SiteInfo
 from monservice.models import BoxInfo
+from models import SiteStat
+from models import SiteStatDetail
 
 
 class BoxTypeInfoSerializer(serializers.ModelSerializer):
@@ -141,4 +143,20 @@ class AppointmentResSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserAppointment
+        fields = '__all__'
+
+
+class SiteStatSerializer(serializers.ModelSerializer):
+    site = SiteInfoSerializer()
+
+    class Meta:
+        model = SiteStat
+        fields = '__all__'
+
+
+class SiteStatDetailSerializer(serializers.ModelSerializer):
+    box_type = BoxTypeInfoSerializer()
+
+    class Meta:
+        model = SiteStatDetail
         fields = '__all__'
