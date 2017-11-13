@@ -47,26 +47,33 @@ def get_box_info_list(request):
     except Exception:
         return JsonResponse(retcode({}, "9999", "可用标志输入有误"), safe=True, status=status.HTTP_400_BAD_REQUEST)
     query_set = BoxInfo.objects
+    condition = 'N'
     if province_id != 0:
         try:
             province = Province.objects.get(province_id=province_id)
         except Province.DoesNotExist:
             return JsonResponse(retcode({}, "9999", "省信息不存在"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         query_set = query_set.filter(siteinfo__province=province)
+        condition = 'Y'
     if city_id != 0:
         try:
             city = City.objects.get(id=city_id)
         except City.DoesNotExist:
             return JsonResponse(retcode({}, "9999", "市信息不存在"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         query_set = query_set.filter(siteinfo__city=city)
+        condition = 'Y'
     if site_id != 0:
         try:
             site = SiteInfo.objects.get(id=site_id)
         except SiteInfo.DoesNotExist:
             return JsonResponse(retcode({}, "9999", "仓库信息不存在"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         query_set = query_set.filter(siteinfo=site)
+        condition = 'Y'
     if ava_flag != '':
         query_set = query_set.filter(ava_flag=ava_flag)
+        condition = 'Y'
+    if condition == 'N':
+        query_set = query_set.all()
     page = paginator.paginate_queryset(query_set, request)
     ret_ser = BoxInfoSerializer(page, many=True)
     return paginator.get_paginated_response(ret_ser.data)
