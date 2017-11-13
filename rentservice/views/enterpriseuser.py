@@ -17,6 +17,7 @@ import uuid
 import datetime
 import pytz
 from django.conf import settings
+from django.db.models import Q
 
 
 log = logger.get_logger(__name__)
@@ -227,7 +228,7 @@ def enterprise_user_fuzzy_query(request):
         keyword = ''
         log.error(e.message)
     user_data = EnterpriseUser.objects.filter(Q(user_name__contains=keyword) |
-                                              Q(user_phone_contains=keyword)).order_by('user_name')
+                                              Q(user_phone__contains=keyword)).order_by('user_name')
     fuzzy_user_list = []
     for item in user_data:
         ser_item = EnterpriseUserSerializer(item)
