@@ -14,6 +14,7 @@ from monservice.models import SiteHistory
 import time
 import datetime
 from django.db import transaction
+from util.sid import generate_sid
 
 log = logger.get_logger('monservice.site.py')
 
@@ -48,7 +49,7 @@ def add_site(request):
             response_msg = {'status': 'ERROR', 'msg': 'latitude is empty.'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
-        site_code = to_str(data['site_code'])           # 堆场代码
+
         volume = data['volume']                         # 堆场箱子容量
         city_id = data['city_id']                       # 城市
         province_id = data['province_id']               # 省
@@ -57,6 +58,9 @@ def add_site(request):
         city = City.objects.get(id=city_id)
         province = Province.objects.get(province_id=province_id)
         nation = Nation.objects.get(nation_id=nation_id)
+
+        site_code = generate_sid(city.city_name)        # 堆场代码
+
         site = SiteInfo(location=location, latitude=latitude, longitude=longtitude, site_code=site_code,
                         city= city, province=province, nation=nation, volume=volume)
         site.save()
@@ -332,10 +336,10 @@ def dispatchout(request):
 
     except Exception, e:
         log.error(e.message)
-        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        response_msg = {'result': 'False', 'code': '999999', 'msg': 'Fail', 'status': 'error'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': 'dispatch out success'}
+        response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success', 'status': 'dispatch'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
@@ -372,10 +376,10 @@ def dispatchin(request):
 
     except Exception, e:
         log.error(e.message)
-        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        response_msg = {'result': 'False', 'code': '999999', 'msg': 'Fail'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': 'dispatch in success'}
+        response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
