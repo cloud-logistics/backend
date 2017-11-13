@@ -9,7 +9,7 @@ from models import BoxInfo
 from models import Province
 from models import SiteBoxStock
 from models import SiteDispatch
-from models import Manufacturer, ProduceArea, Hardware, Battery
+from models import Manufacturer, ProduceArea, Hardware, Battery, AlarmInfo
 from models import SysGroup, SysUser, SysAccessUrl
 
 
@@ -158,3 +158,18 @@ class SysAccessUrlSerializer(serializers.ModelSerializer):
     class Meta:
         model = SysAccessUrl
         fields = '__all__'
+
+
+class RetAlarmSerializer(serializers.ModelSerializer):
+    error_description = serializers.SerializerMethodField()
+    location_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AlarmInfo
+        fields = '__all__'
+
+    def get_error_description(self, obj):
+        return obj['error_description']
+
+    def get_location_name(self, obj):
+        return obj['location_name']
