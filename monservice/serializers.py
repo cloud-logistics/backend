@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.db import models
 from models import ContainerRentInfo
 from models import SiteInfo
 from models import SiteHistory
@@ -173,3 +174,22 @@ class RetAlarmSerializer(serializers.ModelSerializer):
 
     def get_location_name(self, obj):
         return obj['location_name']
+
+
+class BoxBasicInfoSerializer(serializers.ModelSerializer):
+    box_type_name = serializers.SerializerMethodField()
+    produce_area = serializers.SerializerMethodField()
+    manufacturer = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BoxInfo
+        fields = ('deviceid', 'tid', 'date_of_production', 'box_type_name', 'produce_area', 'manufacturer')
+
+    def get_box_type_name(self, obj):
+        return obj['box_type_name']
+
+    def get_produce_area(self, obj):
+        return obj['produce_area']
+
+    def get_manufacturer(self, obj):
+        return obj['manufacturer']

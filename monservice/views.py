@@ -315,31 +315,36 @@ def alarm_monitor(request, container_id, alert_type_id):
 
 # 基础信息查询
 @csrf_exempt
-def basic_info(request):
-    data = BoxInfo.objects.values('deviceid', 'type__box_type_name', 'produce_area__address',
-                                  'manufacturer__name', 'date_of_production').\
-        select_related('type').select_related('produce_area').select_related('manufacturer')
-
-    data = query_list('select box_info.deviceid, box_type_info.box_type_name, produce_area_info.address, '
+@api_view(['GET'])
+def basic_info(request, container_id, container_type, factory, start_time, end_time):
+    data = query_list('select box_info.deviceid,box_info.tid, box_type_info.box_type_name, produce_area_info.address, '
                       'manufacturer_info.name, date_of_production '
                       'from iot.monservice_boxinfo box_info '
                       'left join iot.monservice_boxtypeinfo box_type_info on box_info.type_id = box_type_info.id '
                       'left join iot.monservice_producearea produce_area_info on box_info.produce_area_id = produce_area_info.id '
                       'left join iot.monservice_manufacturer manufacturer_info on box_info.manufacturer_id = manufacturer_info.id '
-                      'group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
+                      'where (deviceid=\'' + str(container_id) + '\' or \'' + str(container_id) +
+                      '\' = \'\') and box_type_info.id = ' + str(container_type) +
+                      ' and  manufacturer_info.id = ' + str(factory) + ' and date_of_production >=\'' + str(start_time) +
+                      '\' and date_of_production < \'' + str(end_time) +
+                      '\' group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
                       'date_of_production')
-    ret_list = []
+    data_list = []
     for item in data:
         dicitem = {}
-        dicitem['containerId'] = to_str(item[0])
-        dicitem['containerType'] = to_str(item[1])
-        dicitem['factoryLocation'] = to_str(item[2])
-        dicitem['factory'] = to_str(item[3])
-        dicitem['factoryDate'] = item[4]
-        ret_list.append(dicitem)
+        dicitem['deviceid'] = item[0]
+        dicitem['tid'] = item[1]
+        dicitem['box_type_name'] = item[2]
+        dicitem['produce_area'] = item[3]
+        dicitem['manufacturer'] = item[4]
+        dicitem['date_of_production'] = item[5]
+        data_list.append(dicitem)
 
-    ret_dic = {'basicInfo': ret_list}
-    return JsonResponse(ret_dic, safe=True, status=status.HTTP_200_OK)
+    pagination_class = settings.api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    page = paginator.paginate_queryset(data_list, request)
+    ret_data = BoxBasicInfoSerializer(page, many=True)
+    return paginator.get_paginated_response(ret_data.data, 'OK', 'query alarm success')
 
 
 @csrf_exempt
