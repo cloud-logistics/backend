@@ -278,7 +278,7 @@ def alarm_monitor(request):
                                  'left join iot.monservice_alertlevelinfo alert_level_info on alarm_info.level = alert_level_info.id '
                                  'left join iot.monservice_alertcodeinfo alert_code_info on alarm_info.code = alert_code_info.errcode '
                                  'where alarm_info.alarm_status = 1 '
-                                 'and (alert_code_info.id = ' + str(alert_type_id) + ' or ' + alert_type_id + ' = 0) '
+                                 'and (alert_code_info.id = ' + str(alert_type_id) + ' or ' + str(alert_type_id) + ' = 0) '
                                  ' and (alarm_info.deviceid = \'' + to_str(deviceid) + '\' or \'' + deviceid + '\'= \'\') '
                                  'order by timestamp desc')
     ret_data = []
@@ -299,16 +299,16 @@ def alarm_monitor(request):
         battery = record.battery
         robert_operation_status = record.robert_operation_status
         endpointid = record.endpointid
-        location_name = gps_info_trans("%s,%s" % (latitude, longitude))
+        location_name = gps_info_trans("%s,%s" % (latitude, longitude)).decode("utf-8")
         ret_data.append({'timestamp': timestamp, 'deviceid': deviceid,
-                         'level': 1, 'status': '', 'carrier': 1, 'alarm_status': 1,
+                         'level': 1, 'status': u'', 'carrier': 1, 'alarm_status': 1,
                          'error_description': error_description, 'code': error_code,
                          'longitude': longitude, 'latitude': latitude,
                          'speed': speed, 'temperature': temperature,
                          'humidity': humidity,
                          'num_of_collide': num_of_collide,
                          'num_of_door_open': num_of_door_open,
-                         'battery': battery, 'robert_operation_status': robert_operation_status,
+                         'battery':battery, 'robert_operation_status': robert_operation_status,
                          'location_name': location_name, "endpointid": endpointid})
     pagination_class = settings.api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
