@@ -420,8 +420,6 @@ def history_path(request):
 
 
 # 云箱状态汇总
-# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-# @permission_classes((IsAuthenticated,))
 @api_view(['POST'])
 def status_summary(request):
     try:
@@ -1214,4 +1212,14 @@ def get_position(request):
                              'city_name': city_name}, safe=True, status=status.HTTP_200_OK)
     else:
         return JsonResponse({'msg': 'location name not found'}, safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def get_message(request):
+    alarm_count = AlarmInfo.objects.filter(alarm_status=1).count()
+    undispach_count = SiteDispatch.objects.filter(status='undispatch').count()
+    message_count = alarm_count + undispach_count
+    return JsonResponse({'alarm_count': alarm_count, 'undispach_count': undispach_count, 'message_count': message_count},
+                        safe=True, status=status.HTTP_200_OK)
 

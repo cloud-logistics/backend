@@ -7,7 +7,8 @@ from monservice.view import site
 from monservice.view import dispatch
 
 urlpatterns = [
-    url(r'^auth$', views.verify_user),
+    url(r'^auth$', views.verify_user),                            # 登录认证
+    url(r'^message$', views.get_message),                         # 消息查看
     url(r'^containers$', views.containers_overview),              # 云箱概览
     url(r'^realtimeInfo$', views.realtime_message),               # 实时状态
     url(r'^containerInstantInfo$', views.realtime_position),      # 实时位置
