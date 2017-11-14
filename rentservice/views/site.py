@@ -15,6 +15,9 @@ from rentservice.utils.retcode import *
 from monservice.models import SiteBoxStock
 from monservice.serializers import SiteBoxStockSerializer
 from monservice.serializers import SiteInfoMoreSerializer
+from rentservice.models import SiteStat
+from rentservice.models import SiteStatDetail
+from rentservice.serializers import SiteStatResSerializer
 import pytz
 from django.conf import settings
 
@@ -42,6 +45,7 @@ def get_site_list(request, latitude, longitude):
         res_site.append(
             {'id': item.id, 'location': item.location, 'latitude': item.latitude, 'longitude': item.longitude,
              'site_code': item.site_code, 'city': item.city, 'nation': item.nation, 'province': item.province,
+             'name': item.name,
              'box_num': site_box_num})
     page = paginator.paginate_queryset(res_site, request)
     ret_ser = SiteInfoMoreSerializer(page, many=True)
@@ -93,3 +97,25 @@ def get_site_detail(request, site_id):
             "0000", "Success"),
         safe=True,
         status=status.HTTP_200_OK)
+
+
+# 获取堆场的统计信息
+@csrf_exempt
+@api_view(['GET'])
+def get_site_stat(request, site_id):
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    try:
+        site = SiteInfo.objects.get(id=site_id)
+    except SiteInfo.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "仓库信息不存在"), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    stat_list = SiteStat.objects.filter(site=site).order_by('-stat_day')
+    print stat_list
+    res_stat = []
+    for stat_item in stat_list:
+        details = SiteStatDetail.objects.filter(sitestat=stat_item)
+        res_stat.append({'stat_id': stat_item.stat_id, 'stat_day': stat_item.stat_day, 'total_in': stat_item.total_in,
+                         'total_out': stat_item.total_out, 'site': stat_item.site, 'detail': details})
+    page = paginator.paginate_queryset(res_stat, request)
+    ret_ser = SiteStatResSerializer(page, many=True)
+    return paginator.get_paginated_response(ret_ser.data)

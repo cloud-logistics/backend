@@ -7,14 +7,19 @@ from monservice.view import site
 from monservice.view import dispatch
 
 urlpatterns = [
-    url(r'^auth$', views.verify_user),
+    url(r'^auth$', views.verify_user),                            # 登录认证
+    url(r'^message$', views.get_message),                         # 消息查看
     url(r'^containers$', views.containers_overview),              # 云箱概览
     url(r'^realtimeInfo$', views.realtime_message),               # 实时状态
     url(r'^containerInstantInfo$', views.realtime_position),      # 实时位置
     url(r'^containerhistory$', views.history_path),               # 历史轨迹
     url(r'^alerts/(?P<container_id>[0-9a-zA-Z-]+)/(?P<alert_type_id>\d+)$', views.alarm_monitor),  # 报警监控
     url(r'^options$', views.options_to_show),                     # 选项查询
-    url(r'^basicInfo$', views.basic_info),                        # 基础信息查询
+    url(r'^basicInfo/(?P<container_id>[0-9a-zA-Z-]+)/'
+        r'(?P<container_type>[0-9a-zA-Z-]+)/'
+        r'(?P<factory>[0-9a-zA-Z-]+)/'
+        r'(?P<start_time>[0-9a-zA-Z-]+)/'
+        r'(?P<end_time>[0-9a-zA-Z-]+)$', views.basic_info),       # 基础信息查询
     url(r'^securityConfig$', views.security_config),              # 云箱安全参数设置
     url(r'^basicInfoConfig$', views.basic_info_config),           # 云箱基础信息录入
     url(r'^basicInfo/(?P<id>\w+)/', views.remove_basic_info),     # 云箱基础信息删除

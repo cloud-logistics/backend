@@ -44,6 +44,7 @@ urlpatterns = [
     url(r'^rentservice/enterpriseuser/list/enterprise/(?P<enterprise_id>[0-9a-zA-Z-]+)$',
         enterpriseuser.list_enterprise_user_by_enterprise_id),  # 用户列表
     url(r'^rentservice/enterpriseuser/detail/(?P<user_id>[0-9a-zA-Z-]+)/$', enterpriseuser.enterprise_user_detail),
+    url(r'^rentservice/enterpriseuser/fuzzy$', enterpriseuser.enterprise_user_fuzzy_query),
     # 用户详情
     url(r'^rentservice/regions/provinces', regions.get_province_list),  # 获取省列表
     url(r'^rentservice/regions/cities/(?P<province_id>[0-9]+)$', regions.get_city_list),  # 获取制定省的市列表
@@ -68,4 +69,5 @@ urlpatterns = [
     url(r'^rentservice/userinfo/(?P<user_id>[0-9a-zA-Z-]+)/dash$', userinfo.get_dash_data),  # app获取dash信息
     url(r'^rentservice/appointment/cancel', appointment.cancel_appointment),  # 取消预约
     url(r'^rentservice/boxinfo/query', boxinfo.get_box_info_list),  # 查询箱子list
+    url(r'^rentservice/site/stat/(?P<site_id>[0-9a-zA-Z-]+)$', site.get_site_stat), # 查询仓库的统计信息
 ]
