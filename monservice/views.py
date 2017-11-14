@@ -262,7 +262,10 @@ def realtime_position(request):
 # 报警监控
 @csrf_exempt
 @api_view(['GET'])
-def alarm_monitor(request, container_id, alert_type_id):
+def alarm_monitor(request):
+    container_id = request.GET.get('container_id')
+    alert_type_id = request.GET.get('alert_type_id')
+
     deviceid = (container_id, '')[container_id == 'all']
     data = AlarmInfo.objects.raw('select alarm_info.deviceid,alert_level_info.level,alarm_info.timestamp,'
                                  'alert_code_info.description,alarm_info.code,alarm_info.status,'
@@ -274,7 +277,8 @@ def alarm_monitor(request, container_id, alert_type_id):
                                  'from iot.monservice_alarminfo alarm_info '
                                  'left join iot.monservice_alertlevelinfo alert_level_info on alarm_info.level = alert_level_info.id '
                                  'left join iot.monservice_alertcodeinfo alert_code_info on alarm_info.code = alert_code_info.errcode '
-                                 'where alarm_info.alarm_status = 1 and alert_code_info.id = ' + str(alert_type_id) +
+                                 'where alarm_info.alarm_status = 1 '
+                                 'and (alert_code_info.id = ' + str(alert_type_id) + ' or ' + alert_type_id + ' = 0) '
                                  ' and (alarm_info.deviceid = \'' + to_str(deviceid) + '\' or \'' + deviceid + '\'= \'\') '
                                  'order by timestamp desc')
     ret_data = []
@@ -316,19 +320,38 @@ def alarm_monitor(request, container_id, alert_type_id):
 # 基础信息查询
 @csrf_exempt
 @api_view(['GET'])
-def basic_info(request, container_id, container_type, factory, start_time, end_time):
-    data = query_list('select box_info.deviceid,box_info.tid, box_type_info.box_type_name, produce_area_info.address, '
-                      'manufacturer_info.name, date_of_production '
-                      'from iot.monservice_boxinfo box_info '
-                      'left join iot.monservice_boxtypeinfo box_type_info on box_info.type_id = box_type_info.id '
-                      'left join iot.monservice_producearea produce_area_info on box_info.produce_area_id = produce_area_info.id '
-                      'left join iot.monservice_manufacturer manufacturer_info on box_info.manufacturer_id = manufacturer_info.id '
-                      'where (deviceid=\'' + str(container_id) + '\' or \'' + str(container_id) +
-                      '\' = \'all\') and box_type_info.id = ' + str(container_type) +
-                      ' and  manufacturer_info.id = ' + str(factory) + ' and date_of_production >=\'' + str(start_time) +
-                      '\' and date_of_production < \'' + str(end_time) +
-                      '\' group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
-                      'date_of_production')
+def basic_info(request):
+    container_id = request.GET.get('container_id')
+    container_type = request.GET.get('container_type')
+    factory = request.GET.get('factory')
+    start_time = request.GET.get('start_time')
+    end_time = request.GET.get('end_time')
+
+    date_condition = ''
+    if start_time == '0' and end_time != '0':
+        date_condition = ' and date_of_production < \'' + str(end_time) + '\''
+    elif start_time != '0' and end_time == '0':
+        date_condition = ' and date_of_production >= \'' + str(start_time) + '\''
+    elif start_time != '0' and end_time != '0':
+        date_condition = ' and date_of_production >= \'' + str(start_time) + \
+                         '\' and date_of_production < \'' + str(end_time) + '\''
+    elif start_time == '0' and end_time == '0':
+        date_condition = ''
+
+    query_sql = 'select box_info.deviceid,box_info.tid, box_type_info.box_type_name, produce_area_info.address, ' \
+                'manufacturer_info.name, date_of_production ' \
+                'from iot.monservice_boxinfo box_info ' \
+                'left join iot.monservice_boxtypeinfo box_type_info on box_info.type_id = box_type_info.id ' \
+                'left join iot.monservice_producearea produce_area_info on box_info.produce_area_id = produce_area_info.id ' \
+                'left join iot.monservice_manufacturer manufacturer_info on box_info.manufacturer_id = manufacturer_info.id ' \
+                'where (deviceid=\'' + str(container_id) + '\' or \'' + str(container_id) +  \
+                '\' = \'all\') ' + \
+                ' and (box_type_info.id = ' + str(container_type) + ' or ' + str(container_type) + ' = 0 ) ' + \
+                ' and  (manufacturer_info.id = ' + str(factory) + ' or ' + str(factory) + ' = 0 ) ' + \
+                date_condition + \
+                ' group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, ' \
+                'date_of_production'
+    data = query_list(query_sql)
     data_list = []
     for item in data:
         dicitem = {}
@@ -420,15 +443,9 @@ def history_path(request):
 
 
 # 云箱状态汇总
-@api_view(['POST'])
-def status_summary(request):
-    try:
-        parameters = json.loads(request.body)
-        container_type = parameters['containerType']
-        id = parameters['containerId']
-    except Exception, e:
-        id = ''
-        log.error(e.message)
+@api_view(['GET'])
+def status_summary(request, container_id, container_type, location_id):
+    id = container_id
 
     sql = 'select box_info.deviceid,C.timestamp,C.longitude,C.latitude,' \
           'C.speed,C.temperature,C.humidity,C.collide,C.light ' \
