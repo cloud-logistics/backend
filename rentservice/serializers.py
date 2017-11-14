@@ -160,3 +160,11 @@ class SiteStatDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteStatDetail
         fields = '__all__'
+
+
+class SiteStatResSerializer(serializers.ModelSerializer):
+    detail = SiteStatDetailSerializer(many=True)
+
+    class Meta:
+        model = SiteStat
+        fields = '__all__'
