@@ -1210,3 +1210,64 @@ def get_position(request):
     else:
         return JsonResponse({'msg': 'location name not found'}, safe=True, status=status.HTTP_200_OK)
 
+
+# 查询所有类型箱子安全参数
+@csrf_exempt
+@api_view(['GET'])
+def get_all_safe_settings(request):
+    try:
+        box_types = BoxTypeInfo.objects.all().order_by('id')
+        types_ser = BoxTypeInfoSerializer(box_types, many=True)
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'get all box safe settings success',
+                        'box_types': types_ser.data}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+# 根据箱子类型ID查询安全参数
+@csrf_exempt
+@api_view(['GET'])
+def get_safe_settings(request, type_id):
+    try:
+        box_type = BoxTypeInfo.objects.get(id=type_id)
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'get box safe settings success', 'box_type': BoxTypeInfoSerializer(box_type).data}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+# 修改箱子安全参数
+@csrf_exempt
+@api_view(['PUT'])
+def save_safe_settings(request, type_id):
+    try:
+        data = json.loads(request.body)
+        box_type = BoxTypeInfo.objects.get(id=type_id)
+        box_type.interval_time = data['interval_time']
+        box_type.temperature_threshold_min = data['temperature_threshold_min']
+        box_type.temperature_threshold_max = data['temperature_threshold_max']
+        box_type.humidity_threshold_min = data['humidity_threshold_min']
+        box_type.humidity_threshold_max = data['humidity_threshold_max']
+        box_type.battery_threshold_min = data['battery_threshold_min']
+        box_type.battery_threshold_max = data['battery_threshold_max']
+        box_type.operation_threshold_min = data['operation_threshold_min']
+        box_type.operation_threshold_max = data['operation_threshold_max']
+        box_type.collision_threshold_min = data['collision_threshold_min']
+        box_type.collision_threshold_max = data['collision_threshold_max']
+        box_type.save()
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'save box safe settings success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+

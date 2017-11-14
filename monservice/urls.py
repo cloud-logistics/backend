@@ -48,4 +48,7 @@ urlpatterns = [
     url(r'^getlnglat$', views.get_lnglat),                        # 根据省获取城市列表
     url(r'^getPosition$', views.get_position),                    # 根据经纬度获取地名
 
+    url(r'^safeSettings$', views.get_all_safe_settings),                  # 查询所有类型箱子安全参数
+    url(r'^safeSettings/(?P<type_id>\d+)$', views.get_safe_settings),     # 查询箱子安全参数
+    url(r'^safeSettings/(?P<type_id>\d+)', views.save_safe_settings),     # 修改箱子安全参数
 ]
