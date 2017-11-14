@@ -69,5 +69,6 @@ urlpatterns = [
     url(r'^rentservice/userinfo/(?P<user_id>[0-9a-zA-Z-]+)/dash$', userinfo.get_dash_data),  # app获取dash信息
     url(r'^rentservice/appointment/cancel', appointment.cancel_appointment),  # 取消预约
     url(r'^rentservice/boxinfo/query', boxinfo.get_box_info_list),  # 查询箱子list
-    url(r'^rentservice/site/stat/(?P<site_id>[0-9a-zA-Z-]+)$', site.get_site_stat), # 查询仓库的统计信息
+    url(r'^rentservice/site/stat/(?P<site_id>[0-9a-zA-Z-]+)$', site.get_site_stat),  # 查询仓库的统计信息
+    url(r'^rentservice/site/nearby/(?P<latitude>[0-9.]+)/(?P<longitude>[0-9.]+)$', site.get_site_list_nearby), # 获取附近20公里的仓库
 ]
