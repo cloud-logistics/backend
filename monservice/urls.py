@@ -23,9 +23,7 @@ urlpatterns = [
     url(r'^command$', views.send_command),                        # 向终端发送command
     url(r'^containerHistoryStatus$', views.indicator_history),    # 实时报文指标历史曲线
     url(r'^analysisresult$', views.analysis_result),              # 分析报告
-    url(r'^boxStatus/(?P<container_id>[0-9a-zA-Z-]+)/'
-        r'(?P<container_type>[0-9a-zA-Z-]+)/'
-        r'(?P<location_id>[0-9a-zA-Z-]+)$', views.status_summary),  # 云箱状态汇总
+    url(r'^boxStatus$', views.status_summary),                    # 云箱状态汇总
     url(r'^operationoverview$', views.operation_overview),        # 运营状态概览
     url(r'^getSecurityConfig$', views.get_security_config),       # 获取运行安全参数
 
