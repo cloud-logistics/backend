@@ -86,7 +86,7 @@ def add_enterprise_admin(request):
                                               status='', avatar_url=avatar_url, user_phone=user_phone,
                                               user_email=user_email, register_time=datetime.datetime.now(tz=tz),
                                               enterprise=enterprise, user_token=uuid.uuid4().hex, role=role,
-                                              group=group_obj)
+                                              group=group_obj, user_alias_id=uuid.uuid1())
                     new_user.save()
                     auth_user_group = AuthUserGroup(user_token=new_user.user_token, group=group_obj)
                     auth_user_group.save()
@@ -297,7 +297,8 @@ def add_enterprise_user(request):
                                               status='', avatar_url='', user_phone=user_phone,
                                               user_email='', register_time=datetime.datetime.now(tz=tz),
                                               enterprise=enterprise, user_token=uuid.uuid4().hex, role=role,
-                                              group=group_obj, user_real_name=user_real_name, user_gender=user_gender)
+                                              group=group_obj, user_real_name=user_real_name, user_gender=user_gender,
+                                              user_alias_id=uuid.uuid1())
                     new_user.save()
                     auth_user_group = AuthUserGroup(user_token=new_user.user_token, group=group_obj)
                     auth_user_group.save()
