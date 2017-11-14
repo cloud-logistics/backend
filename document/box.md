@@ -95,3 +95,215 @@
     "msg": "delete box success"
 }
 ```
+
+
+### 4. 查询云箱安全参数：
+
+#### URL：
+
+`container/api/v1/cloudbox/monservice/safeSettings/1`
+
+#### 方法： 
+
+`GET`
+
+#### BODY:
+
+```
+无 
+```
+ 
+#### 返回：
+
+```
+{
+    "status": "OK",
+    "msg": "get box safe settings success",
+    "box_type": {
+        "id": 1,
+        "box_type_name": "冷藏箱",
+        "box_type_detail": "",
+        "interval_time": 30,
+        "temperature_threshold_min": -30,
+        "temperature_threshold_max": 0,
+        "humidity_threshold_min": 3,
+        "humidity_threshold_max": 500,
+        "collision_threshold_min": 0,
+        "collision_threshold_max": 100,
+        "battery_threshold_min": 0,
+        "battery_threshold_max": 1,
+        "operation_threshold_min": 0,
+        "operation_threshold_max": 500,
+        "price": 10,
+        "length": 11,
+        "width": 1.2,
+        "height": 0.8
+    }
+}
+```
+
+### 5. 修改云箱安全参数：
+
+#### URL：
+
+`container/api/v1/cloudbox/monservice/safeSettings/1/`
+
+#### 方法： 
+
+`PUT`
+
+#### BODY:
+
+```
+ {
+        "interval_time": 30,
+        "temperature_threshold_min": -30,
+        "temperature_threshold_max": 0,
+        "humidity_threshold_min": 3,
+        "humidity_threshold_max": 500,
+        "collision_threshold_min": 0,
+        "collision_threshold_max": 100,
+        "battery_threshold_min": 0,
+        "battery_threshold_max": 1,
+        "operation_threshold_min": 0,
+        "operation_threshold_max": 500
+}
+```
+ 
+#### 返回：
+
+```
+{
+    "status": "OK",
+    "msg": "save box safe settings success"
+}
+```
+
+
+### 6. 查询所有类型云箱安全参数：
+
+#### URL：
+
+`container/api/v1/cloudbox/monservice/safeSettings`
+
+#### 方法： 
+
+`GET`
+
+#### BODY:
+
+```
+无 
+```
+ 
+#### 返回：
+
+```
+{
+    "status": "OK",
+    "msg": "get all box safe settings success",
+    "box_types": [
+        {
+            "id": 1,
+            "box_type_name": "冷藏箱",
+            "box_type_detail": "",
+            "interval_time": 30,
+            "temperature_threshold_min": -30,
+            "temperature_threshold_max": 0,
+            "humidity_threshold_min": 3,
+            "humidity_threshold_max": 500,
+            "collision_threshold_min": 0,
+            "collision_threshold_max": 100,
+            "battery_threshold_min": 0,
+            "battery_threshold_max": 1,
+            "operation_threshold_min": 0,
+            "operation_threshold_max": 500,
+            "price": 10,
+            "length": 11,
+            "width": 1.2,
+            "height": 0.8
+        },
+        {
+            "id": 2,
+            "box_type_name": "冷冻箱",
+            "box_type_detail": "",
+            "interval_time": 30,
+            "temperature_threshold_min": -30,
+            "temperature_threshold_max": 40,
+            "humidity_threshold_min": 3,
+            "humidity_threshold_max": 500,
+            "collision_threshold_min": 0,
+            "collision_threshold_max": 100,
+            "battery_threshold_min": 0,
+            "battery_threshold_max": 1,
+            "operation_threshold_min": 0,
+            "operation_threshold_max": 500,
+            "price": 20,
+            "length": 11,
+            "width": 1.2,
+            "height": 0.8
+        },
+        {
+            "id": 3,
+            "box_type_name": "医药箱",
+            "box_type_detail": "",
+            "interval_time": 30,
+            "temperature_threshold_min": 2,
+            "temperature_threshold_max": 25,
+            "humidity_threshold_min": 0,
+            "humidity_threshold_max": 30,
+            "collision_threshold_min": 0,
+            "collision_threshold_max": 100,
+            "battery_threshold_min": 0,
+            "battery_threshold_max": 100,
+            "operation_threshold_min": 0,
+            "operation_threshold_max": 100,
+            "price": 30,
+            "length": 11,
+            "width": 1.2,
+            "height": 0.8
+        },
+        {
+            "id": 4,
+            "box_type_name": "普通箱",
+            "box_type_detail": "",
+            "interval_time": 30,
+            "temperature_threshold_min": 2,
+            "temperature_threshold_max": 8,
+            "humidity_threshold_min": 0,
+            "humidity_threshold_max": 30,
+            "collision_threshold_min": 0,
+            "collision_threshold_max": 100,
+            "battery_threshold_min": 0,
+            "battery_threshold_max": 100,
+            "operation_threshold_min": 0,
+            "operation_threshold_max": 100,
+            "price": 50,
+            "length": 11,
+            "width": 1.2,
+            "height": 0.8
+        },
+        {
+            "id": 5,
+            "box_type_name": "特殊箱",
+            "box_type_detail": "",
+            "interval_time": 30,
+            "temperature_threshold_min": -30,
+            "temperature_threshold_max": 50,
+            "humidity_threshold_min": 0,
+            "humidity_threshold_max": 30,
+            "collision_threshold_min": 0,
+            "collision_threshold_max": 100,
+            "battery_threshold_min": 0,
+            "battery_threshold_max": 100,
+            "operation_threshold_min": 0,
+            "operation_threshold_max": 100,
+            "price": 15,
+            "length": 11,
+            "width": 1.2,
+            "height": 0.8
+        }
+    ]
+}
+```
+

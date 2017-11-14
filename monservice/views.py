@@ -262,7 +262,10 @@ def realtime_position(request):
 # 报警监控
 @csrf_exempt
 @api_view(['GET'])
-def alarm_monitor(request, container_id, alert_type_id):
+def alarm_monitor(request):
+    container_id = request.GET.get('container_id')
+    alert_type_id = request.GET.get('alert_type_id')
+
     deviceid = (container_id, '')[container_id == 'all']
     data = AlarmInfo.objects.raw('select alarm_info.deviceid,alert_level_info.level,alarm_info.timestamp,'
                                  'alert_code_info.description,alarm_info.code,alarm_info.status,'
@@ -274,7 +277,8 @@ def alarm_monitor(request, container_id, alert_type_id):
                                  'from iot.monservice_alarminfo alarm_info '
                                  'left join iot.monservice_alertlevelinfo alert_level_info on alarm_info.level = alert_level_info.id '
                                  'left join iot.monservice_alertcodeinfo alert_code_info on alarm_info.code = alert_code_info.errcode '
-                                 'where alarm_info.alarm_status = 1 and alert_code_info.id = ' + str(alert_type_id) +
+                                 'where alarm_info.alarm_status = 1 '
+                                 'and (alert_code_info.id = ' + str(alert_type_id) + ' or ' + alert_type_id + ' = 0) '
                                  ' and (alarm_info.deviceid = \'' + to_str(deviceid) + '\' or \'' + deviceid + '\'= \'\') '
                                  'order by timestamp desc')
     ret_data = []
@@ -316,19 +320,38 @@ def alarm_monitor(request, container_id, alert_type_id):
 # 基础信息查询
 @csrf_exempt
 @api_view(['GET'])
-def basic_info(request, container_id, container_type, factory, start_time, end_time):
-    data = query_list('select box_info.deviceid,box_info.tid, box_type_info.box_type_name, produce_area_info.address, '
-                      'manufacturer_info.name, date_of_production '
-                      'from iot.monservice_boxinfo box_info '
-                      'left join iot.monservice_boxtypeinfo box_type_info on box_info.type_id = box_type_info.id '
-                      'left join iot.monservice_producearea produce_area_info on box_info.produce_area_id = produce_area_info.id '
-                      'left join iot.monservice_manufacturer manufacturer_info on box_info.manufacturer_id = manufacturer_info.id '
-                      'where (deviceid=\'' + str(container_id) + '\' or \'' + str(container_id) +
-                      '\' = \'all\') and box_type_info.id = ' + str(container_type) +
-                      ' and  manufacturer_info.id = ' + str(factory) + ' and date_of_production >=\'' + str(start_time) +
-                      '\' and date_of_production < \'' + str(end_time) +
-                      '\' group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
-                      'date_of_production')
+def basic_info(request):
+    container_id = request.GET.get('container_id')
+    container_type = request.GET.get('container_type')
+    factory = request.GET.get('factory')
+    start_time = request.GET.get('start_time')
+    end_time = request.GET.get('end_time')
+
+    date_condition = ''
+    if start_time == '0' and end_time != '0':
+        date_condition = ' and date_of_production < \'' + str(end_time) + '\''
+    elif start_time != '0' and end_time == '0':
+        date_condition = ' and date_of_production >= \'' + str(start_time) + '\''
+    elif start_time != '0' and end_time != '0':
+        date_condition = ' and date_of_production >= \'' + str(start_time) + \
+                         '\' and date_of_production < \'' + str(end_time) + '\''
+    elif start_time == '0' and end_time == '0':
+        date_condition = ''
+
+    query_sql = 'select box_info.deviceid,box_info.tid, box_type_info.box_type_name, produce_area_info.address, ' \
+                'manufacturer_info.name, date_of_production ' \
+                'from iot.monservice_boxinfo box_info ' \
+                'left join iot.monservice_boxtypeinfo box_type_info on box_info.type_id = box_type_info.id ' \
+                'left join iot.monservice_producearea produce_area_info on box_info.produce_area_id = produce_area_info.id ' \
+                'left join iot.monservice_manufacturer manufacturer_info on box_info.manufacturer_id = manufacturer_info.id ' \
+                'where (deviceid=\'' + str(container_id) + '\' or \'' + str(container_id) +  \
+                '\' = \'all\') ' + \
+                ' and (box_type_info.id = ' + str(container_type) + ' or ' + str(container_type) + ' = 0 ) ' + \
+                ' and  (manufacturer_info.id = ' + str(factory) + ' or ' + str(factory) + ' = 0 ) ' + \
+                date_condition + \
+                ' group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, ' \
+                'date_of_production'
+    data = query_list(query_sql)
     data_list = []
     for item in data:
         dicitem = {}
@@ -420,17 +443,9 @@ def history_path(request):
 
 
 # 云箱状态汇总
-# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-# @permission_classes((IsAuthenticated,))
-@api_view(['POST'])
-def status_summary(request):
-    try:
-        parameters = json.loads(request.body)
-        container_type = parameters['containerType']
-        id = parameters['containerId']
-    except Exception, e:
-        id = ''
-        log.error(e.message)
+@api_view(['GET'])
+def status_summary(request, container_id, container_type, location_id):
+    id = container_id
 
     sql = 'select box_info.deviceid,C.timestamp,C.longitude,C.latitude,' \
           'C.speed,C.temperature,C.humidity,C.collide,C.light ' \
@@ -1214,4 +1229,76 @@ def get_position(request):
                              'city_name': city_name}, safe=True, status=status.HTTP_200_OK)
     else:
         return JsonResponse({'msg': 'location name not found'}, safe=True, status=status.HTTP_200_OK)
+
+
+# 查询所有类型箱子安全参数
+@csrf_exempt
+@api_view(['GET'])
+def get_all_safe_settings(request):
+    try:
+        box_types = BoxTypeInfo.objects.all().order_by('id')
+        types_ser = BoxTypeInfoSerializer(box_types, many=True)
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'get all box safe settings success',
+                        'box_types': types_ser.data}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+# 根据箱子类型ID查询安全参数
+@csrf_exempt
+@api_view(['GET'])
+def get_safe_settings(request, type_id):
+    try:
+        box_type = BoxTypeInfo.objects.get(id=type_id)
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'get box safe settings success', 'box_type': BoxTypeInfoSerializer(box_type).data}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+# 修改箱子安全参数
+@csrf_exempt
+@api_view(['PUT'])
+def save_safe_settings(request, type_id):
+    try:
+        data = json.loads(request.body)
+        box_type = BoxTypeInfo.objects.get(id=type_id)
+        box_type.interval_time = data['interval_time']
+        box_type.temperature_threshold_min = data['temperature_threshold_min']
+        box_type.temperature_threshold_max = data['temperature_threshold_max']
+        box_type.humidity_threshold_min = data['humidity_threshold_min']
+        box_type.humidity_threshold_max = data['humidity_threshold_max']
+        box_type.battery_threshold_min = data['battery_threshold_min']
+        box_type.battery_threshold_max = data['battery_threshold_max']
+        box_type.operation_threshold_min = data['operation_threshold_min']
+        box_type.operation_threshold_max = data['operation_threshold_max']
+        box_type.collision_threshold_min = data['collision_threshold_min']
+        box_type.collision_threshold_max = data['collision_threshold_max']
+        box_type.save()
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'save box safe settings success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def get_message(request):
+    alarm_count = AlarmInfo.objects.filter(alarm_status=1).count()
+    undispach_count = SiteDispatch.objects.filter(status='undispatch').count()
+    message_count = alarm_count + undispach_count
+    return JsonResponse({'alarm_count': alarm_count, 'undispach_count': undispach_count, 'message_count': message_count},
+                        safe=True, status=status.HTTP_200_OK)
+
 
