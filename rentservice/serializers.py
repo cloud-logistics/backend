@@ -28,18 +28,18 @@ class BoxTypeInfoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class SiteInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteInfo
+        fields = '__all__'
+
+
 class BoxInfoSerializer(serializers.ModelSerializer):
     type = BoxTypeInfoSerializer()
     siteinfo = SiteInfoSerializer()
 
     class Meta:
         model = BoxInfo
-        fields = '__all__'
-
-
-class SiteInfoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SiteInfo
         fields = '__all__'
 
 
