@@ -444,32 +444,35 @@ def history_path(request):
 
 # 云箱状态汇总
 @api_view(['GET'])
-def status_summary(request, container_id, container_type, location_id):
+def status_summary(request):
+    container_id = request.GET.get('container_id')
+    container_type = request.GET.get('container_type')
+    location_id = request.GET.get('location_id')
     id = container_id
 
     sql = 'select box_info.deviceid,C.timestamp,C.longitude,C.latitude,' \
           'C.speed,C.temperature,C.humidity,C.collide,C.light ' \
           'from iot.monservice_boxinfo box_info ' \
 
-    if id is not None and id != '':
-        sql = sql + ' and box_info.deviceid = \'' + id + '\' '
-
     sql = sql + ' left join ( select B.* from ' \
                 '(select max(timestamp) as timestamp ,deviceid from iot.monservice_sensordata '
 
-    if id is not None and id != '':
+    if id is not None and id != 'all':
         sql = sql + 'where deviceid = \'' + id + '\' '
 
     sql = sql + 'group by deviceid) A left join iot.monservice_sensordata B ' \
                 'on A.timestamp = B.timestamp and A.deviceid = B.deviceid '
 
-    if id is not None and id != '':
+    if id is not None and id != 'all':
         sql = sql + 'where B.deviceid = \'' + id + '\''
 
-    sql = sql + ') C on C.deviceid=box_info.deviceid and box_info.type = ' + str(container_type) + \
-          'group by box_info.deviceid,C.timestamp, ' \
-          'C.longitude,C.latitude,C.speed,C.temperature,C.humidity,C.collide,C.light'
-
+    sql = sql + ') C on C.deviceid=box_info.deviceid where ' \
+                '(box_info.type_id = ' + str(container_type) + ' or ' + container_type + ' = 0)' \
+                ' and (siteinfo_id = ' + location_id + ' or ' + location_id + ' = 0)'
+    if id is not None and id != 'all':
+        sql = sql + ' and box_info.deviceid = \'' + id + '\' '
+    sql = sql + ' group by box_info.deviceid,C.timestamp, ' \
+                'C.longitude,C.latitude,C.speed,C.temperature,C.humidity,C.collide,C.light'
     data = query_list(sql)
 
     ret_data = []
@@ -488,14 +491,15 @@ def status_summary(request, container_id, container_type, location_id):
 
         location_name = gps_info_trans("%s,%s" % (latitude, longitude))
 
-        element = {'containerId': deviceid, 'position':
-            {'lng': longitude, 'lat': latitude}, 'locationName': location_name,
-                   'speed': speed, 'temperature': temperature, 'humidity': humidity, 'num_of_collide': collide,
-                   'num_of_door_open': num_of_door_open, 'robot_operation_status': '装箱', 'battery': light}
-
+        element = {'deviceid': deviceid, 'longitude': longitude, 'latitude': latitude, 'location_name': location_name,
+                   'speed': speed, 'temperature': temperature, 'humidity': humidity, 'collide': collide,
+                   'num_of_door_open': num_of_door_open, 'robot_operation_status': u'装箱', 'battery': light}
         ret_data.append(element)
-
-    return JsonResponse({"boxStatus": ret_data}, safe=True, status=status.HTTP_200_OK)
+    pagination_class = settings.api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    page = paginator.paginate_queryset(ret_data, request)
+    ret_list = BoxSummarySerializer(page, many=True)
+    return paginator.get_paginated_response(ret_list.data, 'OK', 'query alarm success')
 
 
 def new_containerid(category):
