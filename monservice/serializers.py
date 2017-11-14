@@ -180,10 +180,12 @@ class BoxBasicInfoSerializer(serializers.ModelSerializer):
     box_type_name = serializers.SerializerMethodField()
     produce_area = serializers.SerializerMethodField()
     manufacturer = serializers.SerializerMethodField()
+    battery_detail = serializers.SerializerMethodField()
 
     class Meta:
         model = BoxInfo
-        fields = ('deviceid', 'tid', 'date_of_production', 'box_type_name', 'produce_area', 'manufacturer')
+        fields = ('deviceid', 'tid', 'date_of_production', 'box_type_name',
+                  'produce_area', 'manufacturer', 'battery_detail')
 
     def get_box_type_name(self, obj):
         return obj['box_type_name']
@@ -193,6 +195,9 @@ class BoxBasicInfoSerializer(serializers.ModelSerializer):
 
     def get_manufacturer(self, obj):
         return obj['manufacturer']
+
+    def get_battery_detail(self, obj):
+        return obj['battery_detail']
 
 
 class BoxSummarySerializer(serializers.ModelSerializer):

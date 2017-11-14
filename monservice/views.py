@@ -339,18 +339,19 @@ def basic_info(request):
         date_condition = ''
 
     query_sql = 'select box_info.deviceid,box_info.tid, box_type_info.box_type_name, produce_area_info.address, ' \
-                'manufacturer_info.name, date_of_production ' \
+                'manufacturer_info.name, date_of_production, battery_info.battery_detail ' \
                 'from iot.monservice_boxinfo box_info ' \
                 'left join iot.monservice_boxtypeinfo box_type_info on box_info.type_id = box_type_info.id ' \
                 'left join iot.monservice_producearea produce_area_info on box_info.produce_area_id = produce_area_info.id ' \
                 'left join iot.monservice_manufacturer manufacturer_info on box_info.manufacturer_id = manufacturer_info.id ' \
+                'left join iot.monservice_battery battery_info on battery_info.id = box_info.battery_id ' \
                 'where (deviceid=\'' + str(container_id) + '\' or \'' + str(container_id) +  \
                 '\' = \'all\') ' + \
                 ' and (box_type_info.id = ' + str(container_type) + ' or ' + str(container_type) + ' = 0 ) ' + \
                 ' and  (manufacturer_info.id = ' + str(factory) + ' or ' + str(factory) + ' = 0 ) ' + \
                 date_condition + \
                 ' group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, ' \
-                'date_of_production'
+                'date_of_production, battery_detail'
     data = query_list(query_sql)
     data_list = []
     for item in data:
@@ -361,6 +362,7 @@ def basic_info(request):
         dicitem['produce_area'] = item[3]
         dicitem['manufacturer'] = item[4]
         dicitem['date_of_production'] = item[5]
+        dicitem['battery_detail'] = item[6]
         data_list.append(dicitem)
 
     pagination_class = settings.api_settings.DEFAULT_PAGINATION_CLASS
