@@ -324,7 +324,7 @@ def basic_info(request, container_id, container_type, factory, start_time, end_t
                       'left join iot.monservice_producearea produce_area_info on box_info.produce_area_id = produce_area_info.id '
                       'left join iot.monservice_manufacturer manufacturer_info on box_info.manufacturer_id = manufacturer_info.id '
                       'where (deviceid=\'' + str(container_id) + '\' or \'' + str(container_id) +
-                      '\' = \'\') and box_type_info.id = ' + str(container_type) +
+                      '\' = \'all\') and box_type_info.id = ' + str(container_type) +
                       ' and  manufacturer_info.id = ' + str(factory) + ' and date_of_production >=\'' + str(start_time) +
                       '\' and date_of_production < \'' + str(end_time) +
                       '\' group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, '
