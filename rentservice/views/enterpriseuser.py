@@ -233,7 +233,7 @@ def enterprise_user_fuzzy_query(request):
     for item in user_data:
         ser_item = EnterpriseUserSerializer(item)
         ret = ser_item.data
-        ret['group'] = ret.group.group
+        ret['group'] = item.group.group
         fuzzy_user_list.append(ret)
     return JsonResponse(retcode(fuzzy_user_list, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
