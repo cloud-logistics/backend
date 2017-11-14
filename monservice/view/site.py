@@ -80,8 +80,13 @@ def add_site(request):
 @api_view(['DELETE'])
 def delete_site(request, id):
     try:
-        SiteInfo.objects.get(id=id).delete()
-        SiteBoxStock.objects.filter(site_id=id).delete()
+        # 如果堆场有箱子，则提示不能删除堆场
+        boxes = BoxInfo.objects.filter(siteinfo_id=id)
+        if len(boxes) > 0:
+            response_msg = {'status': 'ERROR', 'msg': '堆场内还有箱子，不能删除该堆场！'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            SiteInfo.objects.get(id=id).delete()
 
     except Exception, e:
         log.error(e.message)
@@ -354,10 +359,13 @@ def dispatchin(request):
         dispatch_id = str(data['dispatch_id'])  # 调度id
         dispatch = SiteDispatch.objects.get(did=dispatch_id)
         site = dispatch.start
-        dispatch.status = 'dispatched'
+        boxes = data['boxes']
+        if len(boxes) >= dispatch.count:
+            dispatch.status = 'dispatched'
+        else:
+            dispatch.count -= len(boxes)
         dispatch.save()
 
-        boxes = data['boxes']                   # 箱子数组
         ts = str(time.time())[0:10]
         with transaction.atomic():
             for box in boxes:
