@@ -73,6 +73,7 @@ class EnterpriseUser(models.Model):
     user_real_name = models.CharField(max_length=48, default='')
     user_gender = models.CharField(max_length=8, default='')
     user_nickname = models.CharField(max_length=48, default='')
+    user_alias_id = models.CharField(max_length=64, default='')
 
 
 class UserAppointment(models.Model):
