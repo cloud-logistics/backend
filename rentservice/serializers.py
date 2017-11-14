@@ -30,6 +30,7 @@ class BoxTypeInfoSerializer(serializers.ModelSerializer):
 
 class BoxInfoSerializer(serializers.ModelSerializer):
     type = BoxTypeInfoSerializer()
+    siteinfo = SiteInfoSerializer()
 
     class Meta:
         model = BoxInfo
