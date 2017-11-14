@@ -14,6 +14,7 @@ from monservice.models import Province
 from monservice.models import City
 from monservice.models import SiteInfo
 from rentservice.serializers import BoxInfoSerializer
+from rentservice.serializers import BoxInfoResSerializer
 from django.conf import settings
 import datetime
 import uuid
@@ -78,3 +79,13 @@ def get_box_info_list(request):
     ret_ser = BoxInfoSerializer(page, many=True)
     return paginator.get_paginated_response(ret_ser.data)
 
+
+@csrf_exempt
+@api_view(['GET'])
+def get_box_detail(request, box_id):
+    try:
+        box_info = BoxInfo.objects.get(deviceid=box_id)
+    except BoxInfo.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "云箱不存在"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return JsonResponse(retcode(BoxInfoResSerializer(box_info).data, "0000", "Success"), safe=True,
+                        status=status.HTTP_200_OK)

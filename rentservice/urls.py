@@ -70,5 +70,7 @@ urlpatterns = [
     url(r'^rentservice/appointment/cancel', appointment.cancel_appointment),  # 取消预约
     url(r'^rentservice/boxinfo/query', boxinfo.get_box_info_list),  # 查询箱子list
     url(r'^rentservice/site/stat/(?P<site_id>[0-9a-zA-Z-]+)$', site.get_site_stat),  # 查询仓库的统计信息
-    url(r'^rentservice/site/nearby/(?P<latitude>[0-9.]+)/(?P<longitude>[0-9.]+)$', site.get_site_list_nearby), # 获取附近20公里的仓库
+    url(r'^rentservice/site/nearby/(?P<latitude>[0-9.]+)/(?P<longitude>[0-9.]+)$', site.get_site_list_nearby),
+    # 获取附近20公里的仓库
+    url(r'^rentservice/boxinfo/detail/(?P<box_id>[0-9a-zA-Z-]+)$', boxinfo.get_box_detail),  # 查询箱子详情
 ]
