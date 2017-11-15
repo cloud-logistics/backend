@@ -10,7 +10,7 @@ from models import BoxInfo
 from models import Province
 from models import SiteBoxStock
 from models import SiteDispatch
-from models import Manufacturer, ProduceArea, Hardware, Battery, AlarmInfo
+from models import Manufacturer, ProduceArea, Hardware, Battery, AlarmInfo, SensorData
 from models import SysGroup, SysUser, SysAccessUrl
 from models import SensorData
 
@@ -181,10 +181,12 @@ class BoxBasicInfoSerializer(serializers.ModelSerializer):
     box_type_name = serializers.SerializerMethodField()
     produce_area = serializers.SerializerMethodField()
     manufacturer = serializers.SerializerMethodField()
+    battery_detail = serializers.SerializerMethodField()
 
     class Meta:
         model = BoxInfo
-        fields = ('deviceid', 'tid', 'date_of_production', 'box_type_name', 'produce_area', 'manufacturer')
+        fields = ('deviceid', 'tid', 'date_of_production', 'box_type_name',
+                  'produce_area', 'manufacturer', 'battery_detail')
 
     def get_box_type_name(self, obj):
         return obj['box_type_name']
@@ -195,6 +197,9 @@ class BoxBasicInfoSerializer(serializers.ModelSerializer):
     def get_manufacturer(self, obj):
         return obj['manufacturer']
 
+    def get_battery_detail(self, obj):
+        return obj['battery_detail']
+
 
 class SensorPathDataSerializer(serializers.ModelSerializer):
     longitude = serializers.ReadOnlyField(source='convert_longitude')
@@ -203,4 +208,29 @@ class SensorPathDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = SensorData
         fields = ('timestamp', 'longitude', 'latitude')
+
+
+class BoxSummarySerializer(serializers.ModelSerializer):
+    location_name = serializers.SerializerMethodField()
+    battery = serializers.SerializerMethodField()
+    num_of_door_open = serializers.SerializerMethodField()
+    robot_operation_status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SensorData
+        fields = ('deviceid', 'longitude', 'latitude', 'speed', 'temperature', 'humidity', 'collide',
+                  'num_of_door_open', 'robot_operation_status', 'battery', 'location_name')
+
+    def get_location_name(self, obj):
+        return obj['location_name']
+
+    def get_battery(self, obj):
+        return obj['battery']
+
+    def get_num_of_door_open(self, obj):
+        return obj['num_of_door_open']
+
+    def get_robot_operation_status(self, obj):
+        return obj['robot_operation_status']
+
 

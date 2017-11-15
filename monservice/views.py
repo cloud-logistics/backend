@@ -279,7 +279,7 @@ def alarm_monitor(request):
                                  'left join iot.monservice_alertlevelinfo alert_level_info on alarm_info.level = alert_level_info.id '
                                  'left join iot.monservice_alertcodeinfo alert_code_info on alarm_info.code = alert_code_info.errcode '
                                  'where alarm_info.alarm_status = 1 '
-                                 'and (alert_code_info.id = ' + str(alert_type_id) + ' or ' + alert_type_id + ' = 0) '
+                                 'and (alert_code_info.id = ' + str(alert_type_id) + ' or ' + str(alert_type_id) + ' = 0) '
                                  ' and (alarm_info.deviceid = \'' + to_str(deviceid) + '\' or \'' + deviceid + '\'= \'\') '
                                  'order by timestamp desc')
     ret_data = []
@@ -300,16 +300,16 @@ def alarm_monitor(request):
         battery = record.battery
         robert_operation_status = record.robert_operation_status
         endpointid = record.endpointid
-        location_name = gps_info_trans("%s,%s" % (latitude, longitude))
+        location_name = gps_info_trans("%s,%s" % (latitude, longitude)).decode("utf-8")
         ret_data.append({'timestamp': timestamp, 'deviceid': deviceid,
-                         'level': 1, 'status': '', 'carrier': 1, 'alarm_status': 1,
+                         'level': 1, 'status': u'', 'carrier': 1, 'alarm_status': 1,
                          'error_description': error_description, 'code': error_code,
                          'longitude': longitude, 'latitude': latitude,
                          'speed': speed, 'temperature': temperature,
                          'humidity': humidity,
                          'num_of_collide': num_of_collide,
                          'num_of_door_open': num_of_door_open,
-                         'battery': battery, 'robert_operation_status': robert_operation_status,
+                         'battery':battery, 'robert_operation_status': robert_operation_status,
                          'location_name': location_name, "endpointid": endpointid})
     pagination_class = settings.api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
@@ -340,18 +340,19 @@ def basic_info(request):
         date_condition = ''
 
     query_sql = 'select box_info.deviceid,box_info.tid, box_type_info.box_type_name, produce_area_info.address, ' \
-                'manufacturer_info.name, date_of_production ' \
+                'manufacturer_info.name, date_of_production, battery_info.battery_detail ' \
                 'from iot.monservice_boxinfo box_info ' \
                 'left join iot.monservice_boxtypeinfo box_type_info on box_info.type_id = box_type_info.id ' \
                 'left join iot.monservice_producearea produce_area_info on box_info.produce_area_id = produce_area_info.id ' \
                 'left join iot.monservice_manufacturer manufacturer_info on box_info.manufacturer_id = manufacturer_info.id ' \
+                'left join iot.monservice_battery battery_info on battery_info.id = box_info.battery_id ' \
                 'where (deviceid=\'' + str(container_id) + '\' or \'' + str(container_id) +  \
                 '\' = \'all\') ' + \
                 ' and (box_type_info.id = ' + str(container_type) + ' or ' + str(container_type) + ' = 0 ) ' + \
                 ' and  (manufacturer_info.id = ' + str(factory) + ' or ' + str(factory) + ' = 0 ) ' + \
                 date_condition + \
                 ' group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, ' \
-                'date_of_production'
+                'date_of_production, battery_detail'
     data = query_list(query_sql)
     data_list = []
     for item in data:
@@ -362,6 +363,7 @@ def basic_info(request):
         dicitem['produce_area'] = item[3]
         dicitem['manufacturer'] = item[4]
         dicitem['date_of_production'] = item[5]
+        dicitem['battery_detail'] = item[6]
         data_list.append(dicitem)
 
     pagination_class = settings.api_settings.DEFAULT_PAGINATION_CLASS
@@ -469,32 +471,35 @@ def box_history_path(request):
 
 # 云箱状态汇总
 @api_view(['GET'])
-def status_summary(request, container_id, container_type, location_id):
+def status_summary(request):
+    container_id = request.GET.get('container_id')
+    container_type = request.GET.get('container_type')
+    location_id = request.GET.get('location_id')
     id = container_id
 
     sql = 'select box_info.deviceid,C.timestamp,C.longitude,C.latitude,' \
           'C.speed,C.temperature,C.humidity,C.collide,C.light ' \
           'from iot.monservice_boxinfo box_info ' \
 
-    if id is not None and id != '':
-        sql = sql + ' and box_info.deviceid = \'' + id + '\' '
-
     sql = sql + ' left join ( select B.* from ' \
                 '(select max(timestamp) as timestamp ,deviceid from iot.monservice_sensordata '
 
-    if id is not None and id != '':
+    if id is not None and id != 'all':
         sql = sql + 'where deviceid = \'' + id + '\' '
 
     sql = sql + 'group by deviceid) A left join iot.monservice_sensordata B ' \
                 'on A.timestamp = B.timestamp and A.deviceid = B.deviceid '
 
-    if id is not None and id != '':
+    if id is not None and id != 'all':
         sql = sql + 'where B.deviceid = \'' + id + '\''
 
-    sql = sql + ') C on C.deviceid=box_info.deviceid and box_info.type = ' + str(container_type) + \
-          'group by box_info.deviceid,C.timestamp, ' \
-          'C.longitude,C.latitude,C.speed,C.temperature,C.humidity,C.collide,C.light'
-
+    sql = sql + ') C on C.deviceid=box_info.deviceid where ' \
+                '(box_info.type_id = ' + str(container_type) + ' or ' + container_type + ' = 0)' \
+                ' and (siteinfo_id = ' + location_id + ' or ' + location_id + ' = 0)'
+    if id is not None and id != 'all':
+        sql = sql + ' and box_info.deviceid = \'' + id + '\' '
+    sql = sql + ' group by box_info.deviceid,C.timestamp, ' \
+                'C.longitude,C.latitude,C.speed,C.temperature,C.humidity,C.collide,C.light'
     data = query_list(sql)
 
     ret_data = []
@@ -513,14 +518,15 @@ def status_summary(request, container_id, container_type, location_id):
 
         location_name = gps_info_trans("%s,%s" % (latitude, longitude))
 
-        element = {'containerId': deviceid, 'position':
-            {'lng': longitude, 'lat': latitude}, 'locationName': location_name,
-                   'speed': speed, 'temperature': temperature, 'humidity': humidity, 'num_of_collide': collide,
-                   'num_of_door_open': num_of_door_open, 'robot_operation_status': '装箱', 'battery': light}
-
+        element = {'deviceid': deviceid, 'longitude': longitude, 'latitude': latitude, 'location_name': location_name,
+                   'speed': speed, 'temperature': temperature, 'humidity': humidity, 'collide': collide,
+                   'num_of_door_open': num_of_door_open, 'robot_operation_status': u'装箱', 'battery': light}
         ret_data.append(element)
-
-    return JsonResponse({"boxStatus": ret_data}, safe=True, status=status.HTTP_200_OK)
+    pagination_class = settings.api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    page = paginator.paginate_queryset(ret_data, request)
+    ret_list = BoxSummarySerializer(page, many=True)
+    return paginator.get_paginated_response(ret_list.data, 'OK', 'query alarm success')
 
 
 def new_containerid(category):

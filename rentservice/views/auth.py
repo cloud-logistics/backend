@@ -10,7 +10,7 @@ from rest_framework.parsers import JSONParser
 from rentservice.models import EnterpriseUser, AuthUserGroup, AccessGroup
 from rentservice.utils.retcode import *
 from rest_framework.settings import api_settings
-from rentservice.serializers import AccessGroupSerializer
+from rentservice.serializers import AccessGroupSerializer, EnterpriseUserSerializer
 import uuid
 
 
@@ -72,10 +72,9 @@ def auth(request):
     except AuthUserGroup.DoesNotExist, e:
         log.error(repr(e))
         return JsonResponse(retcode({}, "0403", '用户不属于任何群组'), safe=True, status=status.HTTP_403_FORBIDDEN)
-    ret = {}
-    ret['user_token'] = user.user_token
+    ser_user = EnterpriseUserSerializer(user)
+    ret = ser_user.data
     ret['group'] = access_group.group
-    ret['user_id'] = user.user_id
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
 

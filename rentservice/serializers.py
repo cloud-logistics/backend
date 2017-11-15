@@ -18,8 +18,33 @@ from models import RentalAdminOperationRecords
 from monservice.models import BoxTypeInfo
 from monservice.models import SiteInfo
 from monservice.models import BoxInfo
+from monservice.models import Manufacturer, ProduceArea, Hardware, Battery
 from models import SiteStat
 from models import SiteStatDetail
+
+
+class ManufacturerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Manufacturer
+        fields = '__all__'
+
+
+class ProduceAreaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProduceArea
+        fields = '__all__'
+
+
+class HardwareSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Hardware
+        fields = '__all__'
+
+
+class BatterySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Battery
+        fields = '__all__'
 
 
 class BoxTypeInfoSerializer(serializers.ModelSerializer):
@@ -168,4 +193,17 @@ class SiteStatResSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SiteStat
+        fields = '__all__'
+
+
+class BoxInfoResSerializer(serializers.ModelSerializer):
+    type = BoxTypeInfoSerializer()
+    siteinfo = SiteInfoSerializer()
+    manufacturer = ManufacturerSerializer()
+    produce_area = ProduceAreaSerializer()
+    hardware = HardwareSerializer()
+    battery = BatterySerializer()
+
+    class Meta:
+        model = BoxInfo
         fields = '__all__'

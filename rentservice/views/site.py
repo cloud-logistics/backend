@@ -25,6 +25,33 @@ log = logger.get_logger(__name__)
 tz = pytz.timezone(settings.TIME_ZONE)
 
 
+# 根据GPS定位信息获取附近20公里内的仓库
+@csrf_exempt
+@api_view(['GET'])
+def get_site_list_nearby(request, latitude, longitude):
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    _lat = float(latitude)
+    _lng = float(longitude)
+    site_list = SiteInfo.objects.raw(
+        '''select t2.* from (select *, ROUND(6378.138*2*ASIN(SQRT(POW(SIN((%s*PI()/180-latitude::NUMERIC *PI()/180)/2),2) \
+        +COS(%s*PI()/180)*COS(latitude::NUMERIC*PI()/180)*POW(SIN((%s*PI()/180-longitude::NUMERIC*PI()/180)/2),2)))) AS juli\
+        from monservice_siteinfo order by juli ASC) as t2 where t2.juli < 20
+        ''', [_lat, _lat, _lng])
+    res_site = []
+    for item in site_list:
+        # 获取每个堆场的各箱子类型的数量
+        site_box_num = SiteBoxStock.objects.filter(site=item)
+        res_site.append(
+            {'id': item.id, 'location': item.location, 'latitude': item.latitude, 'longitude': item.longitude,
+             'site_code': item.site_code, 'city': item.city, 'nation': item.nation, 'province': item.province,
+             'name': item.name,
+             'box_num': site_box_num})
+    page = paginator.paginate_queryset(res_site, request)
+    ret_ser = SiteInfoMoreSerializer(page, many=True)
+    return paginator.get_paginated_response(ret_ser.data)
+
+
 # 根据GPS定位信息获取距离最近的堆场
 @csrf_exempt
 @api_view(['GET'])
@@ -35,7 +62,7 @@ def get_site_list(request, latitude, longitude):
     _lng = float(longitude)
     site_list = SiteInfo.objects.raw(
         '''select *, ROUND(6378.138*2*ASIN(SQRT(POW(SIN((%s*PI()/180-latitude::NUMERIC *PI()/180)/2),2) \
-        +COS(%s*PI()/180)*COS(latitude::NUMERIC*PI()/180)*POW(SIN((%s*PI()/180-longitude::NUMERIC*PI()/180)/2),2)))*1000) AS juli\
+        +COS(%s*PI()/180)*COS(latitude::NUMERIC*PI()/180)*POW(SIN((%s*PI()/180-longitude::NUMERIC*PI()/180)/2),2)))) AS juli\
         from monservice_siteinfo order by juli ASC
         ''', [_lat, _lat, _lng])
     res_site = []
