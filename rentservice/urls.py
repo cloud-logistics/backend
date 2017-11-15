@@ -73,4 +73,6 @@ urlpatterns = [
     url(r'^rentservice/site/nearby/(?P<latitude>[0-9.]+)/(?P<longitude>[0-9.]+)$', site.get_site_list_nearby),
     # 获取附近20公里的仓库
     url(r'^rentservice/boxinfo/detail/(?P<box_id>[0-9a-zA-Z-]+)$', boxinfo.get_box_detail),  # 查询箱子详情
+    url(r'^rentservice/appointment/(?P<user_id>[0-9a-zA-Z-]+)/processlist$', appointment.get_user_process_list),  # 承运方进行中的预约单
+    url(r'^rentservice/appointment/(?P<user_id>[0-9a-zA-Z-]+)/finishedlist$', appointment.get_user_finished_list),  # 承运方已完成的预约单
 ]

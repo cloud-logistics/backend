@@ -150,6 +150,94 @@ def get_list_by_user(request, user_id):
     return paginator.get_paginated_response(ret_ser.data)
 
 
+# 进行中的预约单查询
+@csrf_exempt
+@api_view(['GET'])
+def get_user_process_list(request, user_id):
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    try:
+        user = EnterpriseUser.objects.get(user_id=user_id)
+    except EnterpriseUser.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
+    # 获取预约单列表
+    appointment_list = UserAppointment.objects.filter(user_id=user, flag=0)
+    ret = []
+    for appointment_item in appointment_list:
+        tmp_list = []
+        res_app_list = []
+        detail_list = AppointmentDetail.objects.filter(appointment_id=appointment_item, flag=0)
+        for detail in detail_list:
+            if detail.site_id.id in tmp_list:
+                # res_app_list[tmp_list.index(detail.site_id.id)]['box_info'].append(
+                #     AppointmentDetailSerializer(detail).data)
+                res_app_list[tmp_list.index(detail.site_id.id)]['box_info'].append(
+                    detail)
+            else:
+                tmp_list.append(detail.site_id.id)
+                # res_app_list.append({'site': SiteInfoSerializer(detail.site_id).data,
+                #                      'box_info': [AppointmentDetailSerializer(detail).data]})
+                res_app_list.append(
+                    {'id': detail.site_id.id, 'location': detail.site_id.location, 'latitude': detail.site_id.latitude,
+                     'longitude': detail.site_id.longitude, 'site_code': detail.site_id.site_code,
+                     'city': detail.site_id.city, 'province': detail.site_id.province, 'nation': detail.site_id.nation,
+                     'volume': detail.site_id.volume,
+                     'box_info': [detail]})
+        # ret.append({'appointment': UserAppointmentSerializer(appointment_item).data, 'info': res_app_list})
+
+        ret.append({'appointment_id': appointment_item.appointment_id, 'user_id': appointment_item.user_id,
+                    'appointment_time': appointment_item.appointment_time,
+                    'appointment_code': appointment_item.appointment_code, 'flag': appointment_item.flag,
+                    'info': res_app_list})
+    page = paginator.paginate_queryset(ret, request)
+    ret_ser = AppointmentResSerializer(page, many=True)
+    return paginator.get_paginated_response(ret_ser.data)
+
+
+# 已完成的预约单查询
+@csrf_exempt
+@api_view(['GET'])
+def get_user_finished_list(request, user_id):
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    try:
+        user = EnterpriseUser.objects.get(user_id=user_id)
+    except EnterpriseUser.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
+    # 获取预约单列表
+    appointment_list = UserAppointment.objects.filter(user_id=user).exclude(flag=0)
+    ret = []
+    for appointment_item in appointment_list:
+        tmp_list = []
+        res_app_list = []
+        detail_list = AppointmentDetail.objects.filter(appointment_id=appointment_item, flag=0)
+        for detail in detail_list:
+            if detail.site_id.id in tmp_list:
+                # res_app_list[tmp_list.index(detail.site_id.id)]['box_info'].append(
+                #     AppointmentDetailSerializer(detail).data)
+                res_app_list[tmp_list.index(detail.site_id.id)]['box_info'].append(
+                    detail)
+            else:
+                tmp_list.append(detail.site_id.id)
+                # res_app_list.append({'site': SiteInfoSerializer(detail.site_id).data,
+                #                      'box_info': [AppointmentDetailSerializer(detail).data]})
+                res_app_list.append(
+                    {'id': detail.site_id.id, 'location': detail.site_id.location, 'latitude': detail.site_id.latitude,
+                     'longitude': detail.site_id.longitude, 'site_code': detail.site_id.site_code,
+                     'city': detail.site_id.city, 'province': detail.site_id.province, 'nation': detail.site_id.nation,
+                     'volume': detail.site_id.volume,
+                     'box_info': [detail]})
+        # ret.append({'appointment': UserAppointmentSerializer(appointment_item).data, 'info': res_app_list})
+
+        ret.append({'appointment_id': appointment_item.appointment_id, 'user_id': appointment_item.user_id,
+                    'appointment_time': appointment_item.appointment_time,
+                    'appointment_code': appointment_item.appointment_code, 'flag': appointment_item.flag,
+                    'info': res_app_list})
+    page = paginator.paginate_queryset(ret, request)
+    ret_ser = AppointmentResSerializer(page, many=True)
+    return paginator.get_paginated_response(ret_ser.data)
+
+
 # 预约单详情查询detail
 @csrf_exempt
 @api_view(['GET'])
