@@ -478,7 +478,7 @@ def status_summary(request):
     id = container_id
 
     sql = 'select box_info.deviceid,C.timestamp,C.longitude,C.latitude,' \
-          'C.speed,C.temperature,C.humidity,C.collide,C.light ' \
+          'C.speed,C.temperature,C.humidity,C.collide,C.light,box_info.ava_flag ' \
           'from iot.monservice_boxinfo box_info ' \
 
     sql = sql + ' left join ( select B.* from ' \
@@ -510,17 +510,24 @@ def status_summary(request):
         longitude = cal_position((item[2], '0')[item[2] is None])
         latitude = cal_position((item[3], '0')[item[3] is None])
         speed = float((item[4], 0)[item[4] is None])
-        temperature = float((item[5], 0)[item[4] is None])
-        humidity = float((item[6], 0)[item[4] is None])
-        collide = float((item[7], 0)[item[4] is None])
-        light = float((item[8], 0)[item[4] is None])
+        temperature = float((item[5], 0)[item[5] is None])
+        humidity = float((item[6], 0)[item[6] is None])
+        collide = int((item[7], 0)[item[7] is None])
+        light = float((item[8], 0)[item[8] is None])
+        available_status = (item[9], u'Y')[item[9] is None]
         num_of_door_open = 5
 
-        location_name = gps_info_trans("%s,%s" % (latitude, longitude))
+        if available_status == u'Y':
+            available_status= u'可用'
+        else:
+            available_status = u'不可用'
+
+        location_name = gps_info_trans("%s,%s" % (latitude, longitude)).decode("utf-8")
 
         element = {'deviceid': deviceid, 'longitude': longitude, 'latitude': latitude, 'location_name': location_name,
                    'speed': speed, 'temperature': temperature, 'humidity': humidity, 'collide': collide,
-                   'num_of_door_open': num_of_door_open, 'robot_operation_status': u'装箱', 'battery': light}
+                   'num_of_door_open': num_of_door_open, 'robot_operation_status': u'装箱', 'battery': light,
+                   'available_status': available_status}
         ret_data.append(element)
     pagination_class = settings.api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
@@ -776,11 +783,11 @@ def verify_user(request):
     try:
         username = req_param['username']
     except Exception:
-        return JsonResponse('username should not be empty ', safe=True, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'msg': 'username should not be empty'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
         password = req_param['password']
     except Exception:
-        return JsonResponse('password should not be empty ', safe=True, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'msg': 'password should not be empty'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         user = SysUser.objects.get(user_name=username, user_password=password)
@@ -789,7 +796,7 @@ def verify_user(request):
             ret_dict['token'] = user.user_token
             return JsonResponse(ret_dict, safe=True, status=status.HTTP_200_OK)
     except SysUser.DoesNotExist:
-        return JsonResponse('用户不存在', safe=True, status=status.HTTP_403_FORBIDDEN)
+        return JsonResponse({'msg': 'username or password error'}, safe=True, status=status.HTTP_403_FORBIDDEN)
 
 
 # 向终端发送command

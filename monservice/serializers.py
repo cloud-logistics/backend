@@ -216,11 +216,12 @@ class BoxSummarySerializer(serializers.ModelSerializer):
     battery = serializers.SerializerMethodField()
     num_of_door_open = serializers.SerializerMethodField()
     robot_operation_status = serializers.SerializerMethodField()
+    available_status = serializers.SerializerMethodField()
 
     class Meta:
         model = SensorData
         fields = ('deviceid', 'longitude', 'latitude', 'speed', 'temperature', 'humidity', 'collide',
-                  'num_of_door_open', 'robot_operation_status', 'battery', 'location_name')
+                  'num_of_door_open', 'robot_operation_status', 'battery', 'location_name', 'available_status')
 
     def get_location_name(self, obj):
         return obj['location_name']
@@ -234,6 +235,8 @@ class BoxSummarySerializer(serializers.ModelSerializer):
     def get_robot_operation_status(self, obj):
         return obj['robot_operation_status']
 
+    def get_available_status(self, obj):
+        return obj['available_status']
 
 class MaintenanceStationSerializer(serializers.ModelSerializer):
     class Meta:
