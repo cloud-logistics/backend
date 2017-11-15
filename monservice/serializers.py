@@ -183,11 +183,18 @@ class BoxBasicInfoSerializer(serializers.ModelSerializer):
     produce_area = serializers.SerializerMethodField()
     manufacturer = serializers.SerializerMethodField()
     battery_detail = serializers.SerializerMethodField()
+    box_type_id = serializers.SerializerMethodField()
+    produce_area_id = serializers.SerializerMethodField()
+    manufacturer_id = serializers.SerializerMethodField()
+    battery_id = serializers.SerializerMethodField()
+    hardware_detail = serializers.SerializerMethodField()
+    hardware_id = serializers.SerializerMethodField()
 
     class Meta:
         model = BoxInfo
         fields = ('deviceid', 'tid', 'date_of_production', 'box_type_name',
-                  'produce_area', 'manufacturer', 'battery_detail')
+                  'produce_area', 'manufacturer', 'battery_detail', 'box_type_id',
+                  'produce_area_id', 'manufacturer_id', 'battery_id', 'hardware_detail', 'hardware_id')
 
     def get_box_type_name(self, obj):
         return obj['box_type_name']
@@ -200,6 +207,24 @@ class BoxBasicInfoSerializer(serializers.ModelSerializer):
 
     def get_battery_detail(self, obj):
         return obj['battery_detail']
+
+    def get_box_type_id(self, obj):
+        return obj['box_type_id']
+
+    def get_produce_area_id(self, obj):
+        return obj['produce_area_id']
+
+    def get_manufacturer_id(self, obj):
+        return obj['manufacturer_id']
+
+    def get_battery_id(self, obj):
+        return obj['battery_id']
+
+    def get_hardware_detail(self, obj):
+        return obj['hardware_detail']
+
+    def get_hardware_id(self, obj):
+        return obj['hardware_id']
 
 
 class SensorPathDataSerializer(serializers.ModelSerializer):
