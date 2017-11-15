@@ -307,3 +307,71 @@
 }
 ```
 
+
+### 7. 查询云箱历史轨迹：
+
+#### URL：
+
+`container/api/v1/cloudbox/monservice/historypath/?deviceid=01-03-17-09-00-21&start_time=1510628670&end_time=1510637070`
+
+#### 方法： 
+
+`GET`
+
+#### BODY:
+
+```
+无 
+```
+ 
+#### 返回：
+
+```
+{
+    "status": "OK",
+    "msg": "get history path success",
+    "path": [
+        {
+            "timestamp": 1510628670,
+            "longitude": "114.053531",
+            "latitude": "22.533053"
+        },
+        {
+            "timestamp": 1510629270,
+            "longitude": "114.053531",
+            "latitude": "22.533053"
+        },
+        {
+            "timestamp": 1510629870,
+            "longitude": "114.053531",
+            "latitude": "22.533053"
+        },
+        {
+            "timestamp": 1510630470,
+            "longitude": "114.053531",
+            "latitude": "22.533053"
+        },
+        {
+            "timestamp": 1510631070,
+            "longitude": "114.053531",
+            "latitude": "22.533053"
+        },
+        {
+            "timestamp": 1510631670,
+            "longitude": "114.053531",
+            "latitude": "22.533053"
+        },
+        {
+            "timestamp": 1510632270,
+            "longitude": "114.053531",
+            "latitude": "22.533053"
+        },
+        {
+            "timestamp": 1510632870,
+            "longitude": "114.053531",
+            "latitude": "22.533053"
+        }
+    ]
+}
+```
+

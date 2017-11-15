@@ -8,6 +8,7 @@ from django.db import models
 # Create your models here.
 from django.db import models
 from django.contrib.auth.models import User
+from util.geo import cal_position
 
 
 class AlertLevelInfo(models.Model):
@@ -182,6 +183,12 @@ class SensorData(models.Model):
     light = models.CharField(max_length=10)
     legacy = models.TextField(null=True)
     endpointid = models.CharField(max_length=48)
+
+    def convert_longitude(self):
+        return str(cal_position(self.longitude))
+
+    def convert_latitude(self):
+        return str(cal_position(self.latitude))
 
 
 # 仓库各类型可用箱子数量

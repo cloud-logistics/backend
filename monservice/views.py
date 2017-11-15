@@ -23,6 +23,7 @@ import json
 import random
 from monservice.serializers import *
 from monservice.models import *
+from math import ceil
 
 
 log = logger.get_logger('monservice.view.py')
@@ -440,6 +441,30 @@ def history_path(request):
             return JsonResponse(final_response, safe=True, status=status.HTTP_200_OK)
     else:
         return JsonResponse(final_response, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# 云箱历史轨迹
+@csrf_exempt
+@api_view(['GET'])
+def box_history_path(request):
+    try:
+        deviceid = request.GET.get('deviceid')
+        start_time = request.GET.get('start_time')
+        end_time = request.GET.get('end_time')
+        locations = SensorData.objects.filter(deviceid=deviceid, timestamp__gte=start_time, timestamp__lte=end_time).exclude(longitude='0', latitude='0')
+        total_num = len(locations)
+        if total_num > 0:
+            span_num = 20
+            step = int(ceil(total_num/float(span_num)))
+            locations = locations[::step]
+        locations_ser = SensorPathDataSerializer(locations, many=True)
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'get history path success', 'path': locations_ser.data}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
 # 云箱状态汇总
@@ -1300,5 +1325,6 @@ def get_message(request):
     message_count = alarm_count + undispach_count
     return JsonResponse({'alarm_count': alarm_count, 'undispach_count': undispach_count, 'message_count': message_count},
                         safe=True, status=status.HTTP_200_OK)
+
 
 

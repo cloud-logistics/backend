@@ -12,6 +12,7 @@ from models import SiteBoxStock
 from models import SiteDispatch
 from models import Manufacturer, ProduceArea, Hardware, Battery, AlarmInfo
 from models import SysGroup, SysUser, SysAccessUrl
+from models import SensorData
 
 
 class ContainerRentInfoSerializer(serializers.ModelSerializer):
@@ -193,3 +194,13 @@ class BoxBasicInfoSerializer(serializers.ModelSerializer):
 
     def get_manufacturer(self, obj):
         return obj['manufacturer']
+
+
+class SensorPathDataSerializer(serializers.ModelSerializer):
+    longitude = serializers.ReadOnlyField(source='convert_longitude')
+    latitude = serializers.ReadOnlyField(source='convert_latitude')
+
+    class Meta:
+        model = SensorData
+        fields = ('timestamp', 'longitude', 'latitude')
+
