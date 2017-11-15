@@ -251,3 +251,12 @@ class SiteCode(models.Model):
     max = models.IntegerField(default=0)
 
 
+# 维修点
+class MaintenanceStation(models.Model):
+    name = models.CharField(max_length=50)
+    nation = models.ForeignKey(Nation, related_name='maintenance_nation_fk', null=True)
+    province = models.ForeignKey(Province, related_name='maintenance_province_fk', null=True)
+    city = models.ForeignKey(City, related_name='maintenance_nation_fk', null=True)
+    longitude = models.CharField(max_length=20)
+    latitude = models.CharField(max_length=20)
+    contact = models.CharField(max_length=20)

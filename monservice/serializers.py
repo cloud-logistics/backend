@@ -13,6 +13,7 @@ from models import SiteDispatch
 from models import Manufacturer, ProduceArea, Hardware, Battery, AlarmInfo, SensorData
 from models import SysGroup, SysUser, SysAccessUrl
 from models import SensorData
+from models import MaintenanceStation
 
 
 class ContainerRentInfoSerializer(serializers.ModelSerializer):
@@ -233,4 +234,9 @@ class BoxSummarySerializer(serializers.ModelSerializer):
     def get_robot_operation_status(self, obj):
         return obj['robot_operation_status']
 
+
+class MaintenanceStationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MaintenanceStation
+        fields = '__all__'
 

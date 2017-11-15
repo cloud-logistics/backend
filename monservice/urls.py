@@ -3,8 +3,7 @@
 
 from django.conf.urls import url
 from monservice import views
-from monservice.view import site
-from monservice.view import dispatch
+from monservice.view import site, dispatch, maintenance
 
 urlpatterns = [
     url(r'^auth$', views.verify_user),                            # 登录认证
@@ -13,7 +12,7 @@ urlpatterns = [
     url(r'^realtimeInfo$', views.realtime_message),               # 实时状态
     url(r'^containerInstantInfo$', views.realtime_position),      # 实时位置
     url(r'^containerhistory$', views.history_path),               # 历史轨迹
-    url(r'^historypath/$', views.box_history_path),                # 云箱历史轨迹
+    url(r'^historypath/$', views.box_history_path),               # 云箱历史轨迹
     url(r'^alerts$', views.alarm_monitor),                        # 报警监控
     url(r'^options$', views.options_to_show),                     # 选项查询
     url(r'^basicInfo$', views.basic_info),                        # 基础信息查询
@@ -53,4 +52,9 @@ urlpatterns = [
     url(r'^safeSettings$', views.get_all_safe_settings),                  # 查询所有类型箱子安全参数
     url(r'^safeSettings/(?P<type_id>\d+)$', views.get_safe_settings),     # 查询箱子安全参数
     url(r'^safeSettings/(?P<type_id>\d+)', views.save_safe_settings),     # 修改箱子安全参数
+
+    url(r'^maintenance$', maintenance.create_maintenance),                               # 增加维修点
+    url(r'^maintenance/(?P<maintenance_id>\d+)$', maintenance.delete_maintenance),       # 删除维修点
+    url(r'^maintenance/(?P<maintenance_id>\d+)', maintenance.update_maintenance),        # 修改维修点
+    url(r'^allmaintenance$', maintenance.get_maintenance),                               # 查询维修点
 ]
