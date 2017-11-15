@@ -15,7 +15,9 @@ from monservice.models import SiteInfo, SiteDispatch, SiteBoxStock, BoxTypeInfo
 from util import logger
 from util.geo import get_distance
 import datetime
+import time
 from rest_framework.settings import api_settings
+from util.db import query_list
 
 log = logger.get_logger('monservice.dispatch.py')
 low = 0.1
@@ -111,7 +113,6 @@ class DSite:
         self.latitude = lat
         self.volume = volume
         self.avanum = avanum
-
 
 
 def generate_dispatches():
@@ -258,3 +259,12 @@ def save_type_dispatch(start_id, finish_id, type_id, count):
         except Exception, e:
             log.error(e.message)
 
+
+def generate_dispath_id():
+    type_code = '0'
+    day = str(time.strftime('%Y%m%d', time.localtime(int(time.time()))))[2:]
+    sql = '''select nextval('iot.monservice_dispatch_id_seq') from iot.monservice_dispatch_id_seq'''
+    id_query = query_list(sql)
+    seq = id_query[0][0]
+    ext_code = '0000'
+    return  type_code + day + str(seq) + ext_code
