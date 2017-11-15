@@ -65,6 +65,10 @@ ALTER SEQUENCE iot.path_detail_id_seq OWNER TO postgres;
 CREATE SEQUENCE iot.monservice_box_id_seq INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
 ALTER SEQUENCE iot.monservice_box_id_seq OWNER TO postgres;
 
+CREATE SEQUENCE iot.monservice_dispatch_id_seq INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 999999 CACHE 1 CYCLE;
+ALTER SEQUENCE iot.monservice_dispatch_id_seq OWNER TO postgres;
+
+
 CREATE TABLE iot.box_info
 (
     id integer NOT NULL DEFAULT nextval('iot.box_info_id_seq'::regclass),

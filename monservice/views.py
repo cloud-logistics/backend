@@ -450,7 +450,7 @@ def history_path(request):
 @api_view(['GET'])
 def box_history_path(request):
     try:
-        deviceid = request.GET.get('deviceid')
+        deviceid = request.GET.get('containerId')
         start_time = request.GET.get('start_time')
         end_time = request.GET.get('end_time')
         locations = SensorData.objects.filter(deviceid=deviceid, timestamp__gte=start_time, timestamp__lte=end_time).exclude(longitude='0', latitude='0')
