@@ -340,19 +340,22 @@ def basic_info(request):
         date_condition = ''
 
     query_sql = 'select box_info.deviceid,box_info.tid, box_type_info.box_type_name, produce_area_info.address, ' \
-                'manufacturer_info.name, date_of_production, battery_info.battery_detail ' \
+                'manufacturer_info.name, date_of_production, battery_info.battery_detail,box_type_info.id,' \
+                'produce_area_info.id,manufacturer_info.id,battery_info.id,hardware.hardware_detail,hardware.id ' \
                 'from iot.monservice_boxinfo box_info ' \
                 'left join iot.monservice_boxtypeinfo box_type_info on box_info.type_id = box_type_info.id ' \
                 'left join iot.monservice_producearea produce_area_info on box_info.produce_area_id = produce_area_info.id ' \
                 'left join iot.monservice_manufacturer manufacturer_info on box_info.manufacturer_id = manufacturer_info.id ' \
                 'left join iot.monservice_battery battery_info on battery_info.id = box_info.battery_id ' \
+                'left join iot.monservice_hardware hardware on hardware.id = box_info.hardware_id ' \
                 'where (deviceid=\'' + str(container_id) + '\' or \'' + str(container_id) +  \
                 '\' = \'all\') ' + \
                 ' and (box_type_info.id = ' + str(container_type) + ' or ' + str(container_type) + ' = 0 ) ' + \
                 ' and  (manufacturer_info.id = ' + str(factory) + ' or ' + str(factory) + ' = 0 ) ' + \
                 date_condition + \
                 ' group by box_info.deviceid, box_type_name, produce_area_info.address, manufacturer_info.name, ' \
-                'date_of_production, battery_detail'
+                'date_of_production, battery_detail, box_type_info.id,produce_area_info.id,manufacturer_info.id,' \
+                'battery_info.id,hardware.hardware_detail,hardware.id '
     data = query_list(query_sql)
     data_list = []
     for item in data:
@@ -364,6 +367,12 @@ def basic_info(request):
         dicitem['manufacturer'] = item[4]
         dicitem['date_of_production'] = item[5]
         dicitem['battery_detail'] = item[6]
+        dicitem['box_type_id'] = item[7]
+        dicitem['produce_area_id'] = item[8]
+        dicitem['manufacturer_id'] = item[9]
+        dicitem['battery_id'] = item[10]
+        dicitem['hardware_detail'] = item[11]
+        dicitem['hardware_id'] = item[12]
         data_list.append(dicitem)
 
     pagination_class = settings.api_settings.DEFAULT_PAGINATION_CLASS
@@ -660,16 +669,24 @@ def options_to_show(request):
         if req_param['requiredOptions']:
             for item in req_param['requiredOptions']:
                 if item == 'alertLevel':
-                    alert_level_list = query_list('select id,level from iot.monservice_alertlevelinfo')
+                    alert_level_list = query_list('select 0 as id, \'all\' as level '
+                                                  'union select id,level from '
+                                                  'iot.monservice_alertlevelinfo order by id asc')
                     final_response['alertLevel'] = strip_tuple(alert_level_list)
                 if item == 'alertCode':
-                    alert_code_list = query_list('select id,errcode from iot.monservice_alertcodeinfo')
+                    alert_code_list = query_list('select 0 as id, \'all\' as errcode union '
+                                                 'select id, (CAST (errcode AS text)) '
+                                                 'from iot.monservice_alertcodeinfo order by id asc')
                     final_response['alertCode'] = strip_tuple(alert_code_list)
                 if item == 'alertType':
-                    alert_type_list = query_list('select id, description as type from iot.monservice_alertcodeinfo')
+                    alert_type_list = query_list('select 0 as id, \'all\' as type union '
+                                                 'select id, description as type '
+                                                 'from iot.monservice_alertcodeinfo order by id asc')
                     final_response['alertType'] = strip_tuple(alert_type_list)
                 if item == 'containerType':
-                    container_type_list = query_list('select id,box_type_name from iot.monservice_boxtypeinfo')
+                    container_type_list = query_list('select 0 as id, \'all\' as box_type_name union '
+                                                     'select id,box_type_name '
+                                                     'from iot.monservice_boxtypeinfo order by id asc')
                     final_response['containerType'] = strip_tuple(container_type_list)
                 if item == 'currentStatus':
                     status_list = []
@@ -677,25 +694,37 @@ def options_to_show(request):
                     status_list.append(to_str(ANCHORED))
                     final_response['currentStatus'] = status_list
                 if item == 'location':
-                    location_list = query_list('select id,location from iot.monservice_siteinfo')
+                    location_list = query_list('select 0 as id, \'all\' as location '
+                                               'union select id,location '
+                                               'from iot.monservice_siteinfo order by id asc')
                     final_response['location'] = strip_tuple(location_list)
                 if item == 'factory':
-                    factory_list = query_list('select id,name from iot.monservice_manufacturer')
+                    factory_list = query_list('select 0 as id, \'all\' as name '
+                                              'union select id,name '
+                                              'from iot.monservice_manufacturer order by id asc')
                     final_response['factory'] = strip_tuple(factory_list)
                 if item == 'factoryLocation':
-                    location_list = query_list('select id,address from iot.monservice_producearea')
+                    location_list = query_list('select 0 as id, \'all\' as address '
+                                               'union select id,address '
+                                               'from iot.monservice_producearea order by id asc')
                     final_response['factoryLocation'] = strip_tuple(location_list)
                 if item == 'batteryInfo':
-                    batteryinfo_list = query_list('select id,battery_detail from iot.monservice_battery')
+                    batteryinfo_list = query_list('select 0 as id, \'all\' as battery_detail '
+                                                  'union select id,battery_detail '
+                                                  'from iot.monservice_battery order by id asc')
                     final_response['batteryInfo'] = strip_tuple(batteryinfo_list)
                 if item == 'maintenanceLocation':
                     final_response['maintenanceLocation'] = strip_tuple([])
                 if item == 'intervalTime':
-                    interval_time_list = query_list('select id,interval_time_min from iot.monservice_intervaltimeinfo')
+                    interval_time_list = query_list('select 0 as id, \'all\' as interval_time_min '
+                                                    'union select id,(CAST (interval_time_min AS text)) '
+                                                    'from iot.monservice_intervaltimeinfo order by id asc')
                     # interval time type is integer
                     final_response['intervalTime'] = strip_tuple(interval_time_list)
                 if item == 'hardwareInfo':
-                    hardware_info_list = query_list('select id,hardware_detail from iot.monservice_hardware')
+                    hardware_info_list = query_list('select 0 as id, \'all\' as hardware_detail '
+                                                    'union select id,hardware_detail '
+                                                    'from iot.monservice_hardware order by id asc')
                     final_response['hardwareInfo'] = strip_tuple(hardware_info_list)
             log.debug(json.dumps(final_response))
             return JsonResponse(final_response, safe=True, status=status.HTTP_200_OK)
