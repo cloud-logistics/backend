@@ -669,16 +669,24 @@ def options_to_show(request):
         if req_param['requiredOptions']:
             for item in req_param['requiredOptions']:
                 if item == 'alertLevel':
-                    alert_level_list = query_list('select id,level from iot.monservice_alertlevelinfo')
+                    alert_level_list = query_list('select 0 as id, \'all\' as level '
+                                                  'union select id,level from '
+                                                  'iot.monservice_alertlevelinfo order by id asc')
                     final_response['alertLevel'] = strip_tuple(alert_level_list)
                 if item == 'alertCode':
-                    alert_code_list = query_list('select id,errcode from iot.monservice_alertcodeinfo')
+                    alert_code_list = query_list('select 0 as id, \'all\' as errcode union '
+                                                 'select id, (CAST (errcode AS text)) '
+                                                 'from iot.monservice_alertcodeinfo order by id asc')
                     final_response['alertCode'] = strip_tuple(alert_code_list)
                 if item == 'alertType':
-                    alert_type_list = query_list('select id, description as type from iot.monservice_alertcodeinfo')
+                    alert_type_list = query_list('select 0 as id, \'all\' as type union '
+                                                 'select id, description as type '
+                                                 'from iot.monservice_alertcodeinfo order by id asc')
                     final_response['alertType'] = strip_tuple(alert_type_list)
                 if item == 'containerType':
-                    container_type_list = query_list('select id,box_type_name from iot.monservice_boxtypeinfo')
+                    container_type_list = query_list('select 0 as id, \'all\' as box_type_name union '
+                                                     'select id,box_type_name '
+                                                     'from iot.monservice_boxtypeinfo order by id asc')
                     final_response['containerType'] = strip_tuple(container_type_list)
                 if item == 'currentStatus':
                     status_list = []
@@ -686,25 +694,37 @@ def options_to_show(request):
                     status_list.append(to_str(ANCHORED))
                     final_response['currentStatus'] = status_list
                 if item == 'location':
-                    location_list = query_list('select id,location from iot.monservice_siteinfo')
+                    location_list = query_list('select 0 as id, \'all\' as location '
+                                               'union select id,location '
+                                               'from iot.monservice_siteinfo order by id asc')
                     final_response['location'] = strip_tuple(location_list)
                 if item == 'factory':
-                    factory_list = query_list('select id,name from iot.monservice_manufacturer')
+                    factory_list = query_list('select 0 as id, \'all\' as name '
+                                              'union select id,name '
+                                              'from iot.monservice_manufacturer order by id asc')
                     final_response['factory'] = strip_tuple(factory_list)
                 if item == 'factoryLocation':
-                    location_list = query_list('select id,address from iot.monservice_producearea')
+                    location_list = query_list('select 0 as id, \'all\' as address '
+                                               'union select id,address '
+                                               'from iot.monservice_producearea order by id asc')
                     final_response['factoryLocation'] = strip_tuple(location_list)
                 if item == 'batteryInfo':
-                    batteryinfo_list = query_list('select id,battery_detail from iot.monservice_battery')
+                    batteryinfo_list = query_list('select 0 as id, \'all\' as battery_detail '
+                                                  'union select id,battery_detail '
+                                                  'from iot.monservice_battery order by id asc')
                     final_response['batteryInfo'] = strip_tuple(batteryinfo_list)
                 if item == 'maintenanceLocation':
                     final_response['maintenanceLocation'] = strip_tuple([])
                 if item == 'intervalTime':
-                    interval_time_list = query_list('select id,interval_time_min from iot.monservice_intervaltimeinfo')
+                    interval_time_list = query_list('select 0 as id, \'all\' as interval_time_min '
+                                                    'union select id,(CAST (interval_time_min AS text)) '
+                                                    'from iot.monservice_intervaltimeinfo order by id asc')
                     # interval time type is integer
                     final_response['intervalTime'] = strip_tuple(interval_time_list)
                 if item == 'hardwareInfo':
-                    hardware_info_list = query_list('select id,hardware_detail from iot.monservice_hardware')
+                    hardware_info_list = query_list('select 0 as id, \'all\' as hardware_detail '
+                                                    'union select id,hardware_detail '
+                                                    'from iot.monservice_hardware order by id asc')
                     final_response['hardwareInfo'] = strip_tuple(hardware_info_list)
             log.debug(json.dumps(final_response))
             return JsonResponse(final_response, safe=True, status=status.HTTP_200_OK)
