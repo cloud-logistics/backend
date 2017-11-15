@@ -512,7 +512,7 @@ def status_summary(request):
         speed = float((item[4], 0)[item[4] is None])
         temperature = float((item[5], 0)[item[5] is None])
         humidity = float((item[6], 0)[item[6] is None])
-        collide = float((item[7], 0)[item[7] is None])
+        collide = int((item[7], 0)[item[7] is None])
         light = float((item[8], 0)[item[8] is None])
         available_status = (item[9], u'Y')[item[9] is None]
         num_of_door_open = 5
