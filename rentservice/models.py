@@ -106,27 +106,7 @@ class RentLeaseInfo(models.Model):
     on_site = models.ForeignKey(SiteInfo, null=True, related_name='on_site_fk')
     rent = models.BigIntegerField(default=0)
     rent_status = models.IntegerField(default=0)
-
-
-class UserRentDay(models.Model):
-    user_rent_day_id = models.AutoField(primary_key=True)
-    user_id = models.ForeignKey(EnterpriseUser, related_name='user_rent_day_enterprise_user_fk')
-    enterprise_id = models.ForeignKey(EnterpriseInfo, related_name='user_rent_day_enterprise_info_fk')
-    date = models.DateField()
-    rent = models.BigIntegerField(default=0)
-
-
-class UserRentMonth(models.Model):
-    user_rent_month_id = models.AutoField(primary_key=True)
-    user_id = models.ForeignKey(EnterpriseUser, related_name='user_rent_month_enterprise_user_fk')
-    enterprise_id = models.ForeignKey(EnterpriseInfo, related_name='user_rent_month_enterprise_info_fk')
-    month = models.DateField()
-    rent = models.BigIntegerField(default=0)
-
-
-# class RentalAdminOperationType(models.Model):
-#     type_id = models.CharField(max_length=48, primary_key=True)
-#     operation_name = models.CharField(max_length=128, default='default operation')
+    rent_fee_rate = models.BigIntegerField(default=0)
 
 
 class RentalAdminOperationRecords(models.Model):
@@ -134,13 +114,6 @@ class RentalAdminOperationRecords(models.Model):
     admin_id = models.ForeignKey(RentalServiceAdmin, related_name='rental_admin_operation_record_rental_admin_id_fk')
     operation_detail = models.CharField(max_length=128, default='')
     flag = models.IntegerField(default=0)
-
-
-# class RentServiceRegUser(models.Model):
-#     reg_user_id = models.CharField(max_length=64, primary_key=True)
-#     user_name = models.CharField(max_length=64)
-#     user_password = models.CharField(max_length=128)
-#     user_token = models.CharField(max_length=64)
 
 
 class AppointmentCodeSeq(models.Model):
@@ -177,3 +150,15 @@ class SiteStatDetail(models.Model):
     box_in = models.IntegerField(default=0)
     box_out = models.IntegerField(default=0)
     sitestat = models.ForeignKey(SiteStat, related_name='detail_stat_fk', null=True)
+
+
+class BoxRentFeeDetail(models.Model):
+    detail_id = models.CharField(max_length=48, primary_key=True)
+    enterprise = models.ForeignKey(EnterpriseInfo, null=True)
+    user = models.ForeignKey(EnterpriseUser, null=True)
+    date = models.DateTimeField(default=datetime.datetime.today())
+    off_site_nums = models.BigIntegerField(default=0)
+    on_site_nums = models.BigIntegerField(default=0)
+    rent_fee = models.BigIntegerField(default=0)
+
+

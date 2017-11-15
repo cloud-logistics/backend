@@ -12,8 +12,6 @@ from models import UserAppointment
 from models import EnterpriseUser
 from models import AppointmentDetail
 from models import RentLeaseInfo
-from models import UserRentDay
-from models import UserRentMonth
 from models import RentalAdminOperationRecords
 from monservice.models import BoxTypeInfo
 from monservice.models import SiteInfo
@@ -135,18 +133,6 @@ class RentLeaseInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RentLeaseInfo
-        fields = '__all__'
-
-
-class UserRentDaySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserRentDay
-        fields = '__all__'
-
-
-class UserRentMonthSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserRentMonth
         fields = '__all__'
 
 
