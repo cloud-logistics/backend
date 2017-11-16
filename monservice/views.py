@@ -606,10 +606,10 @@ def modify_basic_info(request):
 
         box.type = BoxTypeInfo.objects.get(id=category)
         box.date_of_production = date_of_production
-        box.manufacturer = manufacturer
-        box.produce_area = produce_area
-        box.hardware = hardware_info
-        box.battery = battery_info
+        box.manufacturer = Manufacturer.objects.get(id=manufacturer)
+        box.produce_area = ProduceArea.objects.get(id=produce_area)
+        box.hardware = Hardware.objects.get(id=hardware_info)
+        box.battery = Battery.objects.get(id=battery_info)
         box.tid = rfid
 
         box.save()
