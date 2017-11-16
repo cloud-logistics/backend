@@ -19,6 +19,7 @@ from monservice.models import BoxInfo
 from monservice.models import Manufacturer, ProduceArea, Hardware, Battery
 from models import SiteStat
 from models import SiteStatDetail
+from models import BoxRentFeeDetail
 
 
 class ManufacturerSerializer(serializers.ModelSerializer):
