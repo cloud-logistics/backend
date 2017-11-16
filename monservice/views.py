@@ -886,7 +886,7 @@ def indicator_history(request):
             time_x2 = time.strftime('%H:%M', x2)
 
             if indicator == 'battery':
-                value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(100 - 2 * j)})
+                value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(100 - 0.2 * j)})
             else:
                 value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(y)})
     except Exception, e:
@@ -1363,7 +1363,7 @@ def save_safe_settings(request, type_id):
 @api_view(['GET'])
 def get_message(request):
     alarm_count = AlarmInfo.objects.filter(alarm_status=1).count()
-    undispach_count = SiteDispatch.objects.filter(status='undispatch').count()
+    undispach_count = SiteDispatch.objects.filter(create_date__gte=datetime.date.today()).count()
     message_count = alarm_count + undispach_count
     return JsonResponse({'alarm_count': alarm_count, 'undispach_count': undispach_count, 'message_count': message_count},
                         safe=True, status=status.HTTP_200_OK)
