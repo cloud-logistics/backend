@@ -93,7 +93,7 @@ def delete_site(request, id):
         # 如果堆场有箱子，则提示不能删除堆场
         boxes = BoxInfo.objects.filter(siteinfo_id=id)
         if len(boxes) > 0:
-            response_msg = {'status': 'ERROR', 'msg': '堆场内还有箱子，不能删除该堆场！'}
+            response_msg = {'status': 'ERROR', 'msg': '仓库内还有箱子，不能删除该仓库！'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             SiteInfo.objects.get(id=id).delete()
@@ -103,7 +103,7 @@ def delete_site(request, id):
         response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': 'delete site success'}
+        response_msg = {'status': 'OK', 'msg': '删除仓库成功！'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
@@ -137,7 +137,7 @@ def modify_site(request, id):
         response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': 'modify site success'}
+        response_msg = {'status': 'OK', 'msg': '修改仓库成功！'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
@@ -157,7 +157,7 @@ def get_sites(request):
         response_msg = {'code': 'ERROR', 'message': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        return paginator.get_paginated_response(ret_ser.data, 'OK', 'query sites success')
+        return paginator.get_paginated_response(ret_ser.data, 'OK', '查询全部堆场成功！')
 
 
 # 根据堆场ID获取堆场内的云箱

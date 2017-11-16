@@ -560,6 +560,12 @@ def basic_info_config(request):
     try:
         data = json.loads(request.body)
         rfid = to_str(data['rfid'])                             # RFID
+
+        boxes = BoxInfo.objects.filter(tid=rfid)
+        if len(boxes) > 0:
+            response_msg = {'status': 'ERROR', 'msg': '云箱RFID已存在！'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
         date_of_production = to_str(data['manufactureTime'])    # 生产日期
         battery_info = data['batteryInfo']                      # 电源信息
         bat = Battery.objects.get(id=battery_info)
@@ -595,6 +601,12 @@ def modify_basic_info(request):
         data = json.loads(request.body)
         container_id = to_str(data['containerId'])  # 云箱id
         box = BoxInfo.objects.get(deviceid=container_id)
+        rfid = to_str(data['rfid'])  # RFID
+
+        boxes = BoxInfo.objects.filter(tid=rfid)
+        if len(boxes) > 0:
+            response_msg = {'status': 'ERROR', 'msg': '云箱RFID已存在！'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
         date_of_production = to_str(data['manufactureTime'])  # 生产日期
         battery_info = data['batteryInfo']  # 电源信息
@@ -602,7 +614,6 @@ def modify_basic_info(request):
         produce_area = data['factoryLocation']  # 生产地点
         hardware_info = data['hardwareInfo']  # 智能硬件信息
         category = data['containerType']
-        rfid = to_str(data['rfid']) # RFID
 
         box.type = BoxTypeInfo.objects.get(id=category)
         box.date_of_production = date_of_production
