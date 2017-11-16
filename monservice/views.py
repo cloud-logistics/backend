@@ -886,7 +886,7 @@ def indicator_history(request):
             time_x2 = time.strftime('%H:%M', x2)
 
             if indicator == 'battery':
-                value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(100 - 0.2 * j)})
+                value_arr.append({'time': time_x1 + '~' + time_x2, 'value': round(float(100 - 0.2 * j), 2)})
             else:
                 value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(y)})
     except Exception, e:
