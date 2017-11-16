@@ -1035,7 +1035,7 @@ def gps_info_trans(gpsinfo):
     ret_str = ''
     values = {}
     values['latlng'] = gpsinfo
-    values['key'] = "AIzaSyDD2vDhoHdl8eJAIyWPv0Jw7jeO6VtlRF8"
+    values['key'] = "AIzaSyA1Sr0UDr75ZZsymS4P12tBEzAt7zSl35o"
     data = urllib.urlencode(values)
     url = "https://ditu.google.cn/maps/api/geocode/json"
     geturl = url + "?" + data
