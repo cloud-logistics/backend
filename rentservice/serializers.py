@@ -207,3 +207,11 @@ class RentLeaseBoxSerializer(serializers.ModelSerializer):
 
     def get_enterprise(self, obj):
         return EnterpriseInfoSerializer(obj.user_id.enterprise).data
+
+
+class BoxRentFeeDetailSerializer(serializers.ModelSerializer):
+    enterprise = EnterpriseUserSerializer()
+
+    class Meta:
+        model = BoxRentFeeDetail
+        fields = '__all__'

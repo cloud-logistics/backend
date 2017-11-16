@@ -62,10 +62,12 @@ def rent_boxes_order(request):
         appoint_detail_queryset = AppointmentDetail.objects.filter(appointment_id=user_appoint, site_id=site)
         box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list)
         lease_info_list = []
+        current_time = datetime.datetime.now(tz=timezone)
         with transaction.atomic():
             for item in box_info_list:
                 lease_info = RentLeaseInfo(lease_info_id=uuid.uuid1(), user_id=enterprise_user,
-                                           lease_start_time=datetime.datetime.now(tz=timezone), box=item, off_site=site)
+                                           lease_start_time=current_time, box=item, off_site=site,
+                                           last_update_time=current_time)
                 lease_info.save()
                 #SiteBoxStock update
                 site_box_stock = SiteBoxStock.objects.get(site=site, box_type=item.type)
