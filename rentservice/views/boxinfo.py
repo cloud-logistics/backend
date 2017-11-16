@@ -16,6 +16,7 @@ from monservice.models import SiteInfo
 from rentservice.serializers import BoxInfoSerializer
 from rentservice.serializers import BoxInfoResSerializer
 from rentservice.models import RentLeaseInfo
+from rentservice.serializers import RentLeaseBoxSerializer
 from django.conf import settings
 import datetime
 import uuid
@@ -48,6 +49,10 @@ def get_box_info_list(request):
         ava_flag = data['ava_flag']
     except Exception:
         return JsonResponse(retcode({}, "9999", "可用标志输入有误"), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        box_id = data['box_id']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", "云箱id输入有误"), safe=True, status=status.HTTP_400_BAD_REQUEST)
     query_set = BoxInfo.objects
     condition = 'N'
     if province_id != 0:
@@ -73,6 +78,9 @@ def get_box_info_list(request):
         condition = 'Y'
     if ava_flag != '':
         query_set = query_set.filter(ava_flag=ava_flag)
+        condition = 'Y'
+    if box_id != '':
+        query_set = query_set.filter(deviceid__contains=box_id)
         condition = 'Y'
     if condition == 'N':
         query_set = query_set.all()
@@ -141,3 +149,18 @@ def get_box_stat(request, box_id):
     ret = {'week_count': week_count, 'week_time': week_time, 'month_count': month_count, 'month_time': month_time,
            'year_count': year_count, 'year_time': year_time}
     return JsonResponse(retcode(ret, '0000', 'Success'), safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def get_box_lease_list(request, box_id):
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    try:
+        box = BoxInfo.objects.get(deviceid=box_id)
+    except BoxInfo.DoesNotExist:
+        return JsonResponse(retcode({}, '9999', '云箱信息不存在'), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    lease_list = RentLeaseInfo.objects.filter(box=box).order_by('-lease_start_time')
+    page = paginator.paginate_queryset(lease_list, request)
+    ret_ser = RentLeaseBoxSerializer(page, many=True)
+    return paginator.get_paginated_response(ret_ser.data)

@@ -54,7 +54,7 @@ def get_lng_lat(address):
     lat = 0
     values = {}
     values['address'] = address
-    values['key'] = "AIzaSyBeNmcjCubIBu3xusqOtQxqdn1EkXTk50M"
+    values['key'] = "AIzaSyA1Sr0UDr75ZZsymS4P12tBEzAt7zSl35o"
     params = urllib.urlencode(values)
     url = "https://ditu.google.cn/maps/api/geocode/json"
     geturl = url + "?" + params
@@ -76,7 +76,7 @@ def get_position_name(longitude, latitude):
     try:
         values = {}
         values['latlng'] = latitude + ',' + longitude
-        values['key'] = "AIzaSyDD2vDhoHdl8eJAIyWPv0Jw7jeO6VtlRF8"
+        values['key'] = "AIzaSyA1Sr0UDr75ZZsymS4P12tBEzAt7zSl35o"
         values['language'] = 'zh-cn'
         params = urllib.urlencode(values)
         url = "https://ditu.google.cn/maps/api/geocode/json"
@@ -109,7 +109,7 @@ def get_path_distance(origin, destination):
     values['language'] = 'zh-CN'
     values['origin'] = origin
     values['destination'] = destination
-    values['key'] = "AIzaSyBeNmcjCubIBu3xusqOtQxqdn1EkXTk50M"
+    values['key'] = "AIzaSyA1Sr0UDr75ZZsymS4P12tBEzAt7zSl35o"
     params = urllib.urlencode(values)
     url = "https://ditu.google.cn/maps/api/directions/json"
     geturl = url + "?" + params

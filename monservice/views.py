@@ -897,7 +897,7 @@ def indicator_history(request):
             time_x2 = time.strftime('%H:%M', x2)
 
             if indicator == 'battery':
-                value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(100 - 2 * j)})
+                value_arr.append({'time': time_x1 + '~' + time_x2, 'value': round(float(100 - 0.2 * j), 2)})
             else:
                 value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(y)})
     except Exception, e:
@@ -1046,7 +1046,7 @@ def gps_info_trans(gpsinfo):
     ret_str = ''
     values = {}
     values['latlng'] = gpsinfo
-    values['key'] = "AIzaSyDD2vDhoHdl8eJAIyWPv0Jw7jeO6VtlRF8"
+    values['key'] = "AIzaSyA1Sr0UDr75ZZsymS4P12tBEzAt7zSl35o"
     data = urllib.urlencode(values)
     url = "https://ditu.google.cn/maps/api/geocode/json"
     geturl = url + "?" + data
@@ -1374,7 +1374,8 @@ def save_safe_settings(request, type_id):
 @api_view(['GET'])
 def get_message(request):
     alarm_count = AlarmInfo.objects.filter(alarm_status=1).count()
-    undispach_count = SiteDispatch.objects.filter(status='undispatch').count()
+    dispatches = SiteDispatch.objects.filter(create_date__gte=datetime.date.today()).order_by('did')
+    undispach_count = len(dispatches)
     message_count = alarm_count + undispach_count
     return JsonResponse({'alarm_count': alarm_count, 'undispach_count': undispach_count, 'message_count': message_count},
                         safe=True, status=status.HTTP_200_OK)

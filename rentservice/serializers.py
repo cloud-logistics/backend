@@ -19,6 +19,7 @@ from monservice.models import BoxInfo
 from monservice.models import Manufacturer, ProduceArea, Hardware, Battery
 from models import SiteStat
 from models import SiteStatDetail
+from models import BoxRentFeeDetail
 
 
 class ManufacturerSerializer(serializers.ModelSerializer):
@@ -192,4 +193,26 @@ class BoxInfoResSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BoxInfo
+        fields = '__all__'
+
+
+class RentLeaseBoxSerializer(serializers.ModelSerializer):
+    box = BoxInfoSerializer()
+    on_site = SiteInfoSerializer()
+    off_site = SiteInfoSerializer()
+    enterprise = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RentLeaseInfo
+        fields = '__all__'
+
+    def get_enterprise(self, obj):
+        return EnterpriseInfoSerializer(obj.user_id.enterprise).data
+
+
+class BoxRentFeeDetailSerializer(serializers.ModelSerializer):
+    enterprise = EnterpriseUserSerializer()
+
+    class Meta:
+        model = BoxRentFeeDetail
         fields = '__all__'

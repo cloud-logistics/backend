@@ -253,9 +253,9 @@ CREATE OR REPLACE FUNCTION iot.cal_missing_alarm() RETURNS void AS $$
       timestamp,deviceid FROM (
       SELECT sensor_data.deviceid,max(timestamp) AS timestamp,interval_time
       FROM iot.monservice_sensordata sensor_data INNER JOIN
-      (SELECT deviceid,type FROM iot.monservice_boxinfo GROUP BY deviceid,type) device
+      (SELECT deviceid,type_id FROM iot.monservice_boxinfo GROUP BY deviceid,type_id) device
       ON sensor_data.deviceid = device.deviceid
-      INNER JOIN iot.monservice_boxtypeinfo box_type_info ON device.type = box_type_info.id
+      INNER JOIN iot.monservice_boxtypeinfo box_type_info ON device.type_id = box_type_info.id
       group by sensor_data.deviceid, interval_time) A
     LOOP
       /* 获取箱子当前温度、湿度等数据 */

@@ -24,9 +24,10 @@ app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(crontab(minute='*/15', hour='*'), billing.s())
+    # sender.add_periodic_task(crontab(minute='*/15', hour='*'), billing.s())
     sender.add_periodic_task(crontab(minute='*/15', hour='*'), cancel_appointment.s())
     sender.add_periodic_task(crontab(minute=1, hour=0), generate_site_stat.s())
+    sender.add_periodic_task(crontab(minute=15, hour=0), box_rent_fee_billing.s())
 
 
 @app.task
@@ -120,6 +121,62 @@ def generate_site_stat():
             box_type_stat.append(stat_detail)
         SiteStatDetail.objects.bulk_create(box_type_stat)
     log.info('statistic site box end....')
+
+
+@app.task()
+def send_push_message(alias_list, push_message):
+    from rentservice.utils.jpush import push
+    from rentservice.utils import logger
+    log = logger.get_logger(__name__)
+    try:
+        push.push_alias(alias_list=alias_list, push_msg=push_message)
+    except Exception as e:
+        log.error(e)
+
+
+@app.task
+def box_rent_fee_billing():
+    from rentservice.models import RentLeaseInfo, EnterpriseUser, BoxRentFeeDetail
+    from rentservice.utils import logger
+    import datetime
+    import pytz
+    import uuid
+    from django.db import transaction
+    tz = pytz.timezone(settings.TIME_ZONE)
+    log = logger.get_logger(__name__)
+    log.info("BoxRentFee billing begin ...")
+    current_time = datetime.datetime.now(tz=tz)
+    if RentLeaseInfo.objects.all().count() > 0:
+        user_list = RentLeaseInfo.objects.values_list('user_id', flat=True)
+        user_obj_list = EnterpriseUser.objects.filter(user_id__in=user_list)
+        for user in user_obj_list:
+            off_site_counts = RentLeaseInfo.objects.filter(user_id=user, last_update_time__day=current_time.day - 1,
+                                                           lease_start_time__day=current_time.day - 1).count()
+            on_site_counts = RentLeaseInfo.objects.filter(user_id=user, last_update_time__day=current_time.day - 1,
+                                                          lease_end_time__day=current_time.day - 1).count()
+            with transaction.atomic():
+                user_lease_info_list = RentLeaseInfo.objects.filter(user_id=user)
+                user_total_rent_fee = 0
+                for lease in user_lease_info_list:
+                    if lease.rent_fee_rate == 0:
+                        price_per_hour = int(lease.box.type.price)
+                    else:
+                        price_per_hour = lease.rent_fee_rate
+
+                    if lease.rent_status == 0:
+                        user_total_rent_fee = user_total_rent_fee + price_per_hour * 24
+                    else:
+                        user_total_rent_fee = user_total_rent_fee + price_per_hour * (current_time.hour - lease.last_update_time.hour)
+                    lease.last_update_time = current_time
+                    lease.save()
+                box_rent_fee = BoxRentFeeDetail(detail_id=uuid.uuid1(), enterprise=user.enterprise, user=user,
+                                                date=current_time, off_site_nums=off_site_counts,
+                                                on_site_nums=on_site_counts, rent_fee=user_total_rent_fee)
+                box_rent_fee.save()
+    else:
+        log.info("no rent lease info. do nothing")
+
+    log.info("BoxRentFee billing end ...")
 
 
 @app.task(bind=True)
