@@ -15,6 +15,7 @@ from monservice.models import City
 from monservice.models import SiteInfo
 from rentservice.serializers import BoxInfoSerializer
 from rentservice.serializers import BoxInfoResSerializer
+from rentservice.models import RentLeaseInfo
 from django.conf import settings
 import datetime
 import uuid
@@ -89,3 +90,54 @@ def get_box_detail(request, box_id):
         return JsonResponse(retcode({}, "9999", "云箱不存在"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return JsonResponse(retcode(BoxInfoResSerializer(box_info).data, "0000", "Success"), safe=True,
                         status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def get_box_stat(request, box_id):
+    try:
+        box = BoxInfo.objects.get(deviceid=box_id)
+    except BoxInfo.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "云箱不存在"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    # 获取周区间
+    today = datetime.datetime.today()
+    week_start = today - datetime.timedelta(days=today.weekday())
+    week_end = today - datetime.timedelta(days=7 - today.weekday())
+    week_queryset = RentLeaseInfo.objects.filter(rent_status=1, lease_start_time__gte=week_start,
+                                                 lease_start_time__lte=week_end, box=box)
+    week_count = week_queryset.count()
+    week_time = 0
+    for week in week_queryset:
+        if week.lease_start_time is not None and week.lease_end_time is not None:
+            week_time += float((week.lease_end_time - week.lease_start_time).days) * 24 + float(
+                (week.lease_end_time - week.lease_start_time).seconds) / 3600
+    # 获取月区间
+    y = today.year
+    m = today.month
+    month_start_dt = datetime.date(y, m, 1)
+    if m == 12:
+        month_end_dt = datetime.date(y + 1, 1, 1) - datetime.timedelta(days=1)
+    else:
+        month_end_dt = datetime.date(y, m + 1, 1) - datetime.timedelta(days=1)
+    month_queryset = RentLeaseInfo.objects.filter(rent_status=1, lease_start_time__gte=month_start_dt,
+                                                  lease_start_time__lte=month_end_dt, box=box)
+    month_count = month_queryset.count()
+    month_time = 0
+    for month in month_queryset:
+        if month.lease_start_time is not None and month.lease_end_time is not None:
+            month_time += float((month.lease_end_time - month.lease_start_time).days) * 24 + float(
+                (month.lease_end_time - month.lease_start_time).seconds) / 3600
+    # 获取年区间
+    year_start = datetime.date(y, 1, 1)
+    year_end = datetime.date(y + 1, 1, 1)
+    year_queryset = RentLeaseInfo.objects.filter(rent_status=1, lease_start_time__gte=year_start,
+                                                 lease_start_time__lte=year_end, box=box)
+    year_count = year_queryset.count()
+    year_time = 0
+    for year in year_queryset:
+        if year.lease_start_time is not None and year.lease_end_time is not None:
+            year_time += float((year.lease_end_time - year.lease_start_time).days) * 24 + float(
+                (year.lease_end_time - year.lease_start_time).seconds) / 3600
+    ret = {'week_count': week_count, 'week_time': week_time, 'month_count': month_count, 'month_time': month_time,
+           'year_count': year_count, 'year_time': year_time}
+    return JsonResponse(retcode(ret, '0000', 'Success'), safe=True, status=status.HTTP_200_OK)
