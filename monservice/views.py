@@ -1363,7 +1363,8 @@ def save_safe_settings(request, type_id):
 @api_view(['GET'])
 def get_message(request):
     alarm_count = AlarmInfo.objects.filter(alarm_status=1).count()
-    undispach_count = SiteDispatch.objects.filter(create_date__gte=datetime.date.today()).count()
+    dispatches = SiteDispatch.objects.filter(create_date__gte=datetime.date.today()).order_by('did')
+    undispach_count = len(dispatches)
     message_count = alarm_count + undispach_count
     return JsonResponse({'alarm_count': alarm_count, 'undispach_count': undispach_count, 'message_count': message_count},
                         safe=True, status=status.HTTP_200_OK)
