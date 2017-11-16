@@ -193,3 +193,17 @@ class BoxInfoResSerializer(serializers.ModelSerializer):
     class Meta:
         model = BoxInfo
         fields = '__all__'
+
+
+class RentLeaseBoxSerializer(serializers.ModelSerializer):
+    box = BoxInfoSerializer()
+    on_site = SiteInfoSerializer()
+    off_site = SiteInfoSerializer()
+    enterprise = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RentLeaseInfo
+        fields = '__all__'
+
+    def get_enterprise(self, obj):
+        return EnterpriseInfoSerializer(obj.user_id.enterprise).data

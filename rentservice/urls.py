@@ -78,4 +78,5 @@ urlpatterns = [
     url(r'^rentservice/appointment/(?P<user_id>[0-9a-zA-Z-]+)/finishedlist$', appointment.get_user_finished_list),
     # 承运方已完成的预约单
     url(r'^rentservice/boxinfo/stat/(?P<box_id>[0-9a-zA-Z-]+)$', boxinfo.get_box_stat),  # 查询箱子统计
+    url(r'^rentservice/boxinfo/leaselist/(?P<box_id>[0-9a-zA-Z-]+)$', boxinfo.get_box_lease_list),  # 查询箱子租赁记录
 ]
