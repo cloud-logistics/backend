@@ -24,7 +24,7 @@ from django.conf import settings
 import datetime
 import uuid
 import pytz
-from rentservice.utils.jpush import push
+from cloudbox import celery
 
 log = logger.get_logger(__name__)
 tz = pytz.timezone(settings.TIME_ZONE)
@@ -101,7 +101,8 @@ def create_appointment(request):
         return JsonResponse(retcode({}, "9999", e.message), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     alias = []
     alias.append(user_model.user_alias_id)
-    push.push_alias(alias_list=alias, push_msg=u'您的预约已经成功')
+    message = u'您的租箱预约已经成功，请到指定仓库获取云箱'
+    celery.send_push_message.delay(alias, message)
     return JsonResponse(retcode(UserAppointmentSerializer(appointment_model).data, "0000", "Success"), safe=True,
                         status=status.HTTP_200_OK)
 

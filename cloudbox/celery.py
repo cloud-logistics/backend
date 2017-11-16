@@ -122,6 +122,17 @@ def generate_site_stat():
     log.info('statistic site box end....')
 
 
+@app.task()
+def send_push_message(alias_list, push_message):
+    from rentservice.utils.jpush import push
+    from rentservice.utils import logger
+    log = logger.get_logger(__name__)
+    try:
+        push.push_alias(alias_list=alias_list, push_msg=push_message)
+    except Exception as e:
+        log.error(e)
+
+
 @app.task(bind=True)
 def debug_task(self):
     print('Request: {0!r}'.format(self.request))
