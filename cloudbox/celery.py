@@ -40,7 +40,10 @@ def billing():
     log.info("billing begin ...")
     rent_info_list = RentLeaseInfo.objects.filter(rent_status=0)
     for rent_info in rent_info_list:
-        price_per_hour = int(rent_info.box.type.price)
+        if rent_info.rent_fee_rate == 0:
+            price_per_hour = int(rent_info.box.type.price)
+        else:
+            price_per_hour = rent_info.rent_fee_rate
         current_time = datetime.datetime.now(tz=tz)
         rent_hour_delta = current_time.hour - rent_info.lease_start_time.hour
         rent_info.rent = price_per_hour * rent_hour_delta

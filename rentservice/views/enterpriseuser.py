@@ -86,7 +86,7 @@ def add_enterprise_admin(request):
                                               status='', avatar_url=avatar_url, user_phone=user_phone,
                                               user_email=user_email, register_time=datetime.datetime.now(tz=tz),
                                               enterprise=enterprise, user_token=uuid.uuid4().hex, role=role,
-                                              group=group_obj, user_alias_id=uuid.uuid1())
+                                              group=group_obj, user_alias_id=uuid.uuid1().hex)
                     new_user.save()
                     auth_user_group = AuthUserGroup(user_token=new_user.user_token, group=group_obj)
                     auth_user_group.save()
@@ -298,7 +298,7 @@ def add_enterprise_user(request):
                                               user_email='', register_time=datetime.datetime.now(tz=tz),
                                               enterprise=enterprise, user_token=uuid.uuid4().hex, role=role,
                                               group=group_obj, user_real_name=user_real_name, user_gender=user_gender,
-                                              user_alias_id=uuid.uuid1())
+                                              user_alias_id=uuid.uuid1().hex)
                     new_user.save()
                     auth_user_group = AuthUserGroup(user_token=new_user.user_token, group=group_obj)
                     auth_user_group.save()
@@ -350,6 +350,11 @@ def update_enterprise_user(request):
     except Exception:
         return JsonResponse(retcode(errcode("9999", '修改用户id不能为空'), "9999", '修改用户id不能为空'), safe=True,
                             status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user_password = data['user_password']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '修改用户密码不能为空'), "9999", '修改用户密码不能为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
 
     try:
         user = EnterpriseUser.objects.get(user_id=user_id)
@@ -360,6 +365,9 @@ def update_enterprise_user(request):
         user.user_gender = user_gender
         user.user_nickname = user_nickname
         user.enterprise_id = enterprise
+        if user_password:
+            user.user_password = user_password
+            log.info("user_password is changed")
         user.save()
     except EnterpriseUser.DoesNotExist, e:
         log.error(repr(e))

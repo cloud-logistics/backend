@@ -66,15 +66,15 @@ def auth(request):
     except EnterpriseUser.DoesNotExist, e:
         log.error(repr(e))
         return JsonResponse(retcode({}, "0403", '用户不存在'), safe=True, status=status.HTTP_403_FORBIDDEN)
-    try:
-        auth_user_group = AuthUserGroup.objects.get(user_token=user.user_token)
-        access_group = AccessGroup.objects.get(access_group_id=auth_user_group.group_id)
-    except AuthUserGroup.DoesNotExist, e:
-        log.error(repr(e))
-        return JsonResponse(retcode({}, "0403", '用户不属于任何群组'), safe=True, status=status.HTTP_403_FORBIDDEN)
+    # try:
+    #     auth_user_group = AuthUserGroup.objects.get(user_token=user.user_token)
+    #     access_group = AccessGroup.objects.get(access_group_id=auth_user_group.group_id)
+    # except AuthUserGroup.DoesNotExist, e:s
+    #     log.error(repr(e))
+    #     return JsonResponse(retcode({}, "0403", '用户不属于任何群组'), safe=True, status=status.HTTP_403_FORBIDDEN)
     ser_user = EnterpriseUserSerializer(user)
     ret = ser_user.data
-    ret['group'] = access_group.group
+    ret['group'] = user.group.group
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
 
