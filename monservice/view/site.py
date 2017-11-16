@@ -34,21 +34,30 @@ def add_site(request):
     try:
         data = json.loads(request.body)
         location = to_str(data['location'])             # 堆场名称
+        name = data['name']  # 名称
+
+        if name == '':
+            response_msg = {'status': 'ERROR', 'msg': '仓库名称不能为空.'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
+        sites = SiteInfo.objects.filter(name=name)
+        if len(sites) > 0:
+            response_msg = {'status': 'ERROR', 'msg': '仓库名称已存在.'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
         if location == '':
             response_msg = {'status': 'ERROR', 'msg': 'location is empty.'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
-        longtitude = to_str(data['longitude'])          # 经度
-        if longtitude == '':
-            response_msg = {'status': 'ERROR', 'msg': 'longtitude is empty.'}
+        longitude = to_str(data['longitude'])          # 经度
+        if longitude == '':
+            response_msg = {'status': 'ERROR', 'msg': 'longitude is empty.'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
         latitude = to_str(data['latitude'])             # 纬度
 
         if latitude == '':
             response_msg = {'status': 'ERROR', 'msg': 'latitude is empty.'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
-
 
         volume = data['volume']                         # 堆场箱子容量
         city_id = data['city_id']                       # 城市
@@ -61,7 +70,7 @@ def add_site(request):
 
         site_code = generate_sid(city.city_name)        # 堆场代码
 
-        site = SiteInfo(location=location, latitude=latitude, longitude=longtitude, site_code=site_code,
+        site = SiteInfo(name= name, location=location, latitude=latitude, longitude=longitude, site_code=site_code,
                         city= city, province=province, nation=nation, volume=volume)
         site.save()
 
@@ -72,8 +81,9 @@ def add_site(request):
         response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': 'add site success'}
+        response_msg = {'status': 'OK', 'msg': '录入仓库成功'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
 
 # 删除堆场
 @csrf_exempt
