@@ -62,16 +62,12 @@ def auth(request):
         return JsonResponse(retcode({}, "9999", '注册密码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        user = EnterpriseUser.objects.get(user_name=username, user_password=password)
+        user = EnterpriseUser.objects.get(user_name=username)
+        if user.user_password != password:
+            return JsonResponse(retcode({}, "0403", '用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
     except EnterpriseUser.DoesNotExist, e:
         log.error(repr(e))
         return JsonResponse(retcode({}, "0403", '用户不存在'), safe=True, status=status.HTTP_403_FORBIDDEN)
-    # try:
-    #     auth_user_group = AuthUserGroup.objects.get(user_token=user.user_token)
-    #     access_group = AccessGroup.objects.get(access_group_id=auth_user_group.group_id)
-    # except AuthUserGroup.DoesNotExist, e:s
-    #     log.error(repr(e))
-    #     return JsonResponse(retcode({}, "0403", '用户不属于任何群组'), safe=True, status=status.HTTP_403_FORBIDDEN)
     ser_user = EnterpriseUserSerializer(user)
     ret = ser_user.data
     ret['group'] = user.group.group
