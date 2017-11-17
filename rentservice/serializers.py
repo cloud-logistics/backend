@@ -211,7 +211,8 @@ class RentLeaseBoxSerializer(serializers.ModelSerializer):
 
 
 class BoxRentFeeDetailSerializer(serializers.ModelSerializer):
-    enterprise = EnterpriseUserSerializer()
+    enterprise = EnterpriseInfoSerializer()
+    user = EnterpriseUserSerializer()
 
     class Meta:
         model = BoxRentFeeDetail
