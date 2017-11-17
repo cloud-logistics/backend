@@ -893,8 +893,8 @@ def indicator_history(request):
 
             x1 = time.localtime(start_time + j * 3600)
             x2 = time.localtime(start_time + (j + 1) * 3600)
-            time_x1 = time.strftime('%H:%M', x1)
-            time_x2 = time.strftime('%H:%M', x2)
+            time_x1 = time.strftime('%Y-%m-%d %H:%M', x1)
+            time_x2 = time.strftime('%Y-%m-%d %H:%M', x2)
 
             if indicator == 'battery':
                 value_arr.append({'time': time_x1 + '~' + time_x2, 'value': round(float(100 - 0.2 * j), 2)})
