@@ -27,7 +27,8 @@ def setup_periodic_tasks(sender, **kwargs):
     # sender.add_periodic_task(crontab(minute='*/15', hour='*'), billing.s())
     sender.add_periodic_task(crontab(minute='*/15', hour='*'), cancel_appointment.s())
     sender.add_periodic_task(crontab(minute=1, hour=0), generate_site_stat.s())
-    sender.add_periodic_task(crontab(minute=15, hour=0), box_rent_fee_billing.s())
+    sender.add_periodic_task(crontab(minute=15, hour=0), box_rent_fee_daily_billing.s())
+    sender.add_periodic_task(crontab(minute='*/2', hour='*'), box_rent_fee_month_billing.s())
 
 
 @app.task
@@ -135,7 +136,7 @@ def send_push_message(alias_list, push_message):
 
 
 @app.task
-def box_rent_fee_billing():
+def box_rent_fee_daily_billing():
     from rentservice.models import RentLeaseInfo, EnterpriseUser, BoxRentFeeDetail
     from rentservice.serializers import BoxRentFeeDetailSerializer
     from rentservice.utils import logger
@@ -195,6 +196,47 @@ def box_rent_fee_billing():
     else:
         log.info("no rent lease info. do nothing")
     log.info("BoxRentFee billing end ...")
+
+
+@app.task
+def box_rent_fee_month_billing():
+    from rentservice.models import BoxRentFeeDetail, BoxRentFeeByMonth, EnterpriseInfo
+    from rentservice.utils import logger
+    import datetime
+    import pytz
+    import uuid
+    tz = pytz.timezone(settings.TIME_ZONE)
+    log = logger.get_logger(__name__)
+    log.info("BoxRentFeeByMonth billing begin ...")
+    current_time = datetime.datetime.now(tz=tz)
+    if BoxRentFeeDetail.objects.all().count() > 0:
+        log.info("box_rent_fee_month_billing: compute begin")
+        try:
+            enterprise_list = BoxRentFeeDetail.objects.values('enterprise').distinct()
+            for enterprise in enterprise_list:
+                enterprise_obj = EnterpriseInfo.objects.get(enterprise_id=enterprise['enterprise'])
+                query_list = BoxRentFeeDetail.objects.filter(enterprise=enterprise_obj,
+                                                             date__year=current_time.year, date__month=current_time.month)
+                off_site_box_nums_month = 0
+                on_site_box_nums_month = 0
+                rent_fee_month = 0
+                for box_rent_day in query_list:
+                    rent_fee_month = rent_fee_month + box_rent_day.rent_fee
+                    on_site_box_nums_month = on_site_box_nums_month + box_rent_day.on_site_nums
+                    off_site_box_nums_month = off_site_box_nums_month + box_rent_day.off_site_nums
+                log.info("enterprise_id = %s, rent_fee_month=%s, on_site_box_nums_month=%s,off_site_box_nums_month=%s"
+                         % (enterprise['enterprise'], rent_fee_month, on_site_box_nums_month, off_site_box_nums_month))
+                box_rent_fee = BoxRentFeeByMonth(detail_id=uuid.uuid1(), enterprise=enterprise_obj,
+                                                 date=current_time, off_site_nums=off_site_box_nums_month,
+                                                 on_site_nums=on_site_box_nums_month,
+                                                 rent_fee=rent_fee_month)
+                box_rent_fee.save()
+        except Exception, e:
+            log.error(repr(e))
+        log.info("box_rent_fee_month_billing: compute finsih")
+    else:
+        log.info("no BoxRentFeeDetail records. do nothing")
+    log.info("BoxRentFeeByMonth billing end ...")
 
 
 @app.task(bind=True)
