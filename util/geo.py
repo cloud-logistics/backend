@@ -92,8 +92,10 @@ def get_position_name(longitude, latitude):
             for i in range(size):
                 address_list.append(response_dic['results'][i]['formatted_address'])
         else:
-            log.info("req response: %s" % response_dic)
-
+            if response_dic['status'] == 'OVER_QUERY_LIMIT':
+                return 'OVER_QUERY_LIMIT'
+            else:
+                log.info("req response: %s" % response_dic)
         if len(address_list) > 0:
             return address_list[0]
         else:
