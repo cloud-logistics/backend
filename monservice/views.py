@@ -1043,6 +1043,10 @@ def gps_info_trans(gpsinfo):
     :param gpsinfo: lat,lng for exmaple 39.92,116.46
     :return str:
     '''
+
+    if gpsinfo == '0,0':
+        return ''
+
     ret_str = ''
     values = {}
     values['latlng'] = gpsinfo
