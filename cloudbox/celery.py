@@ -137,11 +137,11 @@ def send_push_message(alias_list, push_message):
 @app.task
 def box_rent_fee_billing():
     from rentservice.models import RentLeaseInfo, EnterpriseUser, BoxRentFeeDetail
+    from rentservice.serializers import BoxRentFeeDetailSerializer
     from rentservice.utils import logger
     import datetime
     import pytz
     import uuid
-    from django.db import transaction
     tz = pytz.timezone(settings.TIME_ZONE)
     log = logger.get_logger(__name__)
     log.info("BoxRentFee billing begin ...")
@@ -149,13 +149,17 @@ def box_rent_fee_billing():
     if RentLeaseInfo.objects.all().count() > 0:
         user_list = RentLeaseInfo.objects.values_list('user_id', flat=True)
         user_obj_list = EnterpriseUser.objects.filter(user_id__in=user_list)
+        # log.info("box_rent_fee_billing: user_list=%s" % user_list)
         for user in user_obj_list:
             off_site_counts = RentLeaseInfo.objects.filter(user_id=user, last_update_time__day=current_time.day - 1,
                                                            lease_start_time__day=current_time.day - 1).count()
             on_site_counts = RentLeaseInfo.objects.filter(user_id=user, last_update_time__day=current_time.day - 1,
                                                           lease_end_time__day=current_time.day - 1).count()
-            with transaction.atomic():
+            log.info("box_rent_fee_billing: off_site_counts=%s, on_site_counts=%s" % (off_site_counts, on_site_counts))
+            try:
+                log.info("box_rent_fee_billing: begin compute")
                 user_lease_info_list = RentLeaseInfo.objects.filter(user_id=user)
+                # log.info("box_rent_fee_billing: user_lease_info_list = %s" % user_lease_info_list)
                 user_total_rent_fee = 0
                 for lease in user_lease_info_list:
                     if lease.rent_fee_rate == 0:
@@ -166,16 +170,30 @@ def box_rent_fee_billing():
                     if lease.rent_status == 0:
                         user_total_rent_fee = user_total_rent_fee + price_per_hour * 24
                     else:
-                        user_total_rent_fee = user_total_rent_fee + price_per_hour * (current_time.hour - lease.last_update_time.hour)
+                        delta_hour = current_time.hour - lease.lease_end_time.hour
+                        delta_day = current_time.day - lease.lease_end_time.day
+                        delta_month = current_time.month - lease.lease_end_time.month
+                        delta_year = current_time.month - lease.lease_end_time.year
+                        if (delta_hour <= 24 and delta_hour > 0) and delta_day == 0 \
+                                and delta_month == 0 and delta_year == 0:
+                            user_total_rent_fee = user_total_rent_fee + price_per_hour * (delta_hour)
+                            log.info("lease id = %s, box lease finished, the last delat hour is %s, rent rate is %s"
+                                     % (lease.lease_info_id, delta_hour, price_per_hour))
+                        else:
+                            log.info("lease id = %s, box lease finished, terminate rent_billing" % lease.lease_info_id)
                     lease.last_update_time = current_time
                     lease.save()
-                box_rent_fee = BoxRentFeeDetail(detail_id=uuid.uuid1(), enterprise=user.enterprise, user=user,
-                                                date=current_time, off_site_nums=off_site_counts,
+                    log.info("box_rent_fee_billing: update last_update_time succ")
+                box_rent_fee = BoxRentFeeDetail(detail_id=uuid.uuid1(), enterprise=user.enterprise,
+                                                user=user, date=current_time, off_site_nums=off_site_counts,
                                                 on_site_nums=on_site_counts, rent_fee=user_total_rent_fee)
                 box_rent_fee.save()
+                log.info("save box_rent_fee == %s" % BoxRentFeeDetailSerializer(box_rent_fee).data)
+                log.info("box_rent_fee_billing: compute finsih")
+            except Exception, e:
+                log.error(repr(e))
     else:
         log.info("no rent lease info. do nothing")
-
     log.info("BoxRentFee billing end ...")
 
 
