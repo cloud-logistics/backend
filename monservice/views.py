@@ -589,7 +589,7 @@ def basic_info_config(request):
         response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': 'add box success'}
+        response_msg = {'status': 'OK', 'msg': u'录入云箱基础信息成功！'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
@@ -630,7 +630,7 @@ def modify_basic_info(request):
         response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': 'modify box success'}
+        response_msg = {'status': 'OK', 'msg': u'修改云箱基础信息成功！'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
@@ -647,7 +647,7 @@ def remove_basic_info(request, id):
         response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': 'delete box success'}
+        response_msg = {'status': 'OK', 'msg': u'删除云箱基础信息成功！'}
         return JsonResponse(response_msg, safe=False, status=status.HTTP_200_OK)
 
 
