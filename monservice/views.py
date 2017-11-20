@@ -603,8 +603,8 @@ def modify_basic_info(request):
         box = BoxInfo.objects.get(deviceid=container_id)
         rfid = to_str(data['rfid'])  # RFID
 
-        boxes = BoxInfo.objects.filter(tid=rfid)
-        if len(boxes) > 0 and rfid != box.tid :
+        boxes = BoxInfo.objects.filter(tid=rfid).exclude(deviceid=container_id)
+        if boxes.count() > 0:
             response_msg = {'status': 'ERROR', 'msg': '云箱RFID已存在！'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 

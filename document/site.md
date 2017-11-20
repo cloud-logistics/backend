@@ -45,7 +45,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/monservice/sites/{site_id}`
+`container/api/v1/cloudbox/monservice/sites/{site_id}/`
 
 #### 方法：
 

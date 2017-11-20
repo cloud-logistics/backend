@@ -27,39 +27,39 @@ def to_str(unicode_or_str):
     return value
 
 
-# 新增堆场
+# 新增仓库
 @csrf_exempt
 @api_view(['POST'])
 def add_site(request):
     try:
         data = json.loads(request.body)
-        location = to_str(data['location'])             # 堆场名称
+        location = to_str(data['location'])             # 仓库名称
         name = data['name']  # 名称
 
         if name == '':
-            response_msg = {'status': 'ERROR', 'msg': '仓库名称不能为空.'}
+            response_msg = {'status': 'ERROR', 'msg': u'仓库名称不能为空！'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
         sites = SiteInfo.objects.filter(name=name)
         if len(sites) > 0:
-            response_msg = {'status': 'ERROR', 'msg': '仓库名称已存在.'}
+            response_msg = {'status': 'ERROR', 'msg': u'仓库名称已存在！'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
         if location == '':
-            response_msg = {'status': 'ERROR', 'msg': 'location is empty.'}
+            response_msg = {'status': 'ERROR', 'msg': u'位置不能为空！'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
         longitude = to_str(data['longitude'])          # 经度
         if longitude == '':
-            response_msg = {'status': 'ERROR', 'msg': 'longitude is empty.'}
+            response_msg = {'status': 'ERROR', 'msg': u'经度不能为空！'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
         latitude = to_str(data['latitude'])             # 纬度
 
         if latitude == '':
-            response_msg = {'status': 'ERROR', 'msg': 'latitude is empty.'}
+            response_msg = {'status': 'ERROR', 'msg': u'纬度不能为空！'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
-        volume = data['volume']                         # 堆场箱子容量
+        volume = data['volume']                         # 仓库箱子容量
         city_id = data['city_id']                       # 城市
         province_id = data['province_id']               # 省
         nation_id = data['nation_id']                   # 国家
@@ -68,7 +68,7 @@ def add_site(request):
         province = Province.objects.get(province_id=province_id)
         nation = Nation.objects.get(nation_id=nation_id)
 
-        site_code = generate_sid(city.city_name)        # 堆场代码
+        site_code = generate_sid(city.city_name)        # 仓库代码
 
         site = SiteInfo(name= name, location=location, latitude=latitude, longitude=longitude, site_code=site_code,
                         city= city, province=province, nation=nation, volume=volume)
@@ -81,19 +81,19 @@ def add_site(request):
         response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': '录入仓库成功'}
+        response_msg = {'status': 'OK', 'msg': u'录入仓库成功！'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
-# 删除堆场
+# 删除仓库
 @csrf_exempt
 @api_view(['DELETE'])
 def delete_site(request, id):
     try:
-        # 如果堆场有箱子，则提示不能删除堆场
+        # 如果仓库有箱子，则提示不能删除仓库
         boxes = BoxInfo.objects.filter(siteinfo_id=id)
         if len(boxes) > 0:
-            response_msg = {'status': 'ERROR', 'msg': '仓库内还有箱子，不能删除该仓库！'}
+            response_msg = {'status': 'ERROR', 'msg': u'仓库内还有箱子，不能删除该仓库！'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             SiteInfo.objects.get(id=id).delete()
@@ -103,11 +103,11 @@ def delete_site(request, id):
         response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': '删除仓库成功！'}
+        response_msg = {'status': 'OK', 'msg': u'删除仓库成功！'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
-# 修改堆场
+# 修改仓库
 @csrf_exempt
 @api_view(['PUT'])
 def modify_site(request, id):
@@ -115,11 +115,21 @@ def modify_site(request, id):
         data = json.loads(request.body)
 
         site = SiteInfo.objects.get(id=id)
-        site.location = to_str(data['location'])  # 堆场名称
+        name = data['name']  # 名称
+        if name == '':
+            response_msg = {'status': 'ERROR', 'msg': u'仓库名称不能为空！'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
+        sites = SiteInfo.objects.filter(name=name).exclude(id=id)
+        if sites.count() > 0:
+            response_msg = {'status': 'ERROR', 'msg': u'仓库名称已存在！'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
+        site.location = to_str(data['location'])  # 仓库位置
         site.longitude = to_str(data['longitude'])  # 经度
         site.latitude = to_str(data['latitude'])  # 纬度
-        site.site_code = to_str(data['site_code'])  # 堆场代码
-        site.volume = data['volume']  # 堆场箱子容量
+        site.site_code = to_str(data['site_code'])  # 仓库代码
+        site.volume = data['volume']  # 仓库箱子容量
 
         city_id = data['city_id']  # 城市
         province_id = data['province_id']  # 省
@@ -137,11 +147,11 @@ def modify_site(request, id):
         response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': '修改仓库成功！'}
+        response_msg = {'status': 'OK', 'msg': u'修改仓库成功！'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
-# 获取全部堆场信息
+# 获取全部仓库信息
 @csrf_exempt
 @api_view(['GET'])
 def get_sites(request):
@@ -157,10 +167,10 @@ def get_sites(request):
         response_msg = {'code': 'ERROR', 'message': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        return paginator.get_paginated_response(ret_ser.data, 'OK', '查询全部堆场成功！')
+        return paginator.get_paginated_response(ret_ser.data, 'OK', u'查询全部仓库成功！')
 
 
-# 根据堆场ID获取堆场内的云箱
+# 根据仓库ID获取仓库内的云箱
 @csrf_exempt
 @api_view(['GET'])
 def get_site_boxes(request, id):
@@ -207,7 +217,7 @@ def get_box_by_allsite(request):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
-# 获取某个堆场箱子进出流水
+# 获取某个仓库箱子进出流水
 @csrf_exempt
 @api_view(['GET'])
 def get_site_stream(request, id):
@@ -242,7 +252,7 @@ def get_site_stream(request, id):
 def box_inout(request):
     try:
         data = json.loads(request.body)
-        site_id = str(data['site_id'])  # 堆场id
+        site_id = str(data['site_id'])  # 仓库id
         boxes = data['boxes']  # 箱子数组
         ts = str(time.time())[0:10]
         with transaction.atomic():
@@ -278,7 +288,7 @@ def box_inout(request):
 # 租赁平台：箱子进出仓库
 def enter_leave_site(data):
     try:
-        site_id = str(data['site_id'])  # 堆场id
+        site_id = str(data['site_id'])  # 仓库id
         boxes = data['boxes']  # 箱子数组
         ts = str(time.time())[0:10]
         with transaction.atomic():

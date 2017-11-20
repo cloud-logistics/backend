@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from monservice.serializers import MaintenanceStationSerializer
 import json
-from monservice.models import MaintenanceStation
+from monservice.models import MaintenanceStation, City, Province, Nation
 from util import logger
 from rest_framework.settings import api_settings
 
@@ -23,14 +23,17 @@ def create_maintenance(request):
         data = json.loads(request.body)
         name = data['name']
         city_id = data['city_id']                       # 城市
+        city = City.objects.get(id=city_id)
         province_id = data['province_id']               # 省
+        province = Province.objects.get(province_id=province_id)
         nation_id = data['nation_id']                   # 国家
+        nation = Nation.objects.get(nation_id=nation_id)
         contact = data['contact']
         longitude = data['longitude']
         latitude = data['latitude']
 
         mainten = MaintenanceStation(name=name, latitude=latitude, longitude=longitude,
-                        city_id= city_id, province_id=province_id, nation=nation_id, contact=contact)
+                        city= city, province=province, nation=nation, contact=contact)
         mainten.save()
 
     except Exception, e:
@@ -66,9 +69,12 @@ def update_maintenance(request, maintenance_id):
         data = json.loads(request.body)
         ms = MaintenanceStation.objects.get(id=maintenance_id)
         ms.name = data['name']
-        ms.city_id = data['city_id']  # 城市
-        ms.province_id = data['province_id']  # 省
-        ms.nation_id = data['nation_id']  # 国家
+        city_id = data['city_id']  # 城市
+        ms.city = City.objects.get(id=city_id)
+        province_id = data['province_id']  # 省
+        ms.province = Province.objects.get(province_id=province_id)
+        nation_id = data['nation_id']  # 国家
+        ms.nation = Nation.objects.get(nation_id=nation_id)
         ms.contact = data['contact']
         ms.longitude = data['longitude']
         ms.latitude = data['latitude']
