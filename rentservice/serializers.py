@@ -20,6 +20,7 @@ from monservice.models import Manufacturer, ProduceArea, Hardware, Battery
 from models import SiteStat
 from models import SiteStatDetail
 from models import BoxRentFeeDetail
+from models import NotifyMessage
 
 
 class ManufacturerSerializer(serializers.ModelSerializer):
@@ -216,4 +217,10 @@ class BoxRentFeeDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BoxRentFeeDetail
+        fields = '__all__'
+
+
+class NotifyMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotifyMessage
         fields = '__all__'
