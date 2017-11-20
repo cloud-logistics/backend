@@ -163,3 +163,12 @@ class BoxRentFeeDetail(models.Model):
     rent_fee = models.BigIntegerField(default=0)
 
 
+class BoxRentFeeByMonth(models.Model):
+    detail_id = models.CharField(max_length=48, primary_key=True)
+    enterprise = models.ForeignKey(EnterpriseInfo, null=True)
+    date = models.DateTimeField(default=datetime.datetime.today())
+    off_site_nums = models.BigIntegerField(default=0)
+    on_site_nums = models.BigIntegerField(default=0)
+    rent_fee = models.BigIntegerField(default=0)
+
+
