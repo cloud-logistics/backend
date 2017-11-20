@@ -123,6 +123,9 @@ def finish_boxes_order(request):
         for item in rent_info_list:
             item.rent_status = 1
             item.lease_end_time = datetime.datetime.now(tz=timezone)
+            rent_rate = get_rent_fee_rate(item)
+            delta_datetime = item.lease_end_time - item.lease_start_time
+            item.rent = (delta_datetime.day * 24 + delta_datetime.seconds / 3600) * rent_rate
             item.on_site = site
             lease_info_list.append(item.lease_info_id)
             item.save()
@@ -138,3 +141,11 @@ def finish_boxes_order(request):
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     ret['rent_lease_info_id_list'] = lease_info_list
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
+def get_rent_fee_rate(lease_info):
+    if lease_info.rent_fee_rate == 0:
+        price_per_hour = int(lease_info.box.type.price)
+    else:
+        price_per_hour = lease_info.rent_fee_rate
+    return price_per_hour

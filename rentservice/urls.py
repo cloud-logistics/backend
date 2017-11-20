@@ -81,4 +81,8 @@ urlpatterns = [
     url(r'^rentservice/boxinfo/stat/(?P<box_id>[0-9a-zA-Z-]+)$', boxinfo.get_box_stat),  # 查询箱子统计
     url(r'^rentservice/boxinfo/leaselist/(?P<box_id>[0-9a-zA-Z-]+)$', boxinfo.get_box_lease_list),  # 查询箱子租赁记录
     url(r'^rentservice/boxbill/realtimebill', boxbill.box_bill_real_time_all),  # 所有企业计费情况报表
+    url(r'^rentservice/boxbill/monthbill/(?P<enterprise_id>[0-9a-zA-Z-]+)$', boxbill.enterprise_month_bill),  # 所有企业计费情况报表
+    url(r'^rentservice/boxbill/detail/(?P<enterprise_id>[0-9a-zA-Z-]+)/(?P<date>[0-9-]+)$',
+        boxbill.enterprise_month_bill_detail),  # 所有企业计费情况报表
+
 ]
