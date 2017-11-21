@@ -246,7 +246,7 @@ def get_user_finished_list(request, user_id):
 @api_view(['GET'])
 def get_appointment_detail(request, appointment_code):
     try:
-        appointment = UserAppointment.objects.get(appointment_code=appointment_code)
+        appointment = UserAppointment.objects.get(appointment_code=appointment_code, flag=0)
     except UserAppointment.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "预约单不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
     tmp_list = []
@@ -269,7 +269,7 @@ def get_appointment_detail(request, appointment_code):
 @api_view(['GET'])
 def get_appointment_detail_by_site(request, appointment_code, site_id):
     try:
-        appointment = UserAppointment.objects.get(appointment_code=appointment_code)
+        appointment = UserAppointment.objects.get(appointment_code=appointment_code, flag=0)
     except UserAppointment.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "预约单不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
     try:
