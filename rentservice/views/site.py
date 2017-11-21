@@ -18,6 +18,7 @@ from monservice.serializers import SiteInfoMoreSerializer
 from rentservice.models import SiteStat
 from rentservice.models import SiteStatDetail
 from rentservice.serializers import SiteStatResSerializer
+from rentservice.serializers import AllSiteSerializer
 import pytz
 from django.conf import settings
 
@@ -146,3 +147,11 @@ def get_site_stat(request, site_id):
     page = paginator.paginate_queryset(res_stat, request)
     ret_ser = SiteStatResSerializer(page, many=True)
     return paginator.get_paginated_response(ret_ser.data)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def get_all_site(request):
+    site_list = SiteInfo.objects.all()
+    return JsonResponse(retcode(AllSiteSerializer(site_list, many=True).data, "0000", "Success"), safe=True,
+                        status=status.HTTP_200_OK)

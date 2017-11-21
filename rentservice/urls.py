@@ -92,7 +92,13 @@ urlpatterns = [
         notify.set_notify_read_flag),  # 更新消息状态
     url(r'^rentservice/notify/delete/(?P<notify_id>[0-9]+)$',
         notify.delete_notify),  # 删除消息
-    url(r'^rentservice/appointment/(?P<appointment_id>[0-9a-zA-Z-]+)/detailbyid$', appointment.get_appointment_detail_by_id),
+    url(r'^rentservice/appointment/(?P<appointment_id>[0-9a-zA-Z-]+)/detailbyid$',
+        appointment.get_appointment_detail_by_id),
     # 预约详情查询
+    url(r'^rentservice/appointment/(?P<appointment_code>[0-9a-zA-Z-]+)/detail/(?P<site_id>[0-9]+)$',
+        appointment.get_appointment_detail_by_site),
+    # 预约详情查询
+    url(r'^rentservice/site/all$', site.get_all_site),
+    # 获取所有的site
 
 ]
