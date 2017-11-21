@@ -11,6 +11,7 @@ from rentservice.models import EnterpriseUser
 from rentservice.models import RentLeaseInfo
 from rentservice.serializers import RentLeaseInfoSerializer
 from rentservice.models import UserAppointment
+from rentservice.models import NotifyMessage
 import pytz
 from django.conf import settings
 
@@ -65,8 +66,8 @@ def get_dash_data(request, user_id):
     appointment_count = UserAppointment.objects.filter(user_id=user, flag=0).count()
     # 获取在运箱子数量
     box_count = RentLeaseInfo.objects.filter(user_id=user, on_site__isnull=True).count()
-    # 获取通知数量 todo
-    notify_count = 0
+    # 获取通知数量
+    notify_count = NotifyMessage.objects.filter(user=user,read_flag='N').count()
     return JsonResponse(
         retcode({'appointment_count': appointment_count, 'box_count': box_count, 'notify_count': notify_count}, '0000',
                 'Success'), safe=True, status=status.HTTP_200_OK)
