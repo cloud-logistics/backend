@@ -15,6 +15,7 @@ from rentservice.views import upload
 from rentservice.views import entleaseinfo
 from rentservice.views import boxinfo
 from rentservice.views import boxbill
+from rentservice.views import notify
 
 urlpatterns = [
     url(r'^rentservice/enterprise/enterpriseinfo/addenterpriseinfo/$', enterprise.add_enterprise_info),  # 企业信息增加接口
@@ -51,7 +52,7 @@ urlpatterns = [
     url(r'^rentservice/regions/cities/(?P<province_id>[0-9]+)$', regions.get_city_list),  # 获取制定省的市列表
     url(r'^rentservice/appointment/create', appointment.create_appointment),  # 承租方预约
     url(r'^rentservice/appointment/(?P<user_id>[0-9a-zA-Z-]+)/list$', appointment.get_list_by_user),  # 承租方预约列表查询
-    url(r'^rentservice/appointment/(?P<appointment_id>[0-9a-zA-Z-]+)/detail$', appointment.get_appointment_detail),
+    url(r'^rentservice/appointment/(?P<appointment_code>[0-9a-zA-Z-]+)/detail$', appointment.get_appointment_detail),
     # 预约详情查询
     url(r'^rentservice/userinfo/list/(?P<user_id>[0-9a-zA-Z-]+)/process', userinfo.get_process_order_list),
     # 承运人的在运箱子查询
@@ -81,8 +82,23 @@ urlpatterns = [
     url(r'^rentservice/boxinfo/stat/(?P<box_id>[0-9a-zA-Z-]+)$', boxinfo.get_box_stat),  # 查询箱子统计
     url(r'^rentservice/boxinfo/leaselist/(?P<box_id>[0-9a-zA-Z-]+)$', boxinfo.get_box_lease_list),  # 查询箱子租赁记录
     url(r'^rentservice/boxbill/realtimebill', boxbill.box_bill_real_time_all),  # 所有企业计费情况报表
-    url(r'^rentservice/boxbill/monthbill/(?P<enterprise_id>[0-9a-zA-Z-]+)$', boxbill.enterprise_month_bill),  # 所有企业计费情况报表
+    url(r'^rentservice/boxbill/monthbill/(?P<enterprise_id>[0-9a-zA-Z-]+)$', boxbill.enterprise_month_bill),
+    # 所有企业计费情况报表
     url(r'^rentservice/boxbill/detail/(?P<enterprise_id>[0-9a-zA-Z-]+)/(?P<date>[0-9-]+)$',
         boxbill.enterprise_month_bill_detail),  # 所有企业计费情况报表
+    url(r'^rentservice/notify/list/(?P<user_id>[0-9a-zA-Z-]+)$',
+        notify.get_notify_list_by_user),  # 获取用户所有通知
+    url(r'^rentservice/notify/set',
+        notify.set_notify_read_flag),  # 更新消息状态
+    url(r'^rentservice/notify/delete/(?P<notify_id>[0-9]+)$',
+        notify.delete_notify),  # 删除消息
+    url(r'^rentservice/appointment/(?P<appointment_id>[0-9a-zA-Z-]+)/detailbyid$',
+        appointment.get_appointment_detail_by_id),
+    # 预约详情查询
+    url(r'^rentservice/appointment/(?P<appointment_code>[0-9a-zA-Z-]+)/detail/(?P<site_id>[0-9]+)$',
+        appointment.get_appointment_detail_by_site),
+    # 预约详情查询
+    url(r'^rentservice/site/all$', site.get_all_site),
+    # 获取所有的site
 
 ]
