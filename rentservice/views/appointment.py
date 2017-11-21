@@ -244,7 +244,30 @@ def get_user_finished_list(request, user_id):
 # 预约单详情查询detail
 @csrf_exempt
 @api_view(['GET'])
-def get_appointment_detail(request, appointment_id):
+def get_appointment_detail(request, appointment_code):
+    try:
+        appointment = UserAppointment.objects.get(appointment_code=appointment_code)
+    except UserAppointment.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "预约单不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
+    tmp_list = []
+    res_app_list = []
+    detail_list = AppointmentDetail.objects.filter(appointment_id=appointment)
+    for detail in detail_list:
+        if detail.site_id.id in tmp_list:
+            res_app_list[tmp_list.index(detail.site_id.id)]['box_info'].append(
+                AppointmentDetailSerializer(detail).data)
+        else:
+            tmp_list.append(detail.site_id.id)
+            res_app_list.append({'site': SiteInfoSerializer(detail.site_id).data,
+                                 'box_info': [AppointmentDetailSerializer(detail).data]})
+    ret = {'appointment': UserAppointmentSerializer(appointment).data, 'info': res_app_list}
+    return JsonResponse(retcode(ret, "0000", "Success"), safe=True, status=status.HTTP_200_OK)
+
+
+# 预约单详情查询detail
+@csrf_exempt
+@api_view(['GET'])
+def get_appointment_detail_by_id(request, appointment_id):
     try:
         appointment = UserAppointment.objects.get(appointment_id=appointment_id)
     except UserAppointment.DoesNotExist:

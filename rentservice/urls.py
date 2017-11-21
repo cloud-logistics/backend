@@ -52,7 +52,7 @@ urlpatterns = [
     url(r'^rentservice/regions/cities/(?P<province_id>[0-9]+)$', regions.get_city_list),  # 获取制定省的市列表
     url(r'^rentservice/appointment/create', appointment.create_appointment),  # 承租方预约
     url(r'^rentservice/appointment/(?P<user_id>[0-9a-zA-Z-]+)/list$', appointment.get_list_by_user),  # 承租方预约列表查询
-    url(r'^rentservice/appointment/(?P<appointment_id>[0-9a-zA-Z-]+)/detail$', appointment.get_appointment_detail),
+    url(r'^rentservice/appointment/(?P<appointment_code>[0-9a-zA-Z-]+)/detail$', appointment.get_appointment_detail),
     # 预约详情查询
     url(r'^rentservice/userinfo/list/(?P<user_id>[0-9a-zA-Z-]+)/process', userinfo.get_process_order_list),
     # 承运人的在运箱子查询
@@ -92,5 +92,7 @@ urlpatterns = [
         notify.set_notify_read_flag),  # 更新消息状态
     url(r'^rentservice/notify/delete/(?P<notify_id>[0-9]+)$',
         notify.delete_notify),  # 删除消息
+    url(r'^rentservice/appointment/(?P<appointment_id>[0-9a-zA-Z-]+)/detailbyid$', appointment.get_appointment_detail_by_id),
+    # 预约详情查询
 
 ]
