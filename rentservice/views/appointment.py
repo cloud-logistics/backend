@@ -21,6 +21,7 @@ from monservice.models import BoxTypeInfo
 from monservice.serializers import SiteInfoSerializer
 from rentservice.serializers import AppointmentResSerializer
 from django.conf import settings
+from .notify import create_notify
 import datetime
 import uuid
 import pytz
@@ -102,6 +103,7 @@ def create_appointment(request):
     alias = []
     alias.append(user_model.user_alias_id)
     message = u'您的租箱预约已经成功，请到指定仓库获取云箱'
+    create_notify("云箱预约", message, user_id)
     celery.send_push_message.delay(alias, message)
     return JsonResponse(retcode(UserAppointmentSerializer(appointment_model).data, "0000", "Success"), safe=True,
                         status=status.HTTP_200_OK)
