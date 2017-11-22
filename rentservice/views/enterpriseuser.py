@@ -140,13 +140,6 @@ def update_enterprise_admin(request):
     except EnterpriseInfo.DoesNotExist:
         return JsonResponse(retcode({}, "9999", '修改所属的企业id'), safe=True,
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    if role:
-        if role != 'rentadmin' or role != 'rentuser':
-            return JsonResponse(retcode({}, "9999", '修改的用户角色不合规(rentadmin或rentuser)'), safe=True,
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
-        return JsonResponse(retcode({}, "9999", '修改的用户角色不能为空'), safe=True,
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     try:
         user = EnterpriseUser.objects.get(user_id=user_id)
         user.group = group_obj
