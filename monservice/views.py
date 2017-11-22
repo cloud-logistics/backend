@@ -946,7 +946,28 @@ def rent_container_history(request):
         time_x1 = time.strftime('%H:%M', x1)
         time_x2 = time.strftime('%H:%M', x2)
         value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(y)})
-    return JsonResponse({indicator: value_arr}, safe=True, status=status.HTTP_200_OK)
+    return JsonResponse({'data': {indicator: value_arr}, 'code': '0000', 'msg': 'Succ'},
+                        safe=True, status=status.HTTP_200_OK)
+
+
+# 租赁平台查询实时报文
+@api_view(['GET'])
+def rent_real_time_msg(request):
+    deviceid = request.GET.get('deviceid')
+    data = SensorData.objects.filter(deviceid=deviceid).order_by('-timestamp')
+    if len(data) > 0:
+        last_data = data[0]
+        temperature = last_data.temperature
+        humidity = last_data.humidity
+        position_name = gps_info_trans(str(cal_position(last_data.latitude)) + ',' +
+                                       str(cal_position(last_data.longitude)))
+    else:
+        temperature= 0
+        humidity = 0
+        position_name = ''
+    return JsonResponse({'data': {'temperature': temperature, 'humidity': humidity, 'position_name': position_name},
+                         'code': '0000', 'msg': 'Succ'},
+                        safe=True, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
