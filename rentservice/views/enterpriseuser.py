@@ -46,9 +46,11 @@ def add_enterprise_admin(request):
     try:
         user_phone = data['user_phone']
         user_email = data['user_email']
+        avatar_url = data['avatar_url']
     except Exception, e:
         user_phone = ''
         user_email = ''
+        avatar_url = ''
         log.error(repr(e))
     try:
         enterprise_id = data['enterprise_id']
@@ -85,7 +87,7 @@ def add_enterprise_admin(request):
                                               status='', register_time=datetime.datetime.now(tz=tz),
                                               enterprise=enterprise, user_token=uuid.uuid4().hex, role=role,
                                               group=group_obj, user_alias_id=uuid.uuid1().hex, user_real_name=user_real_name,
-                                              user_phone=user_phone, user_email=user_email)
+                                              user_phone=user_phone, user_email=user_email, avatar_url=avatar_url)
                     new_user.save()
                     auth_user_group = AuthUserGroup(user_token=new_user.user_token, group=group_obj)
                     auth_user_group.save()
