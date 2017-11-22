@@ -973,13 +973,21 @@ def rent_real_time_msg(request):
         last_data = data[0]
         temperature = last_data.temperature
         humidity = last_data.humidity
+        latitude = cal_position(last_data.latitude)
+        longitude = cal_position(last_data.longitude)
         position_name = gps_info_trans(str(cal_position(last_data.latitude)) + ',' +
                                        str(cal_position(last_data.longitude)))
     else:
-        temperature= 0
+        temperature = 0
         humidity = 0
         position_name = ''
-    return JsonResponse({'data': {'temperature': temperature, 'humidity': humidity, 'position_name': position_name},
+        latitude = 0
+        longitude = 0
+    return JsonResponse({'data': {'temperature': temperature,
+                                  'humidity': humidity,
+                                  'position_name': position_name,
+                                  'latitude': latitude,
+                                  'longitude': longitude},
                          'code': '0000', 'msg': 'Succ'},
                         safe=True, status=status.HTTP_200_OK)
 

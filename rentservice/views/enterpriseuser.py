@@ -43,14 +43,15 @@ def add_enterprise_admin(request):
         user_real_name = data['user_real_name']
     except Exception:
         return JsonResponse(retcode({}, "9999", '注册用户姓名不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
-    # try:
-    #     user_phone = data['user_phone']
-    # except Exception:
-    #     return JsonResponse(retcode({}, "9999", '用户号码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
-    # try:
-    #     user_email = data['user_email']
-    # except Exception:
-    #     return JsonResponse(retcode({}, "9999", '用户邮件地址不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user_phone = data['user_phone']
+        user_email = data['user_email']
+        avatar_url = data['avatar_url']
+    except Exception, e:
+        user_phone = ''
+        user_email = ''
+        avatar_url = ''
+        log.error(repr(e))
     try:
         enterprise_id = data['enterprise_id']
     except Exception:
@@ -85,7 +86,8 @@ def add_enterprise_admin(request):
                     new_user = EnterpriseUser(user_id=uuid.uuid1(), user_name=user_name, user_password=user_password,
                                               status='', register_time=datetime.datetime.now(tz=tz),
                                               enterprise=enterprise, user_token=uuid.uuid4().hex, role=role,
-                                              group=group_obj, user_alias_id=uuid.uuid1().hex, user_real_name=user_real_name)
+                                              group=group_obj, user_alias_id=uuid.uuid1().hex, user_real_name=user_real_name,
+                                              user_phone=user_phone, user_email=user_email, avatar_url=avatar_url)
                     new_user.save()
                     auth_user_group = AuthUserGroup(user_token=new_user.user_token, group=group_obj)
                     auth_user_group.save()
