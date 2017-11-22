@@ -100,5 +100,6 @@ urlpatterns = [
     # 预约详情查询
     url(r'^rentservice/site/all$', site.get_all_site),
     # 获取所有的site
-
+    url(r'^rentservice/site/filter$', site.get_site_by_filter),
+    # 有条件获取sitelist
 ]
