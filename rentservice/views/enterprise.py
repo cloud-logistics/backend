@@ -182,6 +182,8 @@ def enterpise_deposit_confirm(request):
 @csrf_exempt
 @api_view(['POST'])
 def enterprise_fuzzy_query(request):
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
     try:
         data = JSONParser().parse(request)
         keyword = data['keyword']
@@ -189,5 +191,6 @@ def enterprise_fuzzy_query(request):
         keyword = ''
         log.error(e.message)
     enterprise_data = EnterpriseInfo.objects.filter(Q(enterprise_name__contains=keyword)).order_by('register_time')
-    serializer_enterprise_data = EnterpriseInfoSerializer(enterprise_data, many=True)
-    return JsonResponse(retcode(serializer_enterprise_data.data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+    page = paginator.paginate_queryset(enterprise_data, request)
+    ser_ret = EnterpriseInfoSerializer(page, many=True)
+    return paginator.get_paginated_response(ser_ret.data)
