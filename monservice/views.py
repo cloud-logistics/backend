@@ -1450,7 +1450,7 @@ def save_safe_settings(request, type_id):
         response_msg = {'msg': e.message, 'status': 'ERROR'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': 'save box safe settings success'}
+        response_msg = {'status': 'OK', 'msg': u'安全参数设置成功.'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
