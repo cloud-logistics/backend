@@ -205,7 +205,7 @@ class SiteBoxStock(models.Model):
 
 # 堆场调度信息
 class SiteDispatch(models.Model):
-    did = models.AutoField(primary_key=True)
+    did = models.CharField(max_length=20, primary_key=True)
     start = models.ForeignKey(SiteInfo, related_name='start_site_fk')
     finish = models.ForeignKey(SiteInfo, related_name='finish_site_fk')
     count = models.IntegerField(default=0)
