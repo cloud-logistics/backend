@@ -273,6 +273,8 @@ def box_inout(request):
                     box.ava_flag = 'Y'
                     box.siteinfo_id = site_id
                 else:
+                    if stock.ava_num == 0:
+                        return
                     stock.ava_num -= 1
                     box.ava_flag = 'N'
                     box.siteinfo = None
@@ -299,7 +301,7 @@ def enter_leave_site(data):
                 box_id = str(box['box_id'])  # 箱子id
                 type = str(box['type'])  # 操作类型：1表示入仓，0表示出仓
                 history = SiteHistory(timestamp=ts, site_id=site_id, box_id=box_id, op_type=type)
-                history.save()
+
 
                 # 更新箱子状态
                 box = BoxInfo.objects.get(deviceid=box_id)
@@ -310,9 +312,13 @@ def enter_leave_site(data):
                     box.siteinfo_id = site_id
                     stock.ava_num += 1
                 else:
+                    if stock.ava_num == 0:
+                        return
                     box.ava_flag = 'N'
                     box.siteinfo = None
                     stock.ava_num -= 1
+
+                history.save()
                 box.save()
                 stock.save()
 
@@ -352,14 +358,20 @@ def dispatchout(request):
                 box_id = str(box['box_id'])     # 箱子id
                 type = '0'                      # 操作类型：1表示入仓，0表示出仓
                 history = SiteHistory(timestamp=ts, site=site, box_id=box_id, op_type=type)
-                history.save()
 
                 # 更新仓库箱子可用数量
                 box = BoxInfo.objects.get(deviceid=box_id)
                 stock = SiteBoxStock.objects.get(site=site, box_type=box.type)
                 box.ava_flag = 'N'
                 box.siteinfo = None
+
+                if stock.ava_num == 0:
+                    response_msg = {'result': 'False', 'code': '999999', 'msg': 'No Boxes.', 'status': 'error'}
+                    return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
                 stock.ava_num -= 1
+
+                history.save()
                 box.save()
                 stock.save()
 

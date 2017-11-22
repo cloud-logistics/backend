@@ -29,3 +29,21 @@ def char2num(c):
         'P': 27, 'Q': 28, 'R': 29, 'S': 30, 'T': 31, 'U': 32, 'V': 34, 'W': 35,
         'X': 36, 'Y': 37, 'Z': 38, }
     return codec[c]
+
+
+def generate_cid_new(sn, category, length, height, year):
+    owner_code = 'HNA'
+    categories = {'2': 'F', '3': 'M', '1': 'R', '4': 'N', '5': 'S', '6': 'D', }
+    cat_code = categories[category]
+    sn_code = '%06d' % sn
+
+    length_code = length
+    height_code = height
+    year_code = str(year)[3]
+    ext_code = 0
+
+    prefix = owner_code + cat_code + length_code + height_code + year_code + sn_code + ext_code
+
+    total = sum(char2num(c) * 2 ** x for x, c in enumerate(prefix))
+    check_code = (total % 11) % 10
+    return prefix + str(check_code)

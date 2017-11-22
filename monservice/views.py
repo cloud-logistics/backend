@@ -593,6 +593,20 @@ def basic_info_config(request):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
+# 根据云箱RFID获取ContainerID
+@csrf_exempt
+@api_view(['GET'])
+def get_containerid_by_rfid(request, rfid):
+    try:
+        box = BoxInfo.objects.get(tid=rfid)
+    except BoxInfo.DoesNotExist:
+        response_msg = {'result': 'False', 'code': '999999', 'msg': 'Box Not Found'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_404_NOT_FOUND)
+    else:
+        response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success', 'containerID': box.deviceid}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_404_NOT_FOUND)
+
+
 # 修改云箱基础信息
 @csrf_exempt
 @api_view(['PUT'])

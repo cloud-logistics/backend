@@ -143,16 +143,19 @@ def get_dispatch(sites):
         val, idx = min((val, idx) for (idx, val) in enumerate(dis_list))
         near_high_site = high_sites[idx]
 
-        low_sites.remove(low_site)
-        high_sites.remove(near_high_site)
-
         need_count = low_site.volume * ave - low_site.avanum
-        offer_count = near_high_site.volume * high - near_high_site.avanum
+        offer_count = near_high_site.avanum - near_high_site.volume * ave
 
         if need_count < offer_count:
             count = need_count
         else:
-            count = low_site.volume * low
+            count = low_site.volume * low * 2
+
+        if near_high_site.avanum - count < near_high_site.volume * ave:
+            high_sites.remove(near_high_site)
+
+        low_sites.remove(low_site)
+
         save_dispatch(near_high_site.id, low_site.id, count)
 
 

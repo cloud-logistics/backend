@@ -375,3 +375,40 @@
 }
 ```
 
+
+
+### 8. 根据云箱RFID查询云箱ID：
+
+#### URL：
+
+`container/api/v1/cloudbox/monservice/getContainerID/{rfid}`
+
+#### 方法： 
+
+`GET`
+
+#### BODY:
+
+```
+无 
+```
+ 
+#### 返回：
+
+```
+{
+    "msg": "Success",
+    "code": "000000",
+    "result": "True",
+    "containerID": "HNAM0000087"
+}
+```
+
+```
+{
+    "msg": "Box Not Found",
+    "code": "999999",
+    "result": "False"
+}
+
+```
