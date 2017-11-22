@@ -173,6 +173,15 @@ def get_site_by_filter(request):
         pagination_class.default_limit = int(param.get('limit'))
     paginator = pagination_class()
     site_list = SiteInfo.objects.filter(Q(name__contains=site_name) | Q(location__contains=site_name))
-    page = paginator.paginate_queryset(site_list, request)
-    ret_ser = SiteInfoSerializer(page, many=True)
+    res_site = []
+    for item in site_list:
+        # 获取每个堆场的各箱子类型的数目
+        site_box_num = SiteBoxStock.objects.filter(site=item)
+        res_site.append(
+            {'id': item.id, 'location': item.location, 'latitude': item.latitude, 'longitude': item.longitude,
+             'site_code': item.site_code, 'city': item.city, 'nation': item.nation, 'province': item.province,
+             'name': item.name,
+             'box_num': site_box_num})
+    page = paginator.paginate_queryset(res_site, request)
+    ret_ser = SiteInfoMoreSerializer(page, many=True)
     return paginator.get_paginated_response(ret_ser.data)
