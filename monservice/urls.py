@@ -22,6 +22,7 @@ urlpatterns = [
     url(r'^basicInfoMod$', views.modify_basic_info),              # 云箱基础信息修改
     url(r'^command$', views.send_command),                        # 向终端发送command
     url(r'^containerHistoryStatus$', views.indicator_history),    # 实时报文指标历史曲线
+    url(r'^rentContainerHistory$', views.rent_container_history), # 租赁平台调用历史曲线
     url(r'^analysisresult$', views.analysis_result),              # 分析报告
     url(r'^boxStatus$', views.status_summary),                    # 云箱状态汇总
     url(r'^operationoverview$', views.operation_overview),        # 运营状态概览
