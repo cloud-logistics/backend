@@ -164,7 +164,7 @@ def finish_boxes_order(request):
         notify_message = u'您的云箱已经归还成功，箱子ID分别是'
         for _box in box_info_list:
             notify_message += u' [ %s ] ' % _box.deviceid
-        create_notify("云箱租赁", notify_message, rent_info_list[0].user_id)
+        create_notify("云箱租赁", notify_message, rent_info_list[0].user_id.user_id)
     except Exception, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0500", '归还云箱失败'), "0500", '归还云箱失败'), safe=True,
