@@ -72,11 +72,11 @@ def rent_boxes_order(request):
             stock_data['site_id'] = site_id
             box_para_list = []
             for item in box_info_list:
-                lease_info_list.append(lease_info.lease_info_id)
                 lease_info = RentLeaseInfo(lease_info_id=uuid.uuid1(), user_id=enterprise_user,
                                            lease_start_time=current_time, box=item, off_site=site,
                                            last_update_time=current_time)
                 lease_info.save()
+                lease_info_list.append(lease_info.lease_info_id)
                 box_para = {}
                 box_para['box_id'] = item.deviceid
                 box_para['type'] = 0
