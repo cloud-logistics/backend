@@ -149,7 +149,7 @@ def get_dispatch(sites):
         if need_count < offer_count:
             count = need_count
         else:
-            count = low_site.volume * low * 2
+            count = offer_count
 
         if near_high_site.avanum - count < near_high_site.volume * ave:
             high_sites.remove(near_high_site)
@@ -181,8 +181,9 @@ def save_dispatch(start_id, finish_id, count):
     try:
         start_site = SiteInfo.objects.get(id=start_id)
         finish_site = SiteInfo.objects.get(id=finish_id)
+        did = generate_dispath_id()
 
-        dispatch = SiteDispatch(start=start_site, finish=finish_site, count=count, create_date=datetime.datetime.today())
+        dispatch = SiteDispatch(did=did, start=start_site, finish=finish_site, count=count, create_date=datetime.datetime.today())
         dispatch.save()
     except Exception, e:
         log.error(e.message)
@@ -269,5 +270,7 @@ def generate_dispath_id():
     sql = '''select nextval('iot.monservice_dispatch_id_seq') from iot.monservice_dispatch_id_seq'''
     id_query = query_list(sql)
     seq = id_query[0][0]
+    str_seq = '%06d' % seq
     ext_code = '0000'
-    return  type_code + day + str(seq) + ext_code
+    return  type_code + day + str_seq + ext_code
+

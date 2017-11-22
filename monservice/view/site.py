@@ -377,7 +377,7 @@ def dispatchout(request):
 
     except Exception, e:
         log.error(e.message)
-        response_msg = {'result': 'False', 'code': '999999', 'msg': 'Fail', 'status': 'error'}
+        response_msg = {'result': 'False', 'code': '999999', 'msg': e.message, 'status': 'error'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success', 'status': 'dispatch'}
@@ -420,7 +420,7 @@ def dispatchin(request):
 
     except Exception, e:
         log.error(e.message)
-        response_msg = {'result': 'False', 'code': '999999', 'msg': 'Fail'}
+        response_msg = {'result': 'False', 'code': '999999', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success'}
