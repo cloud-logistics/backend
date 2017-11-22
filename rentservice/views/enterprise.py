@@ -184,12 +184,12 @@ def enterpise_deposit_confirm(request):
 def enterprise_fuzzy_query(request):
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
+    data = JSONParser().parse(request)
     try:
-        data = JSONParser().parse(request)
         keyword = data['keyword']
-    except Exception, e:
-        keyword = ''
-        log.error(e.message)
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '关键字为空'), "9999", '关键字为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
     enterprise_data = EnterpriseInfo.objects.filter(Q(enterprise_name__contains=keyword)).order_by('register_time')
     page = paginator.paginate_queryset(enterprise_data, request)
     ser_ret = EnterpriseInfoSerializer(page, many=True)
