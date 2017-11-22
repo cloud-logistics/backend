@@ -16,6 +16,7 @@ from rentservice.views import entleaseinfo
 from rentservice.views import boxinfo
 from rentservice.views import boxbill
 from rentservice.views import notify
+from rentservice.views import dashboard
 
 urlpatterns = [
     url(r'^rentservice/enterprise/enterpriseinfo/addenterpriseinfo/$', enterprise.add_enterprise_info),  # 企业信息增加接口
@@ -102,4 +103,6 @@ urlpatterns = [
     # 获取所有的site
     url(r'^rentservice/site/filter$', site.get_site_by_filter),
     # 有条件获取sitelist
+    url(r'^rentservice/dashboard/info$', dashboard.get_dash_data),
+    # 获取dashboard的信息
 ]
