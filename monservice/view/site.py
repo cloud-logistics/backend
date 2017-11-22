@@ -158,10 +158,13 @@ def get_sites(request):
     try:
         pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
         paginator = pagination_class()
+        offset = request.GET.get('offset')
         sites = SiteInfo.objects.all().order_by('id')
         page = paginator.paginate_queryset(sites, request)
         ret_ser = SiteFullInfoSerializer(page, many=True)
-
+        if offset is None:
+            return JsonResponse({'data': {'results': SiteFullInfoSerializer(sites, many=True).data}},
+                                safe=True, status=status.HTTP_200_OK)
     except Exception, e:
         log.error(e.message)
         response_msg = {'code': 'ERROR', 'message': e.message}

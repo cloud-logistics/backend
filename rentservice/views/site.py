@@ -6,6 +6,8 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.settings import api_settings
+from rest_framework.parsers import JSONParser
+from django.db.models import Q
 from monservice.models import SiteInfo
 from monservice.models import BoxTypeInfo
 from monservice.models import BoxInfo
@@ -18,6 +20,7 @@ from monservice.serializers import SiteInfoMoreSerializer
 from rentservice.models import SiteStat
 from rentservice.models import SiteStatDetail
 from rentservice.serializers import SiteStatResSerializer
+from rentservice.serializers import AllSiteSerializer
 import pytz
 from django.conf import settings
 
@@ -145,4 +148,31 @@ def get_site_stat(request, site_id):
                          'total_out': stat_item.total_out, 'site': stat_item.site, 'detail': details})
     page = paginator.paginate_queryset(res_stat, request)
     ret_ser = SiteStatResSerializer(page, many=True)
+    return paginator.get_paginated_response(ret_ser.data)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def get_all_site(request):
+    site_list = SiteInfo.objects.all()
+    return JsonResponse(retcode(AllSiteSerializer(site_list, many=True).data, "0000", "Success"), safe=True,
+                        status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def get_site_by_filter(request):
+    data = JSONParser().parse(request)
+    try:
+        site_name = data['site_name']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", "仓库参数必输"), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    param = request.query_params
+    if param:
+        pagination_class.default_limit = int(param.get('limit'))
+    paginator = pagination_class()
+    site_list = SiteInfo.objects.filter(Q(name__contains=site_name) | Q(location__contains=site_name))
+    page = paginator.paginate_queryset(site_list, request)
+    ret_ser = SiteInfoSerializer(page, many=True)
     return paginator.get_paginated_response(ret_ser.data)

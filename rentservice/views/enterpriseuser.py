@@ -40,17 +40,17 @@ def add_enterprise_admin(request):
     except Exception:
         return JsonResponse(retcode({}, "9999", '注册密码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
-        avatar_url = data['avatar_url']
+        user_real_name = data['user_real_name']
     except Exception:
-        return JsonResponse(retcode({}, "9999", '头像url不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
-    try:
-        user_phone = data['user_phone']
-    except Exception:
-        return JsonResponse(retcode({}, "9999", '用户号码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
-    try:
-        user_email = data['user_email']
-    except Exception:
-        return JsonResponse(retcode({}, "9999", '用户邮件地址不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(retcode({}, "9999", '注册用户姓名不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    # try:
+    #     user_phone = data['user_phone']
+    # except Exception:
+    #     return JsonResponse(retcode({}, "9999", '用户号码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    # try:
+    #     user_email = data['user_email']
+    # except Exception:
+    #     return JsonResponse(retcode({}, "9999", '用户邮件地址不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
         enterprise_id = data['enterprise_id']
     except Exception:
@@ -83,10 +83,9 @@ def add_enterprise_admin(request):
         except EnterpriseUser.DoesNotExist:
                 with transaction.atomic():
                     new_user = EnterpriseUser(user_id=uuid.uuid1(), user_name=user_name, user_password=user_password,
-                                              status='', avatar_url=avatar_url, user_phone=user_phone,
-                                              user_email=user_email, register_time=datetime.datetime.now(tz=tz),
+                                              status='', register_time=datetime.datetime.now(tz=tz),
                                               enterprise=enterprise, user_token=uuid.uuid4().hex, role=role,
-                                              group=group_obj, user_alias_id=uuid.uuid1().hex)
+                                              group=group_obj, user_alias_id=uuid.uuid1().hex, user_real_name=user_real_name)
                     new_user.save()
                     auth_user_group = AuthUserGroup(user_token=new_user.user_token, group=group_obj)
                     auth_user_group.save()
@@ -104,18 +103,6 @@ def update_enterprise_admin(request):
     ret = {}
     data = JSONParser().parse(request)
     try:
-        user_name = data['user_name']
-    except Exception:
-        return JsonResponse(retcode({}, "9999", '注册姓名不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
-    try:
-        user_password = data['user_password']
-    except Exception:
-        return JsonResponse(retcode({}, "9999", '注册密码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
-    try:
-        avatar_url = data['avatar_url']
-    except Exception:
-        return JsonResponse(retcode({}, "9999", '头像url不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
-    try:
         user_phone = data['user_phone']
     except Exception:
         return JsonResponse(retcode({}, "9999", '用户号码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
@@ -131,16 +118,36 @@ def update_enterprise_admin(request):
         user_id = data['user_id']
     except Exception:
         return JsonResponse(retcode({}, "9999", '修改用户id不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
-
+    try:
+        role = data['role']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", '修改用户角色不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        group = data['group']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", '企业用户所属群组不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        avatar_url = data['avatar_url']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", '头像url不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        group_obj = AccessGroup.objects.get(group=group)
+    except AccessGroup.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", '修改企业用户群组不存在'), safe=True,
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    try:
+        enterprise = EnterpriseInfo.objects.get(enterprise_id=enterprise_id)
+    except EnterpriseInfo.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", '修改所属的企业id'), safe=True,
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     try:
         user = EnterpriseUser.objects.get(user_id=user_id)
-        enterprise = EnterpriseInfo.objects.get(enterprise_id=enterprise_id)
-        user.user_name = user_name
-        user.user_password = user_password
-        user.avatar_url = avatar_url
-        user.user_phone = user_phone
-        user.user_email = user_email
+        user.group = group_obj
         user.enterprise_id = enterprise
+        user.role = role
+        user.avatar_url = avatar_url
+        user.user_email = user_email
+        user.user_phone = user_phone
         user.save()
     except EnterpriseUser.DoesNotExist, e:
         log.error(repr(e))

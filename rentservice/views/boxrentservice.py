@@ -6,9 +6,10 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
-from rentservice.models import RentLeaseInfo, RentalServiceAdmin, EnterpriseUser
-from rentservice.models import RentalAdminOperationRecords, AppointmentDetail, UserAppointment
-from monservice.models import SiteInfo, BoxInfo, SiteBoxStock
+from rentservice.models import RentLeaseInfo, EnterpriseUser
+from rentservice.models import AppointmentDetail, UserAppointment
+from monservice.models import SiteInfo, BoxInfo
+from monservice.view.site import enter_leave_site
 from rentservice.utils.retcode import retcode, errcode
 from rentservice.utils import logger
 from django.db import transaction
@@ -60,23 +61,28 @@ def rent_boxes_order(request):
             return JsonResponse(retcode(errcode("9999", '预约单所属用户不存在'), "9999", '预约单所属用户不存在'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         appoint_detail_queryset = AppointmentDetail.objects.filter(appointment_id=user_appoint, site_id=site)
-        box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list)
+        #所租云箱必须隶属于当前site，否则报错
+        box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list, siteinfo__id=site_id)
+        log.info('box_id_list = %s, site_id = %s, query result list is %s' % (box_id_list, site_id, box_info_list))
         lease_info_list = []
         current_time = datetime.datetime.now(tz=timezone)
         with transaction.atomic():
+            stock_data = {}
+            stock_data['site_id'] = site_id
+            box_para_list = []
             for item in box_info_list:
+                lease_info_list.append(lease_info.lease_info_id)
                 lease_info = RentLeaseInfo(lease_info_id=uuid.uuid1(), user_id=enterprise_user,
                                            lease_start_time=current_time, box=item, off_site=site,
                                            last_update_time=current_time)
                 lease_info.save()
-                #SiteBoxStock update
-                site_box_stock = SiteBoxStock.objects.get(site=site, box_type=item.type)
-                orig_ava_num = site_box_stock.ava_num
-                orig_reserve_num = site_box_stock.reserve_num
-                site_box_stock.ava_num = orig_ava_num - 1
-                site_box_stock.reserve_num = orig_reserve_num - 1
-                site_box_stock.save()
-                lease_info_list.append(lease_info.lease_info_id)
+                box_para = {}
+                box_para['box_id'] = item.deviceid
+                box_para['type'] = 0
+                box_para_list.append(box_para)
+            #SiteBoxStock update
+            stock_data['boxes'] = box_para_list
+            enter_leave_site(stock_data)
             #结束预约
             for appoint_detail in appoint_detail_queryset:
                 appoint_detail.flag = 1
@@ -118,23 +124,39 @@ def finish_boxes_order(request):
             rent_info_list = RentLeaseInfo.objects.filter(box_id__in=box_id_list, rent_status=0)
         except RentLeaseInfo.DoesNotExist:
             return JsonResponse(retcode(errcode("9999", '租赁信息不存在'), "9999", '租赁信息不存在'), safe=True,
-                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         lease_info_list = []
         for item in rent_info_list:
             item.rent_status = 1
             item.lease_end_time = datetime.datetime.now(tz=timezone)
+            rent_rate = get_rent_fee_rate(item)
+            delta_datetime = item.lease_end_time - item.lease_start_time
+            item.rent = (delta_datetime.days * 24 + delta_datetime.seconds / 3600) * rent_rate
             item.on_site = site
             lease_info_list.append(item.lease_info_id)
             item.save()
         #update
+        stock_data = {}
+        stock_data['site_id'] = site_id
+        box_para_list = []
         for item in box_info_list:
-            site_box_stock = SiteBoxStock.objects.get(site=site, box_type=item.type)
-            orig_ava_num = site_box_stock.ava_num
-            site_box_stock.ava_num = orig_ava_num + 1
-            site_box_stock.save()
+            box_para = {}
+            box_para['box_id'] = item.deviceid
+            box_para['type'] = 1
+            box_para_list.append(box_para)
+        stock_data['boxes'] = box_para_list
+        enter_leave_site(stock_data)
     except Exception, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0500", '归还云箱失败'), "0500", '归还云箱失败'), safe=True,
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     ret['rent_lease_info_id_list'] = lease_info_list
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
+def get_rent_fee_rate(lease_info):
+    if lease_info.rent_fee_rate == 0:
+        price_per_hour = int(lease_info.box.type.price)
+    else:
+        price_per_hour = lease_info.rent_fee_rate
+    return price_per_hour
