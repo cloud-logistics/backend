@@ -396,7 +396,7 @@ def list_enterprise_user_by_enterprise_id(request, enterprise_id):
     for item in group_query_set:
         group_map[item.access_group_id] = item.group
     try:
-        enterprise_user_ret = EnterpriseUser.objects.filter(enterprise_id=enterprise_id)
+        enterprise_user_ret = EnterpriseUser.objects.filter(enterprise_id=enterprise_id).order_by('register_time')
         page = paginator.paginate_queryset(enterprise_user_ret, request)
         enterprise_user_ser = EnterpriseUserSerializer(page, many=True)
         revised_enterprise_user_list = []
