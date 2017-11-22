@@ -17,7 +17,8 @@ import uuid
 import datetime
 import pytz
 from django.conf import settings
-
+from .notify import create_notify
+from cloudbox import celery
 
 log = logger.get_logger(__name__)
 timezone = pytz.timezone(settings.TIME_ZONE)
@@ -61,7 +62,7 @@ def rent_boxes_order(request):
             return JsonResponse(retcode(errcode("9999", '预约单所属用户不存在'), "9999", '预约单所属用户不存在'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         appoint_detail_queryset = AppointmentDetail.objects.filter(appointment_id=user_appoint, site_id=site)
-        #所租云箱必须隶属于当前site，否则报错
+        # 所租云箱必须隶属于当前site，否则报错
         box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list, siteinfo__id=site_id)
         log.info('box_id_list = %s, site_id = %s, query result list is %s' % (box_id_list, site_id, box_info_list))
         lease_info_list = []
@@ -80,17 +81,26 @@ def rent_boxes_order(request):
                 box_para['box_id'] = item.deviceid
                 box_para['type'] = 0
                 box_para_list.append(box_para)
-            #SiteBoxStock update
+            # SiteBoxStock update
             stock_data['boxes'] = box_para_list
             enter_leave_site(stock_data)
-            #结束预约
+            # 结束预约
             for appoint_detail in appoint_detail_queryset:
                 appoint_detail.flag = 1
                 appoint_detail.save()
-            #预约单更新为已完成
+            # 预约单更新为已完成
             user_appoint.flag = 1
             user_appoint.save()
         ret['rent_lease_info_id_list'] = lease_info_list
+        # 增加消息
+        alias = []
+        alias.append(enterprise_user.user_alias_id)
+        message = u'您的云箱已经租赁成功'
+        celery.send_push_message.delay(alias, message)
+        notify_message = u'您的云箱已经租赁成功，箱子ID分别是'
+        for _box in box_info_list:
+            notify_message += u' [ %s ] ' % _box.deviceid
+        create_notify("云箱租赁", notify_message, enterprise_user.user_id)
     except Exception, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0500", '租赁云箱失败'), "0500", '租赁云箱失败'), safe=True,
@@ -135,7 +145,7 @@ def finish_boxes_order(request):
             item.on_site = site
             lease_info_list.append(item.lease_info_id)
             item.save()
-        #update
+        # update
         stock_data = {}
         stock_data['site_id'] = site_id
         box_para_list = []
@@ -146,6 +156,15 @@ def finish_boxes_order(request):
             box_para_list.append(box_para)
         stock_data['boxes'] = box_para_list
         enter_leave_site(stock_data)
+        # 增加消息
+        alias = []
+        alias.append(rent_info_list[0].user_id.user_alias_id)
+        message = u'您的云箱已经归还成功'
+        celery.send_push_message.delay(alias, message)
+        notify_message = u'您的云箱已经归还成功，箱子ID分别是'
+        for _box in box_info_list:
+            notify_message += u' [ %s ] ' % _box.deviceid
+        create_notify("云箱租赁", notify_message, rent_info_list[0].user_id)
     except Exception, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0500", '归还云箱失败'), "0500", '归还云箱失败'), safe=True,
