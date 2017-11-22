@@ -51,6 +51,10 @@ def create_appointment(request):
     except Exception:
         return JsonResponse(retcode({}, "9999", "堆场预约箱子数不能为空"), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
+        appointment_time = data['appointment_time']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", "预约时间不能为空"), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
         user_model = EnterpriseUser.objects.get(user_id=user_id)
     except EnterpriseUser.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "承运方用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
@@ -62,8 +66,9 @@ def create_appointment(request):
             appointment_id = str(uuid.uuid1())
             # 获取取消时间
             _cancel_time = datetime.datetime.fromtimestamp(cancel_time)
+            _appointment_time = datetime.datetime.fromtimestamp(appointment_time)
             appointment_model = UserAppointment(appointment_id=appointment_id, appointment_code=code,
-                                                appointment_time=datetime.datetime.today(), user_id=user_model,
+                                                appointment_time=_appointment_time, user_id=user_model,
                                                 cancel_time=_cancel_time)
             appointment_model.save()
             # 循环获取每个堆场的请求
