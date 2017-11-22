@@ -918,6 +918,58 @@ def indicator_history(request):
         return JsonResponse({indicator: value_arr}, safe=True, status=status.HTTP_200_OK)
 
 
+# 租赁平台调用历史曲线
+@api_view(['GET'])
+def rent_container_history(request):
+    deviceid = request.GET.get('deviceid')
+    indicator = request.GET.get('indicator')
+    day = request.GET.get('day')
+
+    end_time = int(time.mktime(time.strptime(day, '%Y-%m-%d'))) + 3600 * 24
+    start_time = end_time - 3600 * 24
+
+    data_list = query_list('SELECT * FROM iot.fn_indicator_history(' + str(start_time) + ',' +
+                           str(end_time) + ',\'' + indicator + '\',\'' + deviceid + '\') AS (value DECIMAL, hour INTEGER)')
+
+    data_dic = {}
+    value_arr = []
+    for i in range(len(data_list)):
+        data_dic.update({data_list[i][1]: data_list[i][0]})
+
+    for j in range(24):
+        y = data_dic.get(j)
+        if y is None:
+            y = 0
+
+        x1 = time.localtime(start_time + j * 3600)
+        x2 = time.localtime(start_time + (j + 1) * 3600)
+        time_x1 = time.strftime('%H:%M', x1)
+        time_x2 = time.strftime('%H:%M', x2)
+        value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(y)})
+    return JsonResponse({'data': {indicator: value_arr}, 'code': '0000', 'msg': 'Succ'},
+                        safe=True, status=status.HTTP_200_OK)
+
+
+# 租赁平台查询实时报文
+@api_view(['GET'])
+def rent_real_time_msg(request):
+    deviceid = request.GET.get('deviceid')
+    data = SensorData.objects.filter(deviceid=deviceid).order_by('-timestamp')
+    if len(data) > 0:
+        last_data = data[0]
+        temperature = last_data.temperature
+        humidity = last_data.humidity
+        position_name = gps_info_trans(str(cal_position(last_data.latitude)) + ',' +
+                                       str(cal_position(last_data.longitude)))
+    else:
+        temperature= 0
+        humidity = 0
+        position_name = ''
+    return JsonResponse({'data': {'temperature': temperature, 'humidity': humidity, 'position_name': position_name},
+                         'code': '0000', 'msg': 'Succ'},
+                        safe=True, status=status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 # @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
 # @permission_classes((IsAuthenticated,))
