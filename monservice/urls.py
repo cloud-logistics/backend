@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^basicInfoConfig$', views.basic_info_config),           # 云箱基础信息录入
     url(r'^basicInfo/(?P<id>\w+)/', views.remove_basic_info),     # 云箱基础信息删除
     url(r'^basicInfoMod$', views.modify_basic_info),              # 云箱基础信息修改
+    url(r'^getContainerID/(?P<rfid>\w+)/', views.get_containerid_by_rfid),  # 根据云箱RFID查询云箱ID
     url(r'^command$', views.send_command),                        # 向终端发送command
     url(r'^containerHistoryStatus$', views.indicator_history),    # 实时报文指标历史曲线
     url(r'^analysisresult$', views.analysis_result),              # 分析报告
