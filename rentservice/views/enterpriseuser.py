@@ -45,13 +45,19 @@ def add_enterprise_admin(request):
         return JsonResponse(retcode({}, "9999", '注册用户姓名不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
         user_phone = data['user_phone']
-        user_email = data['user_email']
-        avatar_url = data['avatar_url']
     except Exception, e:
         user_phone = ''
-        user_email = ''
-        avatar_url = ''
         log.error(repr(e))
+    try:
+        user_email = data['user_email']
+    except Exception, e:
+        log.error(repr(e))
+        user_email = ''
+    try:
+        avatar_url = data['avatar_url']
+    except Exception, e:
+        log.error(repr(e))
+        avatar_url = ''
     try:
         enterprise_id = data['enterprise_id']
     except Exception:
