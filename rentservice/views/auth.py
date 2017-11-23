@@ -60,14 +60,11 @@ def auth(request):
         password = data['password']
     except Exception:
         return JsonResponse(retcode({}, "9999", '注册密码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
-
     try:
-        user = EnterpriseUser.objects.get(user_name=username)
-        if user.user_password != password:
-            return JsonResponse(retcode({}, "0403", '用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
+        user = EnterpriseUser.objects.get(user_name=username, user_password=password)
     except EnterpriseUser.DoesNotExist, e:
         log.error(repr(e))
-        return JsonResponse(retcode({}, "0403", '用户不存在'), safe=True, status=status.HTTP_403_FORBIDDEN)
+        return JsonResponse(retcode({}, "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
     ser_user = EnterpriseUserSerializer(user)
     ret = ser_user.data
     ret['group'] = user.group.group
