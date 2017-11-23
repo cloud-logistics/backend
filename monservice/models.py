@@ -213,6 +213,17 @@ class SiteDispatch(models.Model):
     create_date = models.DateField()
 
 
+# 堆场调度信息
+class SiteTypeDispatch(models.Model):
+    did = models.CharField(max_length=20, primary_key=True)
+    start = models.ForeignKey(SiteInfo, related_name='type_start_site_fk')
+    finish = models.ForeignKey(SiteInfo, related_name='type_finish_site_fk')
+    type = models.ForeignKey(BoxTypeInfo, related_name='type_dispatch_fk')
+    count = models.IntegerField(default=0)
+    status = models.CharField(max_length=20, default='undispatch')
+    create_date = models.DateField()
+
+
 # 仓库进出流水
 class SiteHistory(models.Model):
     id = models.AutoField(primary_key=True)

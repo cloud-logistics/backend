@@ -9,7 +9,7 @@ from models import BoxTypeInfo
 from models import BoxInfo
 from models import Province
 from models import SiteBoxStock
-from models import SiteDispatch
+from models import SiteDispatch, SiteTypeDispatch
 from models import Manufacturer, ProduceArea, Hardware, Battery, AlarmInfo, SensorData
 from models import SysGroup, SysUser, SysAccessUrl
 from models import SensorData
@@ -95,6 +95,15 @@ class SiteDispatchSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SiteDispatch
+        fields = '__all__'
+
+
+class SiteTypeDispatchSerializer(serializers.ModelSerializer):
+    start = SiteBareInfoSerializer()
+    finish = SiteBareInfoSerializer()
+
+    class Meta:
+        model = SiteTypeDispatch
         fields = '__all__'
 
 
