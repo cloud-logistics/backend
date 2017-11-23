@@ -89,6 +89,7 @@ urlpatterns = [
     # 所有企业计费情况报表
     url(r'^rentservice/boxbill/detail/(?P<enterprise_id>[0-9a-zA-Z-]+)/(?P<date>[0-9-]+)$',
         boxbill.enterprise_month_bill_detail),  # 所有企业计费情况报表
+    url(r'^rentservice/boxbill/filtertotalbill', boxbill.box_bill_real_time_all_filter),  # 所有企业计费情况报表
     url(r'^rentservice/notify/list/(?P<user_id>[0-9a-zA-Z-]+)$',
         notify.get_notify_list_by_user),  # 获取用户所有通知
     url(r'^rentservice/notify/set',
