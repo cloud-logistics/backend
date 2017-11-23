@@ -31,6 +31,9 @@ tz = pytz.timezone(settings.TIME_ZONE)
 @api_view(['POST'])
 def get_box_info_list(request):
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    param = request.query_params
+    if param:
+        pagination_class.default_limit = int(param.get('limit'))
     paginator = pagination_class()
     data = JSONParser().parse(request)
     try:
