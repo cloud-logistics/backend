@@ -41,7 +41,7 @@ def create_maintenance(request):
         response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': 'add maintenance station success'}
+        response_msg = {'status': 'OK', 'msg': u'录入维修点成功！'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
@@ -57,7 +57,7 @@ def delete_maintenance(request, maintenance_id):
         response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': 'delete maintenance station success'}
+        response_msg = {'status': 'OK', 'msg': u'删除维修点成功！'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
@@ -85,7 +85,7 @@ def update_maintenance(request, maintenance_id):
         response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': 'update maintenance station success'}
+        response_msg = {'status': 'OK', 'msg': u'编辑维修点成功！'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
@@ -105,4 +105,4 @@ def get_maintenance(request):
         response_msg = {'code': 'ERROR', 'message': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        return paginator.get_paginated_response(ret_ser.data, 'OK', 'query maintenance station success')
+        return paginator.get_paginated_response(ret_ser.data, 'OK', u'查询维修点成功！')
