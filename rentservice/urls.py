@@ -28,6 +28,7 @@ urlpatterns = [
         enterprise.enterpise_info_detail),
     url(r'^rentservice/enterprise/enterpriseinfo/depositconfirm$', enterprise.enterpise_deposit_confirm),
     url(r'^rentservice/enterprise/enterpriseinfo/fuzzy$', enterprise.enterprise_fuzzy_query),
+    url(r'^rentservice/enterprise/enterpriseinfo/userfuzzy$', enterprise.enterpriseuser_fuzzy_query),
     # 企业信息更新接口
     url(r'^rentservice/site/list/(?P<latitude>[0-9.]+)/(?P<longitude>[0-9.]+)$', site.get_site_list),
     # 获取堆场列表

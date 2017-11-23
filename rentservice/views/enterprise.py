@@ -7,10 +7,10 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.settings import api_settings
 from rest_framework.parsers import JSONParser
-from rentservice.models import EnterpriseInfo
+from rentservice.models import EnterpriseInfo, EnterpriseUser
 from rentservice.utils.retcode import retcode, errcode
 from rentservice.utils import logger
-from ..serializers import EnterpriseInfoSerializer
+from ..serializers import EnterpriseInfoSerializer, EnterpriseUserSerializer
 import uuid
 import datetime
 import pytz
@@ -25,7 +25,6 @@ tz = pytz.timezone(settings.TIME_ZONE)
 @api_view(['POST'])
 def add_enterprise_info(request):
     data = JSONParser().parse(request)
-    print request.get_full_path()
     try:
         enterprise_name = data['enterprise_name']
     except Exception:
@@ -193,4 +192,26 @@ def enterprise_fuzzy_query(request):
     enterprise_data = EnterpriseInfo.objects.filter(Q(enterprise_name__contains=keyword)).order_by('register_time')
     page = paginator.paginate_queryset(enterprise_data, request)
     ser_ret = EnterpriseInfoSerializer(page, many=True)
+    return paginator.get_paginated_response(ser_ret.data)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def enterpriseuser_fuzzy_query(request):
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    data = JSONParser().parse(request)
+    try:
+        keyword = data['keyword']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '关键字为空'), "9999", '关键字为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        enterprise_id = data['enterprise_id']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '企业id为空'), "9999", '企业id为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    user_data = EnterpriseUser.objects.filter(Q(user_name__contains=keyword), enterprise_id=enterprise_id).order_by('register_time')
+    page = paginator.paginate_queryset(user_data, request)
+    ser_ret = EnterpriseUserSerializer(page, many=True)
     return paginator.get_paginated_response(ser_ret.data)
