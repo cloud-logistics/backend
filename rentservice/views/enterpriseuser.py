@@ -370,7 +370,11 @@ def update_enterprise_user(request):
     except Exception:
         return JsonResponse(retcode(errcode("9999", '修改用户密码不能为空'), "9999", '修改用户密码不能为空'), safe=True,
                             status=status.HTTP_400_BAD_REQUEST)
-
+    try:
+        user_email = data['user_email']
+    except Exception, e:
+        log.error(repr(e))
+        user_email = ''
     try:
         user = EnterpriseUser.objects.get(user_id=user_id)
         enterprise = EnterpriseInfo.objects.get(enterprise_id=enterprise_id)
@@ -380,6 +384,7 @@ def update_enterprise_user(request):
         user.user_gender = user_gender
         user.user_nickname = user_nickname
         user.enterprise_id = enterprise
+        user.user_email = user_email
         if user_password:
             user.user_password = user_password
             log.info("user_password is changed")
