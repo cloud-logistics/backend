@@ -23,7 +23,8 @@ class AuthMiddleware(MiddlewareMixin):
         self.get_response = get_response
 
     def process_request(self, request):
-        if request.path.startswith(r'/container/api/v1/cloudbox/monservice'):
+        if request.path.startswith(r'/container/api/v1/cloudbox/monservice') and not \
+                request.path.startswith(r'/container/api/v1/cloudbox/monservice/auth'):
             try:
                 token = request.META.get('HTTP_AUTHORIZATION')
                 log.info("request token %s" % token)
