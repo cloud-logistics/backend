@@ -581,7 +581,7 @@ def basic_info_config(request):
 
         box_type = BoxTypeInfo.objects.get(id=category)
         box = BoxInfo(deviceid=container_id, type=box_type, date_of_production=date_of_production, manufacturer=man,
-                      produce_area=pro, hardware=hard, battery=bat, carrier=1, tid=rfid)
+                      produce_area=pro, hardware=hard, battery=bat, carrier=1, tid=rfid, ava_flag='N')
         box.save()
 
     except Exception, e:
@@ -604,7 +604,7 @@ def get_containerid_by_rfid(request, rfid):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_404_NOT_FOUND)
     else:
         response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success', 'containerID': box.deviceid}
-        return JsonResponse(response_msg, safe=True, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
 # 修改云箱基础信息
