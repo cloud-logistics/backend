@@ -74,6 +74,7 @@ class EnterpriseUser(models.Model):
     user_gender = models.CharField(max_length=8, default='')
     user_nickname = models.CharField(max_length=48, default='')
     user_alias_id = models.CharField(max_length=64, default='')
+    user_password_encrypt = models.CharField(max_length=256, default='')
 
 
 class UserAppointment(models.Model):
@@ -179,3 +180,4 @@ class NotifyMessage(models.Model):
     notify_title = models.CharField(max_length=50, default='')
     notify_content = models.TextField()
     read_flag = models.CharField(max_length=1, default='N')
+    
