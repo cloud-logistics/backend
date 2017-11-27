@@ -159,3 +159,6 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_BACKEND = 'django-cache'
 CELERY_TIMEZONE = 'Asia/Shanghai'
+
+#salt duration in seconds
+SALT_DURATION = 300

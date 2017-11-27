@@ -180,4 +180,3 @@ class NotifyMessage(models.Model):
     notify_title = models.CharField(max_length=50, default='')
     notify_content = models.TextField()
     read_flag = models.CharField(max_length=1, default='N')
-    
