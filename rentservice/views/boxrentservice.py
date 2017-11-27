@@ -200,6 +200,17 @@ def set_rent_fee_rate(request):
     return JsonResponse(retcode(ser_data.data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
 
+@csrf_exempt
+@api_view(['GET'])
+def box_type_info_list(request):
+    try:
+        box_type_info_list = BoxTypeInfo.objects.all()
+        ser_data = BoxTypeInfoSerializer(box_type_info_list, many=True)
+    except e:
+        log.error(repr(e))
+    return JsonResponse(retcode(ser_data.data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
 def get_rent_fee_rate(lease_info):
     if lease_info.rent_fee_rate == 0:
         price_per_hour = int(lease_info.box.type.price)
