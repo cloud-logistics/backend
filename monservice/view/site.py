@@ -270,13 +270,11 @@ def box_inout(request):
                 stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
                 if type == '1':
                     stock.ava_num += 1
-                    box.ava_flag = 'Y'
                     box.siteinfo_id = site_id
                 else:
                     if stock.ava_num == 0:
                         return
                     stock.ava_num -= 1
-                    box.ava_flag = 'N'
                     box.siteinfo = None
                 box.save()
                 stock.save()
@@ -308,13 +306,11 @@ def enter_leave_site(data):
                 # 更新仓库箱子可用数量
                 stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
                 if type == '1':
-                    box.ava_flag = 'Y'
                     box.siteinfo_id = site_id
                     stock.ava_num += 1
                 else:
                     if stock.ava_num == 0:
                         return
-                    box.ava_flag = 'N'
                     box.siteinfo = None
                     stock.ava_num -= 1
 
@@ -362,7 +358,6 @@ def dispatchout(request):
                 # 更新仓库箱子可用数量
                 box = BoxInfo.objects.get(deviceid=box_id)
                 stock = SiteBoxStock.objects.get(site=site, box_type=box.type)
-                box.ava_flag = 'N'
                 box.siteinfo = None
 
                 if stock.ava_num == 0:
@@ -393,7 +388,7 @@ def dispatchin(request):
         data = json.loads(request.body)
         dispatch_id = str(data['dispatch_id'])  # 调度id
         dispatch = SiteDispatch.objects.get(did=dispatch_id)
-        site = dispatch.start
+        site = dispatch.finish
         boxes = data['boxes']
         if len(boxes) >= dispatch.count:
             dispatch.status = 'dispatched'
@@ -412,7 +407,6 @@ def dispatchin(request):
                 # 更新仓库箱子可用数量
                 box = BoxInfo.objects.get(deviceid=box_id)
                 stock = SiteBoxStock.objects.get(site=site, box_type=box.type)
-                box.ava_flag = 'Y'
                 box.siteinfo = site
                 stock.ava_num += 1
                 box.save()

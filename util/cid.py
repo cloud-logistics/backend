@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+import datetime
 
 
 def generate_cid(sn, category):
@@ -31,16 +32,17 @@ def char2num(c):
     return codec[c]
 
 
-def generate_cid_new(sn, category, length, height, year):
+def generate_cid_new(sn, category, date_of_production):
     owner_code = 'HNA'
-    categories = {'2': 'F', '3': 'M', '1': 'R', '4': 'N', '5': 'S', '6': 'D', }
+    categories = {'2': 'F0', '3': 'M0', '1': 'R0', '4': 'N0', '5': 'S0', '6': 'D0', }
     cat_code = categories[category]
     sn_code = '%06d' % sn
 
-    length_code = length
-    height_code = height
-    year_code = str(year)[3]
-    ext_code = 0
+    length_code = '1'
+    height_code = '0'
+    year_code = str(datetime.datetime.fromtimestamp(float(str(date_of_production)[:10])).year)[3]
+
+    ext_code = '0'
 
     prefix = owner_code + cat_code + length_code + height_code + year_code + sn_code + ext_code
 

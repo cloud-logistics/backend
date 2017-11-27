@@ -91,10 +91,11 @@ def get_dispatch_by_site(request, site_id):
 def create_dispatches(request):
     try:
         data = json.loads(request.body)
+        did = generate_dispath_id()
         start_id = data['start_id']
         finish_id = data['finish_id']
         count = data['count']
-        dispatch = SiteDispatch(count=count, start_id=start_id, finish_id=finish_id, create_date=datetime.date.today())
+        dispatch = SiteDispatch(did=did, count=count, start_id=start_id, finish_id=finish_id, create_date=datetime.date.today())
         dispatch.save()
 
     except Exception, e:
@@ -299,7 +300,7 @@ def save_type_dispatch(start_id, finish_id, type_id, count):
 
 def generate_dispath_id():
     type_code = '0'
-    day = str(time.strftime('%Y%m%d', time.localtime(int(time.time()))))[2:]
+    day = str(time.strftime('%Y%m%d', time.localtime(int(time.time()))))[3:]
     sql = '''select nextval('iot.monservice_dispatch_id_seq') from iot.monservice_dispatch_id_seq'''
     id_query = query_list(sql)
     seq = id_query[0][0]
