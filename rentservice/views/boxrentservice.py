@@ -65,6 +65,10 @@ def rent_boxes_order(request):
         appoint_detail_queryset = AppointmentDetail.objects.filter(appointment_id=user_appoint, site_id=site)
         # 所租云箱必须隶属于当前site，否则报错
         box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list, siteinfo__id=site_id)
+        if box_info_list.count() == 0:
+            log.error("there is no available box in the site")
+            return JsonResponse(retcode(errcode("9999", '堆场没有符合条件的云箱'), "9999", '堆场没有符合条件的云箱'), safe=True,
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         log.info('box_id_list = %s, site_id = %s, query result list is %s' % (box_id_list, site_id, box_info_list))
         lease_info_list = []
         current_time = datetime.datetime.now(tz=timezone)
