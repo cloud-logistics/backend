@@ -211,7 +211,7 @@ def set_rent_fee_rate(request):
 @api_view(['GET'])
 def box_type_info_list(request):
     try:
-        box_type_info_list = BoxTypeInfo.objects.all()
+        box_type_info_list = BoxTypeInfo.objects.all().order_by('id')
         ser_data = BoxTypeInfoSerializer(box_type_info_list, many=True)
     except e:
         log.error(repr(e))
