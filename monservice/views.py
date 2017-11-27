@@ -32,8 +32,8 @@ NOT_APPLICABLE = 'NA'
 ZERO = 0
 STATUS_NORMAL = '正常'
 STATUS_ABNORMAL = '异常'
-IN_TRANSPORT = '在运'
-ANCHORED = '停靠'
+UNAVAILABLE = '不可用'
+AVAILABLE = '可用'
 REDIS_MAP_KEY = 'gpsmap'
 
 
@@ -173,7 +173,7 @@ def realtime_message(request):
         battery_threshold_max = threshold_data[0][6]
         battery_threshold_min = threshold_data[0][7]
         operation_threshold_max = threshold_data[0][8]
-        operation_threshold_min =  threshold_data[0][9]
+        operation_threshold_min = threshold_data[0][9]
 
     else:
         temperature_threshold_max = ZERO
@@ -188,7 +188,12 @@ def realtime_message(request):
         operation_threshold_min = ZERO
 
     # 计算箱子在运还是停靠
-    shipping_status = IN_TRANSPORT
+    try:
+        box = BoxInfo.objects.get(deviceid=id)
+        shipping_status = (AVAILABLE, UNAVAILABLE)[box.siteinfo_id is None]
+    except Exception, e:
+        shipping_status = UNAVAILABLE
+        log.error(e.message)
 
     # 计算温度是否在正常范围
     if float(temperature_threshold_min) <= float(temperature) <= float(temperature_threshold_max):
@@ -523,7 +528,7 @@ def status_summary(request):
         humidity = float((item[6], 0)[item[6] is None])
         collide = int((item[7], 0)[item[7] is None])
         light = float((item[8], 0)[item[8] is None])
-        available_status = (item[9], u'Y')[item[9] is None]
+        available_status = (item[9], u'N')[item[9] is None]
         num_of_door_open = 5
 
         if available_status == u'Y':
@@ -581,7 +586,7 @@ def basic_info_config(request):
 
         box_type = BoxTypeInfo.objects.get(id=category)
         box = BoxInfo(deviceid=container_id, type=box_type, date_of_production=date_of_production, manufacturer=man,
-                      produce_area=pro, hardware=hard, battery=bat, carrier=1, tid=rfid)
+                      produce_area=pro, hardware=hard, battery=bat, carrier=1, tid=rfid, ava_flag='N')
         box.save()
 
     except Exception, e:
@@ -604,7 +609,7 @@ def get_containerid_by_rfid(request, rfid):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_404_NOT_FOUND)
     else:
         response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success', 'containerID': box.deviceid}
-        return JsonResponse(response_msg, safe=True, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
 # 修改云箱基础信息
