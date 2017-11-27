@@ -36,6 +36,7 @@ urlpatterns = [
     url(r'^auth/auth$', auth.auth),  # 新增用户
     url(r'^auth/groups/detail/(?P<access_group_id>[0-9a-zA-Z-]+)$', auth.group_detail),  # 用户群组
     url(r'^auth/groups/list$', auth.list_group),  # 用户群组
+    url(r'^auth/adminauthsalt$', auth.admin_auth_with_salt),  # 新增用户
     url(r'^rentservice/site/list/province/(?P<province>[0-9]+)/city/(?P<city>[0-9]+)$', site.get_site_by_province),
     # 获取堆场列表
     url(r'^rentservice/site/detail/(?P<site_id>[0-9a-zA-Z-]+)$', site.get_site_detail),  # 获取堆场详情
