@@ -9,7 +9,7 @@ from rest_framework.parsers import JSONParser
 from rentservice.models import RentLeaseInfo, EnterpriseUser
 from rentservice.models import AppointmentDetail, UserAppointment
 from monservice.models import SiteInfo, BoxInfo, BoxTypeInfo
-from monservice.serializers import BoxTypeInfoSerializer
+from monservice.serializers import BoxTypeInfoSerializer, BoxInfoSerializer
 from monservice.view.site import enter_leave_site
 from rentservice.utils.retcode import retcode, errcode
 from rentservice.utils import logger
@@ -67,9 +67,12 @@ def rent_boxes_order(request):
         box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list, siteinfo__id=site_id)
         if box_info_list.count() == 0:
             log.error("there is no available box in the site")
+            log.info('box_id_list = %s, site_id = %s, query result list is %s' % (box_id_list, site_id,
+                                                                                  BoxInfoSerializer(box_info_list, many=True).data)
             return JsonResponse(retcode(errcode("9999", '堆场没有符合条件的云箱'), "9999", '堆场没有符合条件的云箱'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        log.info('box_id_list = %s, site_id = %s, query result list is %s' % (box_id_list, site_id, box_info_list))
+        log.info('box_id_list = %s, site_id = %s, query result list is %s' % (box_id_list, site_id,
+                                                                              BoxInfoSerializer(box_info_list, many=True).data)
         lease_info_list = []
         current_time = datetime.datetime.now(tz=timezone)
         with transaction.atomic():
