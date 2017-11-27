@@ -8,7 +8,8 @@ from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rentservice.models import RentLeaseInfo, EnterpriseUser
 from rentservice.models import AppointmentDetail, UserAppointment
-from monservice.models import SiteInfo, BoxInfo
+from monservice.models import SiteInfo, BoxInfo, BoxTypeInfo
+from monservice.serializers import BoxTypeInfoSerializer
 from monservice.view.site import enter_leave_site
 from rentservice.utils.retcode import retcode, errcode
 from rentservice.utils import logger
@@ -171,6 +172,32 @@ def finish_boxes_order(request):
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     ret['rent_lease_info_id_list'] = lease_info_list
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def set_rent_fee_rate(request):
+    data = JSONParser().parse(request)
+    try:
+        type_id = data['type_id']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '箱子类型不能为空'), "9999", '箱子类型不能为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        fee_per_hour = data['fee_per_hour']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '箱子租赁价格不能为空'), "9999", '箱子租赁价格不能为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        box_type_info = BoxTypeInfo.objects.get(id=type_id)
+        box_type_info.price = float(fee_per_hour)
+        box_type_info.save()
+        ser_data = BoxTypeInfoSerializer(box_type_info)
+    except BoxTypeInfo.DoesNotExist, e:
+        log.error(repr(e))
+        return JsonResponse(retcode(errcode("9999", '修改云箱租赁价格失败'), "9999", '修改云箱租赁价格失败'), safe=True,
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return JsonResponse(retcode(ser_data.data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
 
 def get_rent_fee_rate(lease_info):

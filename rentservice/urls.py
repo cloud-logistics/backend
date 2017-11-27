@@ -71,6 +71,7 @@ urlpatterns = [
     # 承运人的历史箱子查询
     url(r'^rentservice/boxrentservice/createorder$', boxrentservice.rent_boxes_order),  # 租箱
     url(r'^rentservice/boxrentservice/finishorder$', boxrentservice.finish_boxes_order),  # 还箱
+    url(r'^rentservice/boxrentservice/boxtypefee$', boxrentservice.set_rent_fee_rate),  # 设置每小时费用
     url(r'^rentservice/userinfo/(?P<user_id>[0-9a-zA-Z-]+)/dash$', userinfo.get_dash_data),  # app获取dash信息
     url(r'^rentservice/appointment/cancel', appointment.cancel_appointment),  # 取消预约
     url(r'^rentservice/boxinfo/query', boxinfo.get_box_info_list),  # 查询箱子list
