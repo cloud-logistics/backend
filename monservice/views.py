@@ -586,7 +586,7 @@ def basic_info_config(request):
 
         box_type = BoxTypeInfo.objects.get(id=category)
         box = BoxInfo(deviceid=container_id, type=box_type, date_of_production=date_of_production, manufacturer=man,
-                      produce_area=pro, hardware=hard, battery=bat, carrier=1, tid=rfid, ava_flag='N')
+                      produce_area=pro, hardware=hard, battery=bat, carrier=1, tid=rfid)
         box.save()
 
     except Exception, e:
