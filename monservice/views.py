@@ -14,7 +14,7 @@ from rest_framework import settings
 from util.db import query_list, save_to_db
 from util.geo import cal_position, get_lng_lat, get_position_name
 from util import logger
-from util.cid import generate_cid
+from util.cid import generate_cid, generate_cid_new
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 import urllib
@@ -549,11 +549,11 @@ def status_summary(request):
     return paginator.get_paginated_response(ret_list.data, 'OK', 'query alarm success')
 
 
-def new_containerid(category):
+def new_containerid(category, date_of_production):
     sql = '''select nextval('iot.monservice_box_id_seq') from iot.monservice_box_id_seq'''
     id_query = query_list(sql)
     sn = id_query[0][0]
-    cid = generate_cid(sn, category)
+    cid = generate_cid_new(sn, category, date_of_production)
     return cid
 
 
@@ -581,7 +581,7 @@ def basic_info_config(request):
         hard = Hardware.objects.get(id=hardware_info)
         category = data['containerType']
 
-        container_id = new_containerid(str(category))           # 生成云箱id
+        container_id = new_containerid(str(category), date_of_production)           # 生成云箱id
 
         box_type = BoxTypeInfo.objects.get(id=category)
         box = BoxInfo(deviceid=container_id, type=box_type, date_of_production=date_of_production, manufacturer=man,

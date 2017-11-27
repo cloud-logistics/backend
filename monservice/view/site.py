@@ -393,7 +393,7 @@ def dispatchin(request):
         data = json.loads(request.body)
         dispatch_id = str(data['dispatch_id'])  # 调度id
         dispatch = SiteDispatch.objects.get(did=dispatch_id)
-        site = dispatch.start
+        site = dispatch.finish
         boxes = data['boxes']
         if len(boxes) >= dispatch.count:
             dispatch.status = 'dispatched'
