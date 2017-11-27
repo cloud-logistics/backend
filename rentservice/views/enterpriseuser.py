@@ -18,6 +18,7 @@ import datetime
 import pytz
 from django.conf import settings
 from django.db.models import Q
+import hashlib
 
 
 log = logger.get_logger(__name__)
@@ -89,11 +90,15 @@ def add_enterprise_admin(request):
                                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except EnterpriseUser.DoesNotExist:
                 with transaction.atomic():
+                    md = hashlib.md5()
+                    md.update(user_password)
+                    md5_pwd = md.hexdigest()
                     new_user = EnterpriseUser(user_id=uuid.uuid1(), user_name=user_name, user_password=user_password,
                                               status='', register_time=datetime.datetime.now(tz=tz),
                                               enterprise=enterprise, user_token=uuid.uuid4().hex, role=role,
                                               group=group_obj, user_alias_id=uuid.uuid1().hex, user_real_name=user_real_name,
-                                              user_phone=user_phone, user_email=user_email, avatar_url=avatar_url)
+                                              user_phone=user_phone, user_email=user_email, avatar_url=avatar_url,
+                                              user_password_encrypt=md5_pwd)
                     new_user.save()
                     auth_user_group = AuthUserGroup(user_token=new_user.user_token, group=group_obj)
                     auth_user_group.save()
@@ -205,7 +210,7 @@ def list_enterprise_user(request, group):
             except AccessGroup.DoesNotExist:
                 return JsonResponse(retcode(errcode("9999", '企业用户群组不存在'), "9999", '企业用户群组不存在'), safe=True,
                                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            enterprise_user_ret = EnterpriseUser.objects.filter(group=obj_group)
+            enterprise_user_ret = EnterpriseUser.objects.filter(group=obj_group).order_by('-register_time')
             page = paginator.paginate_queryset(enterprise_user_ret, request)
             enterprise_user_ser = EnterpriseUserSerializer(page, many=True)
             revised_enterprise_user_list = []

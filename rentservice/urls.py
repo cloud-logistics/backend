@@ -36,6 +36,7 @@ urlpatterns = [
     url(r'^auth/auth$', auth.auth),  # 新增用户
     url(r'^auth/groups/detail/(?P<access_group_id>[0-9a-zA-Z-]+)$', auth.group_detail),  # 用户群组
     url(r'^auth/groups/list$', auth.list_group),  # 用户群组
+    url(r'^auth/adminauthsalt$', auth.admin_auth_with_salt),  # 新增用户
     url(r'^rentservice/site/list/province/(?P<province>[0-9]+)/city/(?P<city>[0-9]+)$', site.get_site_by_province),
     # 获取堆场列表
     url(r'^rentservice/site/detail/(?P<site_id>[0-9a-zA-Z-]+)$', site.get_site_detail),  # 获取堆场详情
@@ -71,6 +72,8 @@ urlpatterns = [
     # 承运人的历史箱子查询
     url(r'^rentservice/boxrentservice/createorder$', boxrentservice.rent_boxes_order),  # 租箱
     url(r'^rentservice/boxrentservice/finishorder$', boxrentservice.finish_boxes_order),  # 还箱
+    url(r'^rentservice/boxrentservice/boxtypefee$', boxrentservice.set_rent_fee_rate),  # 设置每小时费用
+    url(r'^rentservice/boxrentservice/boxtypeinfo$', boxrentservice.box_type_info_list),  # 云箱类型信息列表
     url(r'^rentservice/userinfo/(?P<user_id>[0-9a-zA-Z-]+)/dash$', userinfo.get_dash_data),  # app获取dash信息
     url(r'^rentservice/appointment/cancel', appointment.cancel_appointment),  # 取消预约
     url(r'^rentservice/boxinfo/query', boxinfo.get_box_info_list),  # 查询箱子list

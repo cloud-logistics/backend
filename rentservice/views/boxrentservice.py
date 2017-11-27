@@ -8,7 +8,8 @@ from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rentservice.models import RentLeaseInfo, EnterpriseUser
 from rentservice.models import AppointmentDetail, UserAppointment
-from monservice.models import SiteInfo, BoxInfo
+from monservice.models import SiteInfo, BoxInfo, BoxTypeInfo
+from monservice.serializers import BoxTypeInfoSerializer, BoxInfoSerializer
 from monservice.view.site import enter_leave_site
 from rentservice.utils.retcode import retcode, errcode
 from rentservice.utils import logger
@@ -64,7 +65,14 @@ def rent_boxes_order(request):
         appoint_detail_queryset = AppointmentDetail.objects.filter(appointment_id=user_appoint, site_id=site)
         # 所租云箱必须隶属于当前site，否则报错
         box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list, siteinfo__id=site_id)
-        log.info('box_id_list = %s, site_id = %s, query result list is %s' % (box_id_list, site_id, box_info_list))
+        if box_info_list.count() == 0:
+            log.error("there is no available box in the site")
+            log.info('box_id_list = %s, site_id = %s, query result list is %s' % (box_id_list, site_id,
+                                                                                  BoxInfoSerializer(box_info_list, many=True).data))
+            return JsonResponse(retcode(errcode("9999", '堆场没有符合条件的云箱'), "9999", '堆场没有符合条件的云箱'), safe=True,
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        log.info('box_id_list = %s, site_id = %s, query result list is %s' % (box_id_list, site_id,
+                                                                              BoxInfoSerializer(box_info_list, many=True).data))
         lease_info_list = []
         current_time = datetime.datetime.now(tz=timezone)
         with transaction.atomic():
@@ -171,6 +179,43 @@ def finish_boxes_order(request):
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     ret['rent_lease_info_id_list'] = lease_info_list
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def set_rent_fee_rate(request):
+    data = JSONParser().parse(request)
+    try:
+        type_id = data['type_id']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '箱子类型不能为空'), "9999", '箱子类型不能为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        fee_per_hour = data['fee_per_hour']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '箱子租赁价格不能为空'), "9999", '箱子租赁价格不能为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        box_type_info = BoxTypeInfo.objects.get(id=type_id)
+        box_type_info.price = float(fee_per_hour)
+        box_type_info.save()
+        ser_data = BoxTypeInfoSerializer(box_type_info)
+    except BoxTypeInfo.DoesNotExist, e:
+        log.error(repr(e))
+        return JsonResponse(retcode(errcode("9999", '修改云箱租赁价格失败'), "9999", '修改云箱租赁价格失败'), safe=True,
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return JsonResponse(retcode(ser_data.data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def box_type_info_list(request):
+    try:
+        box_type_info_list = BoxTypeInfo.objects.all().order_by('id')
+        ser_data = BoxTypeInfoSerializer(box_type_info_list, many=True)
+    except e:
+        log.error(repr(e))
+    return JsonResponse(retcode(ser_data.data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
 
 def get_rent_fee_rate(lease_info):

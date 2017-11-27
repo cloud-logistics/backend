@@ -188,11 +188,12 @@ def realtime_message(request):
         operation_threshold_min = ZERO
 
     # 计算箱子在运还是停靠
-    box = BoxInfo.objects.get(deviceid=id)
-    if box is not None:
+    try:
+        box = BoxInfo.objects.get(deviceid=id)
         shipping_status = (AVAILABLE, UNAVAILABLE)[box.siteinfo_id is None]
-    else:
+    except Exception, e:
         shipping_status = UNAVAILABLE
+        log.error(e.message)
 
     # 计算温度是否在正常范围
     if float(temperature_threshold_min) <= float(temperature) <= float(temperature_threshold_max):
