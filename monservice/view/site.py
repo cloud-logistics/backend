@@ -345,7 +345,6 @@ def dispatchout(request):
         dispatch = SiteDispatch.objects.get(did=dispatch_id)
         dispatch.status = 'dispatching'
         site = dispatch.start
-        dispatch.save()
 
         boxes = data['boxes']                   # 箱子数组
         ts = str(time.time())[0:10]
@@ -375,6 +374,7 @@ def dispatchout(request):
                 history.save()
                 box.save()
                 stock.save()
+        dispatch.save()
 
     except Exception, e:
         log.error(e.message)
