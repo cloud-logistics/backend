@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from django.http import JsonResponse
 from rest_framework import status
-from rentservice.utils.retcode import retcode
+from rentservice.utils.retcode import retcode, errcode
 from rentservice.utils.redistools import RedisTool
 from rentservice.models import *
 from rentservice.serializers import *
@@ -47,7 +47,7 @@ class AuthMiddleware(MiddlewareMixin):
                 conn.hset(PERMISSION_URL_HASH, item_access_group['group'], final_hash_value)
 
     def process_request(self, request):
-        if request.path.startswith(r'/api/v1/cloudbox/rentservice/'):  # 检测如果不是登录的话
+        if request.path.startswith(r'/container/api/v1/cloudbox/rentservice/'):  # 检测如果不是登录的话
             try:
                 token = request.META.get('HTTP_AUTHORIZATION')
                 log.info("request token %s" % token)
@@ -71,21 +71,21 @@ class AuthMiddleware(MiddlewareMixin):
                                         match_flag = True
                                 # 非法请求url直接返回
                                 if not match_flag:
-                                    return JsonResponse(retcode({}, "0401", "no authorized"), safe=True,
+                                    return JsonResponse(retcode(errcode("0401", "no authorized"), "0401", "no authorized"), safe=True,
                                                         status=status.HTTP_401_UNAUTHORIZED)
 
                             else:
-                                return JsonResponse(retcode({}, "0401", "no authorized"), safe=True,
+                                return JsonResponse(retcode(errcode("0401", "no authorized"), "0401", "no authorized"), safe=True,
                                                     status=status.HTTP_401_UNAUTHORIZED)
                     else:
-                        return JsonResponse(retcode({}, "0401", "no authorized, token is null"), safe=True,
+                        return JsonResponse(retcode(errcode("0401", "no authorized"), "0401", "no authorized, token is null"), safe=True,
                                             status=status.HTTP_401_UNAUTHORIZED)
                 else:
                     log.info("request without valid token reject")
-                    return JsonResponse(retcode({}, "0401", "no authorized, token is null"), safe=True,
+                    return JsonResponse(retcode(errcode("0401", "no authorized"), "0401", "no authorized, token is null"), safe=True,
                                         status=status.HTTP_401_UNAUTHORIZED)
             except Exception:
-                return JsonResponse(retcode({}, "0401", "no authorized exception"), safe=True,
+                return JsonResponse(retcode(errcode("0401", "no authorized"), "0401", "no authorized exception"), safe=True,
                                     status=status.HTTP_401_UNAUTHORIZED)
 
     def get_connection_from_pool(self):
