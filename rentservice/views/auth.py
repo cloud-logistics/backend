@@ -191,3 +191,49 @@ def auth_with_salt(request):
     ret = ser_user.data
     ret['group'] = user.group.group
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def change_password(request):
+    data = JSONParser().parse(request)
+    try:
+        user_id = data['user_id']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", '用户id不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        orig_password = data['orig_password']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", '原密码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        new_password = data['new_password']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", '新密码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        timestamp = data['timestamp']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", '异常错误'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user = EnterpriseUser.objects.get(user_id=user_id)
+        # check salt valid
+        current_utc = int(time.time())
+        if current_utc - timestamp > settings.SALT_DURATION:
+            return JsonResponse(retcode({}, "4031", '登陆未经授权'), safe=True, status=status.HTTP_403_FORBIDDEN)
+        m2 = hashlib.md5()
+        m2.update(user.user_password_encrypt + str(timestamp))
+        gen_password = m2.hexdigest()
+        log.info('origin_password=%s, gen_password=%s, user_password_encrypt=%s, timestamp=%s' %
+                 (orig_password, gen_password, user.user_password_encrypt, timestamp))
+        if gen_password != orig_password:
+            return JsonResponse(retcode({}, "0403", '登陆未经授权'), safe=True, status=status.HTTP_403_FORBIDDEN)
+        else:
+            user.user_password_encrypt = new_password
+            user.save()
+    except EnterpriseUser.DoesNotExist, e:
+        log.error(e)
+        return JsonResponse(retcode({}, "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
+    ser_user = EnterpriseUserSerializer(user)
+    ret = ser_user.data
+    ret['group'] = user.group.group
+    return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+

@@ -313,12 +313,15 @@ def add_enterprise_user(request):
                                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except EnterpriseUser.DoesNotExist:
                 with transaction.atomic():
+                    md = hashlib.md5()
+                    md.update('hna12345')
+                    md5_pwd = md.hexdigest()
                     new_user = EnterpriseUser(user_id=uuid.uuid1(), user_name=user_name, user_password='hna12345',
                                               status='', avatar_url='', user_phone=user_phone,
                                               user_email='', register_time=datetime.datetime.now(tz=tz),
                                               enterprise=enterprise, user_token=uuid.uuid4().hex, role=role,
                                               group=group_obj, user_real_name=user_real_name, user_gender=user_gender,
-                                              user_alias_id=uuid.uuid1().hex)
+                                              user_alias_id=uuid.uuid1().hex, user_password_encrypt=md5_pwd)
                     new_user.save()
                     auth_user_group = AuthUserGroup(user_token=new_user.user_token, group=group_obj)
                     auth_user_group.save()
@@ -371,11 +374,6 @@ def update_enterprise_user(request):
         return JsonResponse(retcode(errcode("9999", '修改用户id不能为空'), "9999", '修改用户id不能为空'), safe=True,
                             status=status.HTTP_400_BAD_REQUEST)
     try:
-        user_password = data['user_password']
-    except Exception:
-        return JsonResponse(retcode(errcode("9999", '修改用户密码不能为空'), "9999", '修改用户密码不能为空'), safe=True,
-                            status=status.HTTP_400_BAD_REQUEST)
-    try:
         user_email = data['user_email']
     except Exception, e:
         log.error(repr(e))
@@ -390,9 +388,6 @@ def update_enterprise_user(request):
         user.user_nickname = user_nickname
         user.enterprise_id = enterprise
         user.user_email = user_email
-        if user_password:
-            user.user_password = user_password
-            log.info("user_password is changed")
         user.save()
     except EnterpriseUser.DoesNotExist, e:
         log.error(repr(e))
@@ -412,7 +407,7 @@ def list_enterprise_user_by_enterprise_id(request, enterprise_id):
     for item in group_query_set:
         group_map[item.access_group_id] = item.group
     try:
-        enterprise_user_ret = EnterpriseUser.objects.filter(enterprise_id=enterprise_id).order_by('register_time')
+        enterprise_user_ret = EnterpriseUser.objects.filter(enterprise_id=enterprise_id).order_by('-register_time')
         page = paginator.paginate_queryset(enterprise_user_ret, request)
         enterprise_user_ser = EnterpriseUserSerializer(page, many=True)
         revised_enterprise_user_list = []
