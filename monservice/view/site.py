@@ -358,9 +358,15 @@ def dispatchout(request):
                 # 更新仓库箱子可用数量
                 box = BoxInfo.objects.get(deviceid=box_id)
                 stock = SiteBoxStock.objects.get(site=site, box_type=box.type)
+
+                if box.siteinfo_id != site.id:
+                    msg = 'Box: ' + str(box.deviceid) + ' is in site: ' + str(box.siteinfo_id)
+                    response_msg = {'result': 'False', 'code': '999999', 'msg': msg, 'status': 'error'}
+                    return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
                 box.siteinfo = None
 
-                if stock.ava_num == 0:
+                if stock.ava_num <= 0:
                     response_msg = {'result': 'False', 'code': '999999', 'msg': 'No Boxes.', 'status': 'error'}
                     return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -389,6 +395,12 @@ def dispatchin(request):
         dispatch_id = str(data['dispatch_id'])  # 调度id
         dispatch = SiteDispatch.objects.get(did=dispatch_id)
         site = dispatch.finish
+        current_site_id = str(data['site_id'])
+        if current_site_id != str(site.id):
+            msg = 'Wrong site. Finish site is: ' + str(site.id)
+            response_msg = {'result': 'False', 'code': '999999', 'msg': msg}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         boxes = data['boxes']
         if len(boxes) >= dispatch.count:
             dispatch.status = 'dispatched'
