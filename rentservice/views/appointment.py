@@ -213,12 +213,12 @@ def get_user_finished_list(request, user_id):
     except EnterpriseUser.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
     # 获取预约单列表
-    appointment_list = UserAppointment.objects.filter(user_id=user).exclude(flag=0)
+    appointment_list = UserAppointment.objects.filter(user_id=user).exclude(flag=0).order_by('-appointment_time')
     ret = []
     for appointment_item in appointment_list:
         tmp_list = []
         res_app_list = []
-        detail_list = AppointmentDetail.objects.filter(appointment_id=appointment_item, flag=0)
+        detail_list = AppointmentDetail.objects.filter(appointment_id=appointment_item)
         for detail in detail_list:
             if detail.site_id.id in tmp_list:
                 # res_app_list[tmp_list.index(detail.site_id.id)]['box_info'].append(
