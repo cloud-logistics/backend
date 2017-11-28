@@ -9,13 +9,14 @@ from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rentservice.models import EnterpriseUser, AuthUserGroup, AccessGroup
 from rentservice.utils.retcode import retcode, errcode
+from rentservice.utils.logger import get_logger
 from rest_framework.settings import api_settings
 from rentservice.serializers import AccessGroupSerializer, EnterpriseUserSerializer
 import hashlib
 from django.conf import settings
 import time
 
-log = logger.get_logger(__name__)
+log = get_logger(__name__)
 
 
 # @csrf_exempt
