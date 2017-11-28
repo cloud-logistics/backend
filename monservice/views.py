@@ -604,12 +604,22 @@ def basic_info_config(request):
 def get_containerid_by_rfid(request, rfid):
     try:
         box = BoxInfo.objects.get(tid=rfid)
+        site_id = request.GET.get('siteID')
+
+        if site_id is not None and box.siteinfo_id != site_id:
+            box.siteinfo_id = site_id
+            stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
+            stock.ava_num += 1
+            stock.save()
+            box.save()
+
     except BoxInfo.DoesNotExist:
         response_msg = {'result': 'False', 'code': '999999', 'msg': 'Box Not Found'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_404_NOT_FOUND)
     else:
         response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success', 'containerID': box.deviceid}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
 
 
 # 修改云箱基础信息
