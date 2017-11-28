@@ -211,6 +211,7 @@ class SiteDispatch(models.Model):
     count = models.IntegerField(default=0)
     status = models.CharField(max_length=20, default='undispatch')
     create_date = models.DateField()
+    done = models.IntegerField(default=0)
 
 
 # 堆场调度信息

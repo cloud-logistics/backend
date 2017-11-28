@@ -22,6 +22,7 @@ from models import SiteStatDetail
 from models import BoxRentFeeDetail
 from models import NotifyMessage
 from models import BoxRentFeeByMonth
+from models import Param
 
 
 class ManufacturerSerializer(serializers.ModelSerializer):
@@ -239,3 +240,9 @@ class AllSiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteInfo
         fields = ('id', 'name')
+
+
+class ParamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Param
+        fields = '__all__'
