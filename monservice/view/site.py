@@ -402,11 +402,17 @@ def dispatchin(request):
             return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         boxes = data['boxes']
-        if len(boxes) >= dispatch.count:
+        discount = len(boxes)
+        newdone = discount + dispatch.done
+        if newdone > dispatch.count:
+            msg = 'No more Dispatch.'
+            response_msg = {'result': 'False', 'code': '999999', 'msg': msg}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        elif newdone == dispatch.count:
+            dispatch.done = newdone
             dispatch.status = 'dispatched'
         else:
-            dispatch.count -= len(boxes)
-        dispatch.save()
+            dispatch.done = newdone
 
         ts = str(time.time())[0:10]
         with transaction.atomic():
@@ -414,15 +420,23 @@ def dispatchin(request):
                 box_id = str(box['box_id'])     # 箱子id
                 type = '1'                      # 操作类型：1表示入仓，0表示出仓
                 history = SiteHistory(timestamp=ts, site=site, box_id=box_id, op_type=type)
-                history.save()
 
                 # 更新仓库箱子可用数量
                 box = BoxInfo.objects.get(deviceid=box_id)
+                if box.siteinfo_id == site.id:
+                    msg = 'Box already in site.'
+                    response_msg = {'result': 'False', 'code': '999999', 'msg': msg}
+                    return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
                 stock = SiteBoxStock.objects.get(site=site, box_type=box.type)
                 box.siteinfo = site
                 stock.ava_num += 1
+
+                history.save()
                 box.save()
                 stock.save()
+
+        dispatch.save()
 
     except Exception, e:
         log.error(e.message)
