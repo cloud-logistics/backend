@@ -102,7 +102,7 @@ class RentalServiceAdminSerializer(serializers.ModelSerializer):
 class EnterpriseUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = EnterpriseUser
-        exclude = ('user_password',)
+        exclude = ('user_password', 'user_password_encrypt')
 
 
 class EnterpriseUserForeignKeySerializer(serializers.ModelSerializer):
