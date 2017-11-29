@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rentservice.models import RentLeaseInfo, EnterpriseUser
 from rentservice.models import AppointmentDetail, UserAppointment
-from monservice.models import SiteInfo, BoxInfo, BoxTypeInfo
+from monservice.models import SiteInfo, BoxInfo, BoxTypeInfo, SiteBoxStock
 from monservice.serializers import BoxTypeInfoSerializer, BoxInfoSerializer
 from monservice.view.site import enter_leave_site
 from rentservice.utils.retcode import retcode, errcode
@@ -63,6 +63,11 @@ def rent_boxes_order(request):
             return JsonResponse(retcode(errcode("9999", '预约单所属用户不存在'), "9999", '预约单所属用户不存在'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         appoint_detail_queryset = AppointmentDetail.objects.filter(appointment_id=user_appoint, site_id=site)
+        for item in appoint_detail_queryset:
+            stock = SiteBoxStock.objects.get(site=site, box_type=item.box_type)
+            orig_num = stock.reserve_num
+            stock.reserve_num = orig_num - item.box_num
+            stock.save()
         # 所租云箱必须隶属于当前site，否则报错
         box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list, siteinfo__id=site_id)
         if box_info_list.count() == 0:
