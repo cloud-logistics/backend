@@ -141,6 +141,9 @@ def get_dispatch(sites):
             dis = cal_distance(low_site, high_site)
             dis_list.append(dis)
 
+        if len(dis_list) == 0:
+            continue
+
         val, idx = min((val, idx) for (idx, val) in enumerate(dis_list))
         near_high_site = high_sites[idx]
 
@@ -270,6 +273,9 @@ def dispatch_type(sites):
             if high_site.type == low_site.type:
                 dis = cal_distance(low_site, high_site)
                 dis_list.append(dis)
+
+        if len(dis_list) == 0:
+            continue
 
         val, idx = min((val, idx) for (idx, val) in enumerate(dis_list))
         near_high_site = high_sites[idx]

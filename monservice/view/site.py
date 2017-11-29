@@ -448,6 +448,33 @@ def dispatchin(request):
 
 
 
+@csrf_exempt
+@api_view(['GET'])
+def init_site(request):
+    try:
+        boxes = BoxInfo.objects.all()
+        stock = {}
+        stock['site_id'] = '1'
+
+        box_list = []
+        for box in boxes:
+            box_para = {}
+            box_para['box_id'] = box.deviceid
+            box_para['type'] = 1
+            box_list.append(box_para)
+        stock['boxes'] = box_list
+
+        enter_leave_site(stock)
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'result': 'False', 'code': '999999', 'msg': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
 
 
 
