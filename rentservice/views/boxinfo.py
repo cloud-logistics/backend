@@ -125,7 +125,7 @@ def get_box_stat(request, box_id):
     # 获取周区间
     today = datetime.datetime.today()
     week_start = today - datetime.timedelta(days=today.weekday())
-    week_end = today - datetime.timedelta(days=7 - today.weekday())
+    week_end = today + datetime.timedelta(days=7 - today.weekday())
     week_queryset = RentLeaseInfo.objects.filter(rent_status=1, lease_start_time__gte=week_start,
                                                  lease_start_time__lte=week_end, box=box)
     week_count = week_queryset.count()
