@@ -138,7 +138,7 @@ def send_push_message(alias_list, push_message):
 @app.task
 def box_rent_fee_daily_billing():
     from rentservice.models import RentLeaseInfo, EnterpriseUser, BoxRentFeeDetail
-    from rentservice.serializers import BoxRentFeeDetailSerializer
+    from rentservice.serializers import BoxRentFeeDetailSerializer, RentLeaseBoxSerializer
     from rentservice.utils import logger
     import datetime
     import pytz
@@ -160,17 +160,21 @@ def box_rent_fee_daily_billing():
             try:
                 log.info("box_rent_fee_billing: begin compute")
                 user_lease_info_list = RentLeaseInfo.objects.filter(user_id=user)
+                if user_lease_info_list.count() == 0:
+                    log.info("box_rent_fee_billing: user_lease_info_list is null")
                 log.info("box_rent_fee_billing: user_lease_info_list = %s" %
-                         BoxRentFeeDetailSerializer(user_lease_info_list, many=True))
+                         RentLeaseBoxSerializer(user_lease_info_list, many=True).data)
                 user_total_rent_fee = 0
                 for lease in user_lease_info_list:
                     if lease.rent_fee_rate == 0:
                         price_per_hour = int(lease.box.type.price)
                     else:
                         price_per_hour = lease.rent_fee_rate
-
+                    log.info("box_rent_fee_billing: id=%s, price_per_hour=%s, rent_fee_rate=%s" %
+                             (lease.lease_info_id, price_per_hour, lease.rent_fee_rate))
                     if lease.rent_status == 0:
                         user_total_rent_fee = user_total_rent_fee + price_per_hour * 24
+                        log.info("box_rent_fee_billing: still billing user_total_rent_fee=%s" % user_total_rent_fee)
                     else:
                         delta_hour = current_time.hour - lease.lease_end_time.hour
                         delta_day = current_time.day - lease.lease_end_time.day
