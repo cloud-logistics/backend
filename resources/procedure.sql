@@ -309,7 +309,6 @@ CREATE OR REPLACE FUNCTION iot.cal_missing_alarm() RETURNS void AS $$
              '装货',
              1,
              v_endpointid);
-          COMMIT;
 
         ELSEIF v_alarm_status = 1 THEN
           /* 告警表中已有告警，且是未清除状态 */
@@ -327,7 +326,6 @@ CREATE OR REPLACE FUNCTION iot.cal_missing_alarm() RETURNS void AS $$
             robert_operation_status = '装货',
             alarm_status = 1
             WHERE id = v_id;
-          COMMIT;
         END IF;
 
       ELSE
@@ -346,7 +344,6 @@ CREATE OR REPLACE FUNCTION iot.cal_missing_alarm() RETURNS void AS $$
             robert_operation_status = '装货',
             alarm_status = 0
             WHERE id = v_id;
-          COMMIT;
         END IF;
       END IF;
 
