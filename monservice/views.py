@@ -353,7 +353,7 @@ def basic_info(request):
                 'left join iot.monservice_manufacturer manufacturer_info on box_info.manufacturer_id = manufacturer_info.id ' \
                 'left join iot.monservice_battery battery_info on battery_info.id = box_info.battery_id ' \
                 'left join iot.monservice_hardware hardware on hardware.id = box_info.hardware_id ' \
-                'where (deviceid=\'' + str(container_id) + '\' or \'' + str(container_id) +  \
+                'where (deviceid like \'%' + str(container_id) + '%\' or \'' + str(container_id) +  \
                 '\' = \'all\') ' + \
                 ' and (box_type_info.id = ' + str(container_type) + ' or ' + str(container_type) + ' = 0 ) ' + \
                 ' and  (manufacturer_info.id = ' + str(factory) + ' or ' + str(factory) + ' = 0 ) ' + \

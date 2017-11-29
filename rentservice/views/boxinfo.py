@@ -18,6 +18,8 @@ from rentservice.serializers import BoxInfoResSerializer
 from rentservice.models import RentLeaseInfo
 from rentservice.serializers import RentLeaseBoxSerializer
 from django.conf import settings
+from monservice.models import SensorData
+from monservice.serializers import SensorPathDataSerializer
 import datetime
 import uuid
 import pytz
@@ -99,8 +101,18 @@ def get_box_detail(request, box_id):
         box_info = BoxInfo.objects.get(deviceid=box_id)
     except BoxInfo.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "云箱不存在"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    return JsonResponse(retcode(BoxInfoResSerializer(box_info).data, "0000", "Success"), safe=True,
-                        status=status.HTTP_200_OK)
+    sensor_data = SensorData.objects.filter(deviceid=box_id).order_by('-timestamp')
+    if len(sensor_data) > 0:
+        last_data = sensor_data[0]
+        _location = SensorPathDataSerializer(last_data).data
+    else:
+        _sensor = SensorData(deviceid=box_id, timestamp=0, latitude='0', longitude='0')
+        _location = SensorPathDataSerializer(_sensor).data
+
+    return JsonResponse(retcode(
+        {'box_info': BoxInfoResSerializer(box_info).data, 'location': _location},
+        "0000", "Success"), safe=True,
+        status=status.HTTP_200_OK)
 
 
 @csrf_exempt
@@ -113,7 +125,7 @@ def get_box_stat(request, box_id):
     # 获取周区间
     today = datetime.datetime.today()
     week_start = today - datetime.timedelta(days=today.weekday())
-    week_end = today - datetime.timedelta(days=7 - today.weekday())
+    week_end = today + datetime.timedelta(days=7 - today.weekday())
     week_queryset = RentLeaseInfo.objects.filter(rent_status=1, lease_start_time__gte=week_start,
                                                  lease_start_time__lte=week_end, box=box)
     week_count = week_queryset.count()
