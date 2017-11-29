@@ -267,7 +267,7 @@ CREATE OR REPLACE FUNCTION iot.cal_missing_alarm() RETURNS void AS $$
       v_alarm_status := NULL;
       /* 获取箱子在告警表中记录等最后的状态 */
       SELECT id,alarm_status FROM iot.monservice_alarminfo
-      WHERE deviceid = data_record.deviceid AND code = 6001 ORDER BY timestamp desc LIMIT 1
+      WHERE deviceid = data_record.deviceid AND code = 6001 AND alarm_status = 1 ORDER BY timestamp desc LIMIT 1
       INTO v_id,v_alarm_status;
 
       IF data_record.flag = 1 THEN
