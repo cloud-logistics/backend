@@ -160,7 +160,8 @@ def box_rent_fee_daily_billing():
             try:
                 log.info("box_rent_fee_billing: begin compute")
                 user_lease_info_list = RentLeaseInfo.objects.filter(user_id=user)
-                # log.info("box_rent_fee_billing: user_lease_info_list = %s" % user_lease_info_list)
+                log.info("box_rent_fee_billing: user_lease_info_list = %s" %
+                         BoxRentFeeDetailSerializer(user_lease_info_list, many=True))
                 user_total_rent_fee = 0
                 for lease in user_lease_info_list:
                     if lease.rent_fee_rate == 0:
