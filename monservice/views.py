@@ -586,7 +586,7 @@ def basic_info_config(request):
 
         box_type = BoxTypeInfo.objects.get(id=category)
         box = BoxInfo(deviceid=container_id, type=box_type, date_of_production=date_of_production, manufacturer=man,
-                      produce_area=pro, hardware=hard, battery=bat, carrier=1, tid=rfid)
+                      produce_area=pro, hardware=hard, battery=bat, carrier=1, tid=rfid, ava_flag='N')
         box.save()
 
     except Exception, e:
@@ -604,6 +604,7 @@ def basic_info_config(request):
 def get_containerid_by_rfid(request, rfid):
     try:
         box = BoxInfo.objects.get(tid=rfid)
+
         site_id = request.GET.get('siteID')
 
         if site_id is not None and box.siteinfo_id != site_id:
