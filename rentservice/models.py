@@ -42,6 +42,7 @@ class EnterpriseInfo(models.Model):
     enterprise_address = models.CharField(max_length=128, default='')
     enterprise_homepage_url = models.CharField(max_length=128, default='')
     register_time = models.DateTimeField(default=datetime.datetime.today())
+    last_update_time = models.DateTimeField(default=datetime.datetime.today())
 
 
 class RentalServiceAdmin(models.Model):

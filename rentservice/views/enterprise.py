@@ -59,7 +59,8 @@ def add_enterprise_info(request):
                                          enterprise_license_id_url=enterprise_license_id_url,
                                          enterprise_legal_rep_name=enterprise_legal_rep_name,
                                          enterprise_email=enterprise_email, enterprise_deposit=enterprise_deposit,
-                                         enterprise_deposit_status=0, register_time=datetime.datetime.now(tz))
+                                         enterprise_deposit_status=0, register_time=datetime.datetime.now(tz),
+                                         last_update_time=datetime.datetime.now(tz))
         enterprise_info.save()
     except Exception, e:
         log.error(repr(e))
@@ -115,6 +116,7 @@ def update_enterprise_info(request):
         enterprise_edit.enterprise_legal_rep_name = enterprise_legal_rep_name
         enterprise_edit.enterprise_email = enterprise_email
         enterprise_edit.enterprise_deposit = enterprise_deposit
+        enterprise_edit.last_update_time = datetime.datetime.now(tz)
         enterprise_edit.save()
     except EnterpriseInfo.DoesNotExist:
         return JsonResponse(retcode(errcode("9999", '请求修改的企业信息不存在'), "9999", '请求修改的企业信息不存在'), safe=True, status=status.HTTP_400_BAD_REQUEST)
@@ -139,7 +141,7 @@ def list_enterpise_info(request):
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
     try:
-        enterprise_ret = EnterpriseInfo.objects.all()
+        enterprise_ret = EnterpriseInfo.objects.all().order_by('-last_update_time')
         page = paginator.paginate_queryset(enterprise_ret, request)
         ret_ser = EnterpriseInfoSerializer(page, many=True)
     except Exception:
