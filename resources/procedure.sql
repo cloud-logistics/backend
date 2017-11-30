@@ -93,7 +93,7 @@
     /* 温度告警计算 */
     /* 获取箱子在告警表中的最后一条状态 */
     SELECT id,alarm_status from iot.monservice_alarminfo
-    WHERE code >= 1000 AND code < 2000 AND deviceid = NEW.deviceid
+    WHERE code >= 1000 AND code < 2000 AND deviceid = NEW.deviceid and alarm_status = 1
     ORDER BY timestamp DESC LIMIT 1 INTO v_id ,v_alarm_status;
 
     IF CAST(NEW.temperature AS NUMERIC) > v_temperature_threshold_max THEN
@@ -131,7 +131,7 @@
     /* 湿度告警计算 */
     /* 获取箱子在告警表中的最后一条状态 */
     SELECT id,alarm_status from iot.monservice_alarminfo
-    WHERE code >= 2000 AND code < 3000 AND deviceid = NEW.deviceid
+    WHERE code >= 2000 AND code < 3000 AND deviceid = NEW.deviceid and alarm_status = 1
     ORDER BY timestamp DESC LIMIT 1 INTO v_id ,v_alarm_status;
 
     IF CAST(NEW.humidity AS NUMERIC) > v_humidity_threshold_max THEN
@@ -167,7 +167,7 @@
     /* 碰撞次数告警计算 */
     /* 获取箱子在告警表中的最后一条状态 */
     SELECT id,alarm_status from iot.monservice_alarminfo
-    WHERE code >= 3000 AND code < 4000 AND deviceid = NEW.deviceid
+    WHERE code >= 3000 AND code < 4000 AND deviceid = NEW.deviceid and alarm_status = 1
     ORDER BY timestamp DESC LIMIT 1 INTO v_id ,v_alarm_status;
 
     IF CAST(NEW.collide AS NUMERIC) > v_collision_threshold_max THEN
@@ -193,7 +193,7 @@
     /* 开关箱次数告警计算 */
     /* 获取箱子在告警表中的最后一条状态 */
     SELECT id,alarm_status from iot.monservice_alarminfo
-    WHERE code >= 5000 AND code < 6000 AND deviceid = NEW.deviceid
+    WHERE code >= 5000 AND code < 6000 AND deviceid = NEW.deviceid and alarm_status = 1
     ORDER BY timestamp DESC LIMIT 1 INTO v_id ,v_alarm_status;
 
     IF CAST(NEW.light AS NUMERIC) > v_operation_threshold_max THEN

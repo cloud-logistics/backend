@@ -365,6 +365,7 @@ def dispatchout(request):
                     response_msg = {'result': 'False', 'code': '999999', 'msg': msg, 'status': 'error'}
                     return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+                box.ava_flag = 'N'
                 box.siteinfo = None
 
                 if stock.ava_num <= 0:
@@ -431,6 +432,7 @@ def dispatchin(request):
                     return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
                 stock = SiteBoxStock.objects.get(site=site, box_type=box.type)
+                box.ava_flag = 'Y'
                 box.siteinfo = site
                 stock.ava_num += 1
 
