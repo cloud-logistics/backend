@@ -147,6 +147,8 @@ def admin_auth_with_salt(request):
         m2 = hashlib.md5()
         m2.update(user.user_password_encrypt+str(timestamp))
         gen_password = m2.hexdigest()
+        log.info("password=%s, gen_password=%s, timestamp=%s, username=%s" %
+                 (password, gen_password, timestamp, username))
         if gen_password != password:
             return JsonResponse(retcode(errcode("0403", '用户不存在或用户密码不正确'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
     except EnterpriseUser.DoesNotExist, e:
@@ -183,6 +185,8 @@ def auth_with_salt(request):
         m2 = hashlib.md5()
         m2.update(user.user_password_encrypt+str(timestamp))
         gen_password = m2.hexdigest()
+        log.info("password=%s, gen_password=%s, timestamp=%s, username=%s" %
+                 (password, gen_password, timestamp, username))
         if gen_password != password:
             return JsonResponse(retcode(errcode("0403", '用户不存在或用户密码不正确'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
     except EnterpriseUser.DoesNotExist, e:

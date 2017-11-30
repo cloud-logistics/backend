@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rentservice.models import RentLeaseInfo, EnterpriseUser
-from rentservice.models import AppointmentDetail, UserAppointment
+from rentservice.models import AppointmentDetail, UserAppointment, BoxRentFeeByMonth, BoxRentFeeDetail
 from monservice.models import SiteInfo, BoxInfo, BoxTypeInfo, SiteBoxStock
 from monservice.serializers import BoxTypeInfoSerializer, BoxInfoSerializer
 from monservice.view.site import enter_leave_site
@@ -158,6 +158,8 @@ def finish_boxes_order(request):
             item.on_site = site
             lease_info_list.append(item.lease_info_id)
             item.save()
+        #update daily bill
+        update_box_bill_daily()
         # update
         stock_data = {}
         stock_data['site_id'] = site_id
@@ -229,3 +231,30 @@ def get_rent_fee_rate(lease_info):
     else:
         price_per_hour = lease_info.rent_fee_rate
     return price_per_hour
+
+
+def update_box_bill_daily():
+    current_time = datetime.datetime.now(tz=timezone)
+    user_list = RentLeaseInfo.objects.filter(rent_status=1, sum_flag=0).values_list('user_id', flat=True)
+    user_obj_list = EnterpriseUser.objects.filter(user_id__in=user_list)
+    log.info("update_box_bill_daily: compute begin")
+    log.info("update_box_bill_daily: user_list = %s" % user_list)
+    for user in user_obj_list:
+        off_site_counts = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0).count()
+        on_site_counts = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0).count()
+        rent_lease_info_list = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0)
+        user_rent_fee_sum = 0
+        with transaction.atomic():
+            for rent_lease_info in rent_lease_info_list:
+                user_rent_fee_sum = rent_lease_info_list + rent_lease_info.rent
+                rent_lease_info.sum_flag = 1
+                rent_lease_info.last_update_time = current_time
+                rent_lease_info.save()
+            log.info("update_box_bill_daily: off_site_counts=%s, on_site_counts=%s" % (off_site_counts, on_site_counts))
+            box_rent_fee = BoxRentFeeDetail(detail_id=uuid.uuid1(), enterprise=user.enterprise,
+                                            user=user, date=current_time,
+                                            off_site_nums=off_site_counts,
+                                            on_site_nums=on_site_counts, rent_fee=user_rent_fee_sum)
+            box_rent_fee.save()
+    log.info("update_box_bill_daily: compute finsih")
+

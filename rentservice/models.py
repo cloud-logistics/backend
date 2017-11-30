@@ -110,6 +110,7 @@ class RentLeaseInfo(models.Model):
     rent_status = models.IntegerField(default=0)
     rent_fee_rate = models.BigIntegerField(default=0)
     last_update_time = models.DateTimeField(null=True)
+    sum_flag = models.IntegerField(default=0)
 
 
 class RentalAdminOperationRecords(models.Model):
