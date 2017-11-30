@@ -862,11 +862,11 @@ def verify_user(request):
     try:
         username = req_param['username']
     except Exception:
-        return JsonResponse({'msg': 'username should not be empty'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'msg': '请输入账号'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
         password = req_param['password']
     except Exception:
-        return JsonResponse({'msg': 'password should not be empty'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'msg': '请输入密码'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         user = SysUser.objects.get(user_name=username, user_password=password)
@@ -875,7 +875,7 @@ def verify_user(request):
             ret_dict['token'] = user.user_token
             return JsonResponse(ret_dict, safe=True, status=status.HTTP_200_OK)
     except SysUser.DoesNotExist:
-        return JsonResponse({'msg': 'username or password error'}, safe=True, status=status.HTTP_403_FORBIDDEN)
+        return JsonResponse({'msg': '账号或密码错误'}, safe=True, status=status.HTTP_403_FORBIDDEN)
 
 
 # 向终端发送command
