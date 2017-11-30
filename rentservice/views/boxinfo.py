@@ -139,9 +139,11 @@ def get_box_stat(request, box_id):
     m = today.month
     month_start_dt = datetime.date(y, m, 1)
     if m == 12:
-        month_end_dt = datetime.date(y + 1, 1, 1) - datetime.timedelta(days=1)
+        month_end_dt = datetime.date(y + 1, 1, 1)
+        # month_end_dt = datetime.date(y + 1, 1, 1) - datetime.timedelta(days=1)
     else:
-        month_end_dt = datetime.date(y, m + 1, 1) - datetime.timedelta(days=1)
+        month_end_dt = datetime.date(y, m + 1, 1)
+        # month_end_dt = datetime.date(y, m + 1, 1) - datetime.timedelta(days=1)
     month_queryset = RentLeaseInfo.objects.filter(rent_status=1, lease_start_time__gte=month_start_dt,
                                                   lease_start_time__lte=month_end_dt, box=box)
     month_count = month_queryset.count()
