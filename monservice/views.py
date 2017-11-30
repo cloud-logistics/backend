@@ -929,7 +929,7 @@ def indicator_history(request):
         for j in range(days * 24):
             y = data_dic.get(j)
             if y is None:
-                y = 0
+                y = 'NA'
 
             x1 = time.localtime(start_time + j * 3600)
             x2 = time.localtime(start_time + (j + 1) * 3600)
@@ -939,7 +939,7 @@ def indicator_history(request):
             if indicator == 'battery':
                 value_arr.append({'time': time_x1 + '~' + time_x2, 'value': round(float(100 - 0.2 * j), 2)})
             else:
-                value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(y)})
+                value_arr.append({'time': time_x1 + '~' + time_x2, 'value': str(y)})
     except Exception, e:
         log.error(e.message)
     if indicator == 'battery':
