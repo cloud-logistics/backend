@@ -313,6 +313,8 @@ def enter_leave_site(data):
                         return
                     box.siteinfo = None
                     stock.ava_num -= 1
+                    # orig_reserved = stock.reserve_num
+                    # stock.reserve_num = orig_reserved - 1
 
                 history.save()
                 box.save()
