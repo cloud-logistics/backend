@@ -63,11 +63,6 @@ def rent_boxes_order(request):
             return JsonResponse(retcode(errcode("9999", '预约单所属用户不存在'), "9999", '预约单所属用户不存在'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         appoint_detail_queryset = AppointmentDetail.objects.filter(appointment_id=user_appoint, site_id=site)
-        for item in appoint_detail_queryset:
-            stock = SiteBoxStock.objects.get(site=site, box_type=item.box_type)
-            orig_num = stock.reserve_num
-            stock.reserve_num = orig_num - item.box_num
-            stock.save()
         # 所租云箱必须隶属于当前site，否则报错
         box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list, siteinfo__id=site_id)
         if box_info_list.count() == 0:
@@ -101,6 +96,13 @@ def rent_boxes_order(request):
             for appoint_detail in appoint_detail_queryset:
                 appoint_detail.flag = 1
                 appoint_detail.save()
+                stock = SiteBoxStock.objects.get(site=site, box_type=appoint_detail.box_type)
+                orig_num = stock.reserve_num
+                if orig_num >= appoint_detail.box_num:
+                    stock.reserve_num = orig_num - appoint_detail.box_num
+                    stock.save()
+                else:
+                    log.info("reserved_num less than appoint_detail.box_num")
             # 预约单更新为已完成
             user_appoint.flag = 1
             user_appoint.save()
