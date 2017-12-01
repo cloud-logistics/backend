@@ -28,7 +28,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(crontab(minute='*/15', hour='*'), cancel_appointment.s())
     sender.add_periodic_task(crontab(minute=1, hour=0), generate_site_stat.s())
     #sender.add_periodic_task(crontab(minute=15, hour=0), box_rent_fee_daily_billing.s())
-    #sender.add_periodic_task(crontab(minute=30, hour=0, day_of_month='1'), box_rent_fee_month_billing.s())
+    sender.add_periodic_task(crontab(minute='*/30', hour='*'), box_rent_fee_month_billing.s())
 
 
 @app.task
@@ -221,7 +221,8 @@ def box_rent_fee_month_billing():
             for enterprise in enterprise_list:
                 enterprise_obj = EnterpriseInfo.objects.get(enterprise_id=enterprise['enterprise'])
                 query_list = BoxRentFeeDetail.objects.filter(enterprise=enterprise_obj,
-                                                             date__year=current_time.year, date__month=current_time.month)
+                                                             date__year=current_time.year,
+                                                             date__month=current_time.month)
                 off_site_box_nums_month = 0
                 on_site_box_nums_month = 0
                 rent_fee_month = 0
@@ -231,11 +232,22 @@ def box_rent_fee_month_billing():
                     off_site_box_nums_month = off_site_box_nums_month + box_rent_day.off_site_nums
                 log.info("enterprise_id = %s, rent_fee_month=%s, on_site_box_nums_month=%s,off_site_box_nums_month=%s"
                          % (enterprise['enterprise'], rent_fee_month, on_site_box_nums_month, off_site_box_nums_month))
-                box_rent_fee = BoxRentFeeByMonth(detail_id=uuid.uuid1(), enterprise=enterprise_obj,
-                                                 date=current_time, off_site_nums=off_site_box_nums_month,
-                                                 on_site_nums=on_site_box_nums_month,
-                                                 rent_fee=rent_fee_month)
-                box_rent_fee.save()
+                try:
+                    box_rent_bill_month = BoxRentFeeByMonth.objects.get(enterprise=enterprise_obj,
+                                                                        date__year=current_time.year,
+                                                                        date__month=current_time.month)
+                    box_rent_bill_month.rent_fee = rent_fee_month
+                    box_rent_bill_month.off_site_nums = off_site_box_nums_month
+                    box_rent_bill_month.on_site_nums = on_site_box_nums_month
+                    box_rent_bill_month.save()
+                except BoxRentFeeByMonth.DoesNotExist, e:
+                    month_date = datetime.datetime(current_time.year, current_time.month, 1)
+                    box_rent_fee = BoxRentFeeByMonth(detail_id=uuid.uuid1(), enterprise=enterprise_obj,
+                                                     date=month_date, off_site_nums=off_site_box_nums_month,
+                                                     on_site_nums=on_site_box_nums_month,
+                                                     rent_fee=rent_fee_month)
+                    box_rent_fee.save()
+                    log.error(repr(e))
         except Exception, e:
             log.error(repr(e))
         log.info("box_rent_fee_month_billing: compute finsih")
