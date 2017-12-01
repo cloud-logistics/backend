@@ -42,6 +42,7 @@ class EnterpriseInfo(models.Model):
     enterprise_address = models.CharField(max_length=128, default='')
     enterprise_homepage_url = models.CharField(max_length=128, default='')
     register_time = models.DateTimeField(default=datetime.datetime.today())
+    last_update_time = models.DateTimeField(default=datetime.datetime.today())
 
 
 class RentalServiceAdmin(models.Model):
@@ -109,6 +110,7 @@ class RentLeaseInfo(models.Model):
     rent_status = models.IntegerField(default=0)
     rent_fee_rate = models.BigIntegerField(default=0)
     last_update_time = models.DateTimeField(null=True)
+    sum_flag = models.IntegerField(default=0)
 
 
 class RentalAdminOperationRecords(models.Model):

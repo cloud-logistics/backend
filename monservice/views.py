@@ -273,38 +273,39 @@ def alarm_monitor(request):
     alert_type_id = request.GET.get('alert_type_id')
 
     deviceid = (container_id, '')[container_id == 'all']
-    data = AlarmInfo.objects.raw('select alarm_info.deviceid,alert_level_info.level,alarm_info.timestamp,'
-                                 'alert_code_info.description,alarm_info.code,alarm_info.status,'
-                                 'alarm_info.longitude,alarm_info.latitude,'
-                                 'alarm_info.speed,alarm_info.temperature,alarm_info.humidity,'
-                                 'alarm_info.num_of_collide,alarm_info.num_of_door_open,'
-                                 'alarm_info.battery,alarm_info.robert_operation_status,'
-                                 'alarm_info.endpointid, alarm_info.id '
-                                 'from iot.monservice_alarminfo alarm_info '
-                                 'left join iot.monservice_alertlevelinfo alert_level_info on alarm_info.level = alert_level_info.id '
-                                 'left join iot.monservice_alertcodeinfo alert_code_info on alarm_info.code = alert_code_info.errcode '
-                                 'where alarm_info.alarm_status = 1 '
-                                 'and (alert_code_info.id = ' + str(alert_type_id) + ' or ' + str(alert_type_id) + ' = 0) '
-                                 ' and (alarm_info.deviceid = \'' + to_str(deviceid) + '\' or \'' + deviceid + '\'= \'\') '
-                                 'order by timestamp desc')
+    sql = 'select alarm_info.deviceid,alert_level_info.level,alarm_info.timestamp, ' + \
+          'alert_code_info.description,alarm_info.code,alarm_info.status, ' + \
+          'alarm_info.longitude,alarm_info.latitude,' + \
+          'alarm_info.speed,alarm_info.temperature,alarm_info.humidity,' + \
+          'alarm_info.num_of_collide,alarm_info.num_of_door_open,' + \
+          'alarm_info.battery,alarm_info.robert_operation_status,' + \
+          'alarm_info.endpointid, alarm_info.id ' + \
+          'from iot.monservice_alarminfo alarm_info ' + \
+          'left join iot.monservice_alertlevelinfo alert_level_info on alarm_info.level = alert_level_info.id ' + \
+          'left join iot.monservice_alertcodeinfo alert_code_info on alarm_info.code = alert_code_info.errcode ' + \
+          'where alarm_info.alarm_status = 1 ' + \
+          'and (alert_code_info.id = ' + str(alert_type_id) + ' or ' + str(alert_type_id) + ' = 0) ' + \
+          ' and (alarm_info.deviceid like \'%' + to_str(deviceid) + '%\' or \'' + deviceid + '\'= \'\') ' \
+          ' order by timestamp desc'
+    data = query_list(sql)
     ret_data = []
 
     for record in data:
-        deviceid = record.deviceid
-        timestamp = record.timestamp * 1000        # 前端显示需要精确到毫秒
-        error_description = record.description
-        error_code = record.code
-        ship_status = record.status
-        longitude = cal_position(record.longitude)
-        latitude = cal_position(record.latitude)
-        speed = record.speed
-        temperature = record.temperature
-        humidity = record.humidity
-        num_of_collide = record.num_of_collide
-        num_of_door_open = record.num_of_door_open
-        battery = record.battery
-        robert_operation_status = record.robert_operation_status
-        endpointid = record.endpointid
+        deviceid = record[0]
+        timestamp = record[2] * 1000        # 前端显示需要精确到毫秒
+        error_description = record[3]
+        error_code = record[4]
+        ship_status = record[5]
+        longitude = cal_position(record[6])
+        latitude = cal_position(record[7])
+        speed = record[8]
+        temperature = record[9]
+        humidity = record[10]
+        num_of_collide = record[11]
+        num_of_door_open = record[12]
+        battery = record[13]
+        robert_operation_status = record[14]
+        endpointid = record[15]
         location_name = gps_info_trans("%s,%s" % (latitude, longitude)).decode("utf-8")
         ret_data.append({'timestamp': timestamp, 'deviceid': deviceid,
                          'level': 1, 'status': u'', 'carrier': 1, 'alarm_status': 1,
@@ -499,19 +500,19 @@ def status_summary(request):
                 '(select max(timestamp) as timestamp ,deviceid from iot.monservice_sensordata '
 
     if id is not None and id != 'all':
-        sql = sql + 'where deviceid = \'' + id + '\' '
+        sql = sql + 'where deviceid like \'%' + id + '%\' '
 
     sql = sql + 'group by deviceid) A left join iot.monservice_sensordata B ' \
                 'on A.timestamp = B.timestamp and A.deviceid = B.deviceid '
 
     if id is not None and id != 'all':
-        sql = sql + 'where B.deviceid = \'' + id + '\''
+        sql = sql + 'where B.deviceid like \'%' + id + '%\''
 
     sql = sql + ') C on C.deviceid=box_info.deviceid where ' \
                 '(box_info.type_id = ' + str(container_type) + ' or ' + container_type + ' = 0)' \
                 ' and (siteinfo_id = ' + location_id + ' or ' + location_id + ' = 0)'
     if id is not None and id != 'all':
-        sql = sql + ' and box_info.deviceid = \'' + id + '\' '
+        sql = sql + ' and box_info.deviceid like \'%' + id + '%\' '
     sql = sql + ' group by box_info.deviceid,C.timestamp, ' \
                 'C.longitude,C.latitude,C.speed,C.temperature,C.humidity,C.collide,C.light'
     data = query_list(sql)
@@ -938,7 +939,7 @@ def indicator_history(request):
         for j in range(days * 24):
             y = data_dic.get(j)
             if y is None:
-                y = 0
+                y = 'NA'
 
             x1 = time.localtime(start_time + j * 3600)
             x2 = time.localtime(start_time + (j + 1) * 3600)
@@ -948,7 +949,7 @@ def indicator_history(request):
             if indicator == 'battery':
                 value_arr.append({'time': time_x1 + '~' + time_x2, 'value': round(float(100 - 0.2 * j), 2)})
             else:
-                value_arr.append({'time': time_x1 + '~' + time_x2, 'value': float(y)})
+                value_arr.append({'time': time_x1 + '~' + time_x2, 'value': str(y)})
     except Exception, e:
         log.error(e.message)
     if indicator == 'battery':

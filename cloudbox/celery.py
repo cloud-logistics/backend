@@ -27,8 +27,8 @@ def setup_periodic_tasks(sender, **kwargs):
     # sender.add_periodic_task(crontab(minute='*/15', hour='*'), billing.s())
     sender.add_periodic_task(crontab(minute='*/15', hour='*'), cancel_appointment.s())
     sender.add_periodic_task(crontab(minute=1, hour=0), generate_site_stat.s())
-    sender.add_periodic_task(crontab(minute=15, hour=0), box_rent_fee_daily_billing.s())
-    sender.add_periodic_task(crontab(minute=30, hour=0, day_of_month='1'), box_rent_fee_month_billing.s())
+    #sender.add_periodic_task(crontab(minute=15, hour=0), box_rent_fee_daily_billing.s())
+    #sender.add_periodic_task(crontab(minute=30, hour=0, day_of_month='1'), box_rent_fee_month_billing.s())
 
 
 @app.task

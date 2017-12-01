@@ -78,7 +78,8 @@ def enterprise_month_bill_detail(request, enterprise_id, date):
         # if month <=0 or month >12:
         #     return JsonResponse(retcode(errcode("0400", '日期参数错误'), safe=True, status=status.HTTP_400_BAD_REQUEST)
         rent_info_list = RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise_id,
-                                                      lease_end_time__year=year, lease_end_time__month=month)
+                                                      lease_end_time__year=year,
+                                                      lease_end_time__month=month).order_by('-lease_end_time')
     except Exception, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0500", '查询企业月报表明细错误'), "0500", '查询企业月报表明细错误'), safe=True,
