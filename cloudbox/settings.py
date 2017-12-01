@@ -164,6 +164,6 @@ CELERY_TIMEZONE = 'Asia/Shanghai'
 SALT_DURATION = 300
 
 # session 设置
-SESSION_COOKIE_AGE = 60 * 5              # 5分钟
+SESSION_COOKIE_AGE = 60 * 10              # 10分钟
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # 关闭浏览器，则COOKIE失效
