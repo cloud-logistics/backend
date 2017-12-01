@@ -161,7 +161,7 @@ CELERY_RESULT_BACKEND = 'django-cache'
 CELERY_TIMEZONE = 'Asia/Shanghai'
 
 #salt duration in seconds
-SALT_DURATION = 300
+SALT_DURATION = 600
 
 # session 设置
 SESSION_COOKIE_AGE = 60 * 10              # 10分钟
