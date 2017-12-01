@@ -24,7 +24,7 @@ def get_param(request, param_key):
         param = Param.objects.get(param_key=param_key)
     except Param.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "参数不存在"), safe=True, status=status.HTTP_400_BAD_REQUEST)
-    return JsonResponse(retcode({}, "0000", "Success"), safe=True, status=status.HTTP_200_OK)
+    return JsonResponse(retcode(ParamSerializer(param).data, "0000", "Success"), safe=True, status=status.HTTP_200_OK)
 
 
 # set travel parameters
