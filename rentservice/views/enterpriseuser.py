@@ -177,6 +177,7 @@ def del_enterprise_user(request, user_id):
         with transaction.atomic():
             del_user = EnterpriseUser.objects.get(user_id=user_id)
             AuthUserGroup.objects.get(user_token=del_user.user_token).delete()
+            del_redis_token(del_user.user_token)
             del_user.delete()
         ret = {}
         ret['user_id'] = user_id

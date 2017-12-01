@@ -174,14 +174,19 @@ def finish_boxes_order(request):
         stock_data['boxes'] = box_para_list
         enter_leave_site(stock_data)
         # 增加消息
+        log.info("push message to app: begin")
         alias = []
-        alias.append(rent_info_list[0].user_id.user_alias_id)
-        message = u'您的云箱已经归还成功'
-        celery.send_push_message.delay(alias, message)
-        notify_message = u'您的云箱已经归还成功，箱子ID分别是'
-        for _box in box_info_list:
-            notify_message += u' [ %s ] ' % _box.deviceid
-        create_notify("云箱租赁", notify_message, rent_info_list[0].user_id.user_id)
+        if rent_info_list:
+            alias.append(rent_info_list[0].user_id.user_alias_id)
+            message = u'您的云箱已经归还成功'
+            celery.send_push_message.delay(alias, message)
+            notify_message = u'您的云箱已经归还成功，箱子ID分别是'
+            for _box in box_info_list:
+                notify_message += u' [ %s ] ' % _box.deviceid
+            create_notify("云箱租赁", notify_message, rent_info_list[0].user_id.user_id)
+        else:
+            log.info("rent_info_list is null, dont' push message")
+        log.info("push message to app: end")
     except Exception, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0500", '归还云箱失败'), "0500", '归还云箱失败'), safe=True,
@@ -237,26 +242,29 @@ def get_rent_fee_rate(lease_info):
 
 def update_box_bill_daily():
     current_time = datetime.datetime.now(tz=timezone)
-    user_list = RentLeaseInfo.objects.filter(rent_status=1, sum_flag=0).values_list('user_id', flat=True)
-    user_obj_list = EnterpriseUser.objects.filter(user_id__in=user_list)
     log.info("update_box_bill_daily: compute begin")
-    log.info("update_box_bill_daily: user_list = %s" % user_list)
-    for user in user_obj_list:
-        off_site_counts = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0).count()
-        on_site_counts = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0).count()
-        rent_lease_info_list = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0)
-        user_rent_fee_sum = 0
-        with transaction.atomic():
-            for rent_lease_info in rent_lease_info_list:
-                user_rent_fee_sum = rent_lease_info_list + rent_lease_info.rent
-                rent_lease_info.sum_flag = 1
-                rent_lease_info.last_update_time = current_time
-                rent_lease_info.save()
-            log.info("update_box_bill_daily: off_site_counts=%s, on_site_counts=%s" % (off_site_counts, on_site_counts))
-            box_rent_fee = BoxRentFeeDetail(detail_id=uuid.uuid1(), enterprise=user.enterprise,
-                                            user=user, date=current_time,
-                                            off_site_nums=off_site_counts,
-                                            on_site_nums=on_site_counts, rent_fee=user_rent_fee_sum)
-            box_rent_fee.save()
+    try:
+        user_list = RentLeaseInfo.objects.filter(rent_status=1, sum_flag=0).values_list('user_id', flat=True)
+        user_obj_list = EnterpriseUser.objects.filter(user_id__in=user_list)
+        log.info("update_box_bill_daily: user_list = %s" % user_list)
+        for user in user_obj_list:
+            off_site_counts = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0).count()
+            on_site_counts = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0).count()
+            rent_lease_info_list = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0)
+            user_rent_fee_sum = 0
+            with transaction.atomic():
+                for rent_lease_info in rent_lease_info_list:
+                    user_rent_fee_sum = user_rent_fee_sum + rent_lease_info.rent
+                    rent_lease_info.sum_flag = 1
+                    rent_lease_info.last_update_time = current_time
+                    rent_lease_info.save()
+                log.info("update_box_bill_daily: off_site_counts=%s, on_site_counts=%s" % (off_site_counts, on_site_counts))
+                box_rent_fee = BoxRentFeeDetail(detail_id=uuid.uuid1(), enterprise=user.enterprise,
+                                                user=user, date=current_time,
+                                                off_site_nums=off_site_counts,
+                                                on_site_nums=on_site_counts, rent_fee=user_rent_fee_sum)
+                box_rent_fee.save()
+    except Exception, e:
+        log.error(repr(e))
     log.info("update_box_bill_daily: compute finsih")
 
