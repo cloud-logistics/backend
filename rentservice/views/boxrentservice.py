@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rentservice.models import RentLeaseInfo, EnterpriseUser
 from rentservice.models import AppointmentDetail, UserAppointment, BoxRentFeeByMonth, BoxRentFeeDetail
+from rentservice.models import EnterpriseInfo
 from monservice.models import SiteInfo, BoxInfo, BoxTypeInfo, SiteBoxStock
 from monservice.serializers import BoxTypeInfoSerializer, BoxInfoSerializer
 from monservice.view.site import enter_leave_site
@@ -267,4 +268,47 @@ def update_box_bill_daily():
     except Exception, e:
         log.error(repr(e))
     log.info("update_box_bill_daily: compute finsih")
+
+
+def update_box_bill_month():
+    current_time = datetime.datetime.now(tz=timezone)
+    if BoxRentFeeDetail.objects.all().count() > 0:
+        log.info("box_rent_fee_month_billing: compute begin")
+        try:
+            enterprise_list = BoxRentFeeDetail.objects.values('enterprise').distinct()
+            for enterprise in enterprise_list:
+                enterprise_obj = EnterpriseInfo.objects.get(enterprise_id=enterprise['enterprise'])
+                query_list = BoxRentFeeDetail.objects.filter(enterprise=enterprise_obj,
+                                                             date__year=current_time.year,
+                                                             date__month=current_time.month)
+                off_site_box_nums_month = 0
+                on_site_box_nums_month = 0
+                rent_fee_month = 0
+                for box_rent_day in query_list:
+                    rent_fee_month = rent_fee_month + box_rent_day.rent_fee
+                    on_site_box_nums_month = on_site_box_nums_month + box_rent_day.on_site_nums
+                    off_site_box_nums_month = off_site_box_nums_month + box_rent_day.off_site_nums
+                log.info("enterprise_id = %s, rent_fee_month=%s, on_site_box_nums_month=%s,off_site_box_nums_month=%s"
+                         % (enterprise['enterprise'], rent_fee_month, on_site_box_nums_month, off_site_box_nums_month))
+                try:
+                    box_rent_bill_month = BoxRentFeeByMonth.objects.get(enterprise=enterprise_obj,
+                                                                        date__year=current_time.year,
+                                                                        date__month=current_time.month)
+                    box_rent_bill_month.rent_fee = rent_fee_month
+                    box_rent_bill_month.off_site_nums = off_site_box_nums_month
+                    box_rent_bill_month.on_site_nums = on_site_box_nums_month
+                    box_rent_bill_month.save()
+                except BoxRentFeeByMonth.DoesNotExist, e:
+                    month_date = datetime.datetime(current_time.year, current_time.month, 1)
+                    box_rent_fee = BoxRentFeeByMonth(detail_id=uuid.uuid1(), enterprise=enterprise_obj,
+                                                     date=month_date, off_site_nums=off_site_box_nums_month,
+                                                     on_site_nums=on_site_box_nums_month,
+                                                     rent_fee=rent_fee_month)
+                    box_rent_fee.save()
+                    log.error(repr(e))
+        except Exception, e:
+            log.error(repr(e))
+        log.info("box_rent_fee_month_billing: compute finsih")
+    else:
+        log.info("no BoxRentFeeDetail records. do nothing")
 

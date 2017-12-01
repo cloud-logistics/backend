@@ -24,6 +24,7 @@ import random
 from monservice.serializers import *
 from monservice.models import *
 from math import ceil
+from django.contrib.sessions.models import Session
 
 
 log = logger.get_logger('monservice.view.py')
@@ -867,7 +868,7 @@ def security_config(request):
 
 
 @api_view(['POST'])
-def verify_user(request):
+def login(request):
     ret_dict = {}
     req_param = JSONParser().parse(request)
     try:
@@ -884,9 +885,20 @@ def verify_user(request):
         if user is not None:
             ret_dict['role'] = 'carrier'
             ret_dict['token'] = user.user_token
+            request.session[user.user_token] = user.user_token
             return JsonResponse(ret_dict, safe=True, status=status.HTTP_200_OK)
     except SysUser.DoesNotExist:
         return JsonResponse({'msg': '账号或密码错误'}, safe=True, status=status.HTTP_403_FORBIDDEN)
+
+
+@api_view(['POST'])
+def logout(request):
+    try:
+        token = request.META.get('HTTP_AUTHORIZATION')
+        del request.session[token]
+        return JsonResponse({'msg': '退出成功'}, safe=True, status=status.HTTP_200_OK)
+    except Exception, e:
+        return JsonResponse({'msg': '退出错误'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
 
 # 向终端发送command
