@@ -157,6 +157,7 @@ def admin_auth_with_salt(request):
     ser_user = EnterpriseUserSerializer(user)
     ret = ser_user.data
     ret['group'] = user.group.group
+    request.session[user.user_token] = user.user_token
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
 
@@ -195,6 +196,7 @@ def auth_with_salt(request):
     ser_user = EnterpriseUserSerializer(user)
     ret = ser_user.data
     ret['group'] = user.group.group
+    request.session[user.user_token] = user.user_token
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
 
