@@ -6,7 +6,8 @@ from monservice import views
 from monservice.view import site, dispatch, maintenance
 
 urlpatterns = [
-    url(r'^auth$', views.verify_user),                            # 登录认证
+    url(r'^auth$', views.login),                                  # 登录认证
+    url(r'^logout$', views.logout),                               # 用户退出
     url(r'^message$', views.get_message),                         # 消息查看
     url(r'^containers$', views.containers_overview),              # 云箱概览
     url(r'^realtimeInfo$', views.realtime_message),               # 实时状态

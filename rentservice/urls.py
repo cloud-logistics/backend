@@ -33,7 +33,7 @@ urlpatterns = [
     # 企业信息更新接口
     url(r'^rentservice/site/list/(?P<latitude>[0-9.]+)/(?P<longitude>[0-9.]+)$', site.get_site_list),
     # 获取堆场列表
-    url(r'^auth/adminauth$', auth.admin_auth),  #admn login verify
+    url(r'^auth/adminauth$', auth.admin_auth),  # admn login verify
     url(r'^auth/auth$', auth.auth),  # 新增用户
     url(r'^auth/groups/detail/(?P<access_group_id>[0-9a-zA-Z-]+)$', auth.group_detail),  # 用户群组
     url(r'^auth/groups/list$', auth.list_group),  # 用户群组
@@ -114,6 +114,7 @@ urlpatterns = [
     # 有条件获取sitelist
     url(r'^rentservice/dashboard/info$', dashboard.get_dash_data),
     # 获取dashboard的信息
-    url(r'^param/set$', param.set_param),
+    url(r'^rentservice/param/set$', param.set_param),
+    url(r'^rentservice/param/all$', param.get_all_params),
     url(r'^param/get/(?P<param_key>[0-9a-zA-Z_-]+)$', param.get_param),
 ]
