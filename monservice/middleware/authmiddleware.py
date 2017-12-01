@@ -40,7 +40,7 @@ class AuthMiddleware(MiddlewareMixin):
                                         status=status.HTTP_401_UNAUTHORIZED)
             except Exception, e:
                 return JsonResponse({'msg': "session timeout or invalid"}, safe=True,
-                                      status=status.HTTP_401_UNAUTHORIZED)
+                                    status=status.HTTP_401_UNAUTHORIZED)
             try:
                 req_url = request.path
                 url_set = SysAccessUrlSerializer(SysAccessUrl.objects.
