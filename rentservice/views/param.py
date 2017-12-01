@@ -45,3 +45,12 @@ def set_param(request):
     param.save()
     return JsonResponse(retcode(ParamSerializer(param).data, "0000", "Success"),
                         safe=True, status=status.HTTP_200_OK)
+
+
+# get all parameters
+@csrf_exempt
+@api_view(['GET'])
+def get_all_params(request):
+    param_list = Param.objects.all()
+    return JsonResponse(retcode(ParamSerializer(param_list, many=True).data, "0000", "Success"), safe=True,
+                        status=status.HTTP_200_OK)
