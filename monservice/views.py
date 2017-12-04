@@ -605,12 +605,14 @@ def basic_info_config(request):
 @api_view(['GET'])
 def get_containerid_by_rfid(request, rfid):
     try:
+        log.debug(request.get_full_path())
+
         box = BoxInfo.objects.get(tid=rfid)
 
         site_id = request.GET.get('siteID')
         if site_id is None:
             response_msg = {'result': 'False', 'code': '999999', 'msg': 'Site ID is None.'}
-            return JsonResponse(response_msg, safe=True, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
         else:
             if box.siteinfo_id is None:
                 box.siteinfo_id = site_id

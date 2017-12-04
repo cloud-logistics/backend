@@ -33,6 +33,8 @@ class AuthMiddleware(MiddlewareMixin):
                 log.error(e.message)
                 return JsonResponse({'msg': "no authorized exception"}, safe=True,
                                     status=status.HTTP_401_UNAUTHORIZED)
+
+            '''
             try:
                 s = Session.objects.get(pk=request.session.session_key)
                 if s is None or s.get_decoded()[token] is None:
@@ -41,6 +43,8 @@ class AuthMiddleware(MiddlewareMixin):
             except Exception, e:
                 return JsonResponse({'msg': "session timeout or invalid"}, safe=True,
                                     status=status.HTTP_401_UNAUTHORIZED)
+            '''
+
             try:
                 req_url = request.path
                 url_set = SysAccessUrlSerializer(SysAccessUrl.objects.

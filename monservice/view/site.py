@@ -130,6 +130,7 @@ def modify_site(request, id):
         site.latitude = to_str(data['latitude'])  # 纬度
         site.site_code = to_str(data['site_code'])  # 仓库代码
         site.volume = data['volume']  # 仓库箱子容量
+        site.name = name
 
         city_id = data['city_id']  # 城市
         province_id = data['province_id']  # 省
