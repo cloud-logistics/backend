@@ -78,7 +78,7 @@ def add_site(request):
 
     except Exception, e:
         log.error(e.message)
-        response_msg = {'status': 'ERROR', 'msg': e.message}
+        response_msg = {'status': 'ERROR', 'msg': u'录入仓库失败！'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'status': 'OK', 'msg': u'录入仓库成功！'}

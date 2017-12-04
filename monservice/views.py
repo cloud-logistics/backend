@@ -626,8 +626,8 @@ def get_containerid_by_rfid(request, rfid):
                     old_stock = SiteBoxStock.objects.get(site_id=box.siteinfo_id, box_type=box.type)
                     old_stock.ava_num -= 1
 
-
                     box.siteinfo_id = site_id
+                    box.ava_flag = 'Y'
                     stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
                     stock.ava_num += 1
 
