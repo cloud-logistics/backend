@@ -613,27 +613,20 @@ def get_containerid_by_rfid(request, rfid):
         if site_id is None:
             response_msg = {'result': 'False', 'code': '999999', 'msg': 'Site ID is None.'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            if box.siteinfo_id is None:
-                box.siteinfo_id = site_id
-                box.ava_flag = 'Y'
-                stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
-                stock.ava_num += 1
-                stock.save()
-                box.save()
-            else:
-                if box.siteinfo_id != site_id:
-                    old_stock = SiteBoxStock.objects.get(site_id=box.siteinfo_id, box_type=box.type)
-                    old_stock.ava_num -= 1
 
-                    box.siteinfo_id = site_id
-                    box.ava_flag = 'Y'
-                    stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
-                    stock.ava_num += 1
+        if box.siteinfo_id is None and box.ava_flag == 'N':
+            box.siteinfo_id = site_id
+            box.ava_flag = 'Y'
+            stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
+            stock.ava_num += 1
 
-                    old_stock.save()
-                    stock.save()
-                    box.save()
+            ts = str(time.time())[0:10]
+            op_type = '1'  # 操作类型：1表示入仓，0表示出仓
+            history = SiteHistory(timestamp=ts, site_id=site_id, box_id=box.deviceid, op_type=op_type)
+
+            stock.save()
+            box.save()
+            history.save()
 
     except Exception, e:
         log.error(e.message)
@@ -693,7 +686,7 @@ def remove_basic_info(request, id):
     try:
         container_id = str(id)
         box = BoxInfo.objects.get(deviceid=container_id)
-        if box.siteinfo_id is None:
+        if box.siteinfo_id is None and box.ava_flag == 'Y':
             response_msg = {'status': 'ERROR', 'msg': u'该箱子在运输中，无法删除！'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
