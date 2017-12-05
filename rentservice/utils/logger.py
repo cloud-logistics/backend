@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import logging
+from django.conf import settings
+import os
 
 
 def get_logger(module_name):
@@ -11,7 +13,12 @@ def get_logger(module_name):
     logger.setLevel(logging.DEBUG)
 
     # 创建一个handler，用于写入日志文件
-    fh = logging.FileHandler('runlog.log')
+    # fh = logging.FileHandler('runlog.log')
+    if os.path.exists(settings.LOG_ROOT_PATH):
+        log_path = settings.LOG_ROOT_PATH + '/runlog.log'
+    else:
+        log_path = 'runlog.log'
+    fh = logging.handlers.RotatingFileHandler(log_path, mode='a', maxBytes=10485760, backupCount=10)
     fh.setLevel(logging.DEBUG)
 
     # 再创建一个handler，用于输出到控制台
