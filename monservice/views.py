@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import json
-import os
 import time
 import datetime
 import traceback
@@ -24,11 +22,9 @@ import random
 from monservice.serializers import *
 from monservice.models import *
 from math import ceil
-from django.contrib.sessions.models import Session
 
 
 log = logger.get_logger('monservice.view.py')
-file_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + 'mock_data.json'
 NOT_APPLICABLE = 'NA'
 ZERO = 0
 STATUS_NORMAL = '正常'
@@ -613,27 +609,20 @@ def get_containerid_by_rfid(request, rfid):
         if site_id is None:
             response_msg = {'result': 'False', 'code': '999999', 'msg': 'Site ID is None.'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            if box.siteinfo_id is None:
-                box.siteinfo_id = site_id
-                box.ava_flag = 'Y'
-                stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
-                stock.ava_num += 1
-                stock.save()
-                box.save()
-            else:
-                if box.siteinfo_id != site_id:
-                    old_stock = SiteBoxStock.objects.get(site_id=box.siteinfo_id, box_type=box.type)
-                    old_stock.ava_num -= 1
 
-                    box.siteinfo_id = site_id
-                    box.ava_flag = 'Y'
-                    stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
-                    stock.ava_num += 1
+        if box.siteinfo_id is None and box.ava_flag == 'N':
+            box.siteinfo_id = site_id
+            box.ava_flag = 'Y'
+            stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
+            stock.ava_num += 1
 
-                    old_stock.save()
-                    stock.save()
-                    box.save()
+            ts = str(time.time())[0:10]
+            op_type = '1'  # 操作类型：1表示入仓，0表示出仓
+            history = SiteHistory(timestamp=ts, site_id=site_id, box_id=box.deviceid, op_type=op_type)
+
+            stock.save()
+            box.save()
+            history.save()
 
     except Exception, e:
         log.error(e.message)
@@ -693,7 +682,7 @@ def remove_basic_info(request, id):
     try:
         container_id = str(id)
         box = BoxInfo.objects.get(deviceid=container_id)
-        if box.siteinfo_id is None:
+        if box.siteinfo_id is None and box.ava_flag == 'Y':
             response_msg = {'status': 'ERROR', 'msg': u'该箱子在运输中，无法删除！'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
@@ -769,8 +758,8 @@ def options_to_show(request):
                     final_response['containerType'] = strip_tuple(container_type_list)
                 if item == 'currentStatus':
                     status_list = []
-                    status_list.append(to_str(IN_TRANSPORT))
-                    status_list.append(to_str(ANCHORED))
+                    # status_list.append(to_str(IN_TRANSPORT))
+                    # status_list.append(to_str(ANCHORED))
                     final_response['currentStatus'] = status_list
                 if item == 'location':
                     location_list = query_list(('select 0 as id, \'全部\' as location union ', '')[options_type != 1] +
@@ -899,16 +888,26 @@ def login(request):
         password = req_param['password']
     except Exception:
         return JsonResponse({'msg': '请输入密码'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
-
     try:
-        user = SysUser.objects.get(user_name=username, user_password=password)
-        if user is not None:
+        timestamp = req_param['timestamp']
+    except Exception:
+        return JsonResponse({'msg': '请求异常'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
+    if abs(int(str(time.time())[0:10]) - timestamp) < 60 * 5:
+        sql = 'select user_token from iot.monservice_sysuser where user_name = \'' + username + \
+              '\' and md5(md5(user_password) || CAST(' + str(timestamp) + ' AS VARCHAR)) = \'' +\
+              password + '\''
+        user_list = query_list(sql)
+        if len(user_list) > 0:
             ret_dict['role'] = 'carrier'
-            ret_dict['token'] = user.user_token
-            request.session[user.user_token] = user.user_token
+            ret_dict['token'] = user_list[0][0]
+            request.session[user_list[0][0]] = user_list[0][0]
             return JsonResponse(ret_dict, safe=True, status=status.HTTP_200_OK)
-    except SysUser.DoesNotExist:
-        return JsonResponse({'msg': '账号或密码错误'}, safe=True, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return JsonResponse({'msg': '账号或密码错误'}, safe=True, status=status.HTTP_403_FORBIDDEN)
+    else:
+        log.info('auth interface timestamp is invade')
+        return JsonResponse({'msg': '账号或密码错误'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])

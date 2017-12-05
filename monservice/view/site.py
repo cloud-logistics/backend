@@ -299,23 +299,25 @@ def enter_leave_site(data):
             for box in boxes:
                 box_id = str(box['box_id'])  # 箱子id
                 type = str(box['type'])  # 操作类型：1表示入仓，0表示出仓
-                history = SiteHistory(timestamp=ts, site_id=site_id, box_id=box_id, op_type=type)
-
-
-                # 更新箱子状态
                 box = BoxInfo.objects.get(deviceid=box_id)
-                # 更新仓库箱子可用数量
+
                 stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
                 if type == '1':
+                    if str(box.siteinfo_id) == str(site_id):
+                        log.error(str(box_id) + '箱子已在仓库' + str(site_id))
+                        continue
+
                     box.siteinfo_id = site_id
                     stock.ava_num += 1
                 else:
                     if stock.ava_num == 0:
+                        log.error(str(stock.site_id) + '仓库' + str(box.type) + '型箱可用数为0.')
                         return
+
                     box.siteinfo = None
                     stock.ava_num -= 1
-                    # orig_reserved = stock.reserve_num
-                    # stock.reserve_num = orig_reserved - 1
+
+                history = SiteHistory(timestamp=ts, site_id=site_id, box_id=box_id, op_type=type)
 
                 history.save()
                 box.save()
@@ -366,7 +368,6 @@ def dispatchout(request):
                     response_msg = {'result': 'False', 'code': '999999', 'msg': msg, 'status': 'error'}
                     return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-                box.ava_flag = 'N'
                 box.siteinfo = None
 
                 if stock.ava_num <= 0:

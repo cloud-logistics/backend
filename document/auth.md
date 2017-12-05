@@ -191,3 +191,64 @@ timestamp:加密时的utc时间戳
 该方法无需携带token，请求前确保用户已存在
 ```
 
+
+### 运营平台登录认证接口
+#### 方法
+`POST`
+
+#### URL
+
+`api/v1/cloudbox/auth`
+
+#### Parameter
+
+```
+{
+    "username": "admin",
+    "password": "b61cb2766644874411389fcdd5dc6c73",
+    "timestamp": 1512456245
+}
+```
+
+#### Return
+
+```
+{
+    "token": "139a2d1c6f0a44909670f4e749a1397d",
+    "role": "carrier"
+}
+```
+####说明
+```
+1. password参数为md5(md5(password明文)+timestamp)
+2. timestamp参数为系统当前时间，精确到秒
+3. timestamp距离服务器时间5分钟内有效
+```
+
+
+### 运营平台登出接口
+#### 方法
+`POST`
+
+#### URL
+
+`api/v1/cloudbox/logout`
+
+#### Header
+
+```
+Authorization: 139a2d1c6f0a44909670f4e749a1397d
+```
+
+#### Return
+
+```
+{
+    "msg": "退出成功"
+}
+
+```
+
+
+
+
