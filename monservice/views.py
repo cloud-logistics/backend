@@ -605,20 +605,40 @@ def basic_info_config(request):
 @api_view(['GET'])
 def get_containerid_by_rfid(request, rfid):
     try:
+        log.debug(request.get_full_path())
+
         box = BoxInfo.objects.get(tid=rfid)
 
         site_id = request.GET.get('siteID')
+        if site_id is None:
+            response_msg = {'result': 'False', 'code': '999999', 'msg': 'Site ID is None.'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            if box.siteinfo_id is None:
+                box.siteinfo_id = site_id
+                box.ava_flag = 'Y'
+                stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
+                stock.ava_num += 1
+                stock.save()
+                box.save()
+            else:
+                if box.siteinfo_id != site_id:
+                    old_stock = SiteBoxStock.objects.get(site_id=box.siteinfo_id, box_type=box.type)
+                    old_stock.ava_num -= 1
 
-        if site_id is not None and box.siteinfo_id != site_id:
-            box.siteinfo_id = site_id
-            stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
-            stock.ava_num += 1
-            stock.save()
-            box.save()
+                    box.siteinfo_id = site_id
+                    box.ava_flag = 'Y'
+                    stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
+                    stock.ava_num += 1
 
-    except BoxInfo.DoesNotExist:
-        response_msg = {'result': 'False', 'code': '999999', 'msg': 'Box Not Found'}
-        return JsonResponse(response_msg, safe=True, status=status.HTTP_404_NOT_FOUND)
+                    old_stock.save()
+                    stock.save()
+                    box.save()
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'result': 'False', 'code': '999999', 'msg': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success', 'containerID': box.deviceid}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
