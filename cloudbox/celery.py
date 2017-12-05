@@ -27,7 +27,7 @@ def setup_periodic_tasks(sender, **kwargs):
     # sender.add_periodic_task(crontab(minute='*/15', hour='*'), billing.s())
     sender.add_periodic_task(crontab(minute='*/15', hour='*'), cancel_appointment.s())
     sender.add_periodic_task(crontab(minute=1, hour=0), generate_site_stat.s())
-    #sender.add_periodic_task(crontab(minute=15, hour=0), box_rent_fee_daily_billing.s())
+    # sender.add_periodic_task(crontab(minute=15, hour=0), box_rent_fee_daily_billing.s())
     sender.add_periodic_task(crontab(minute=0, hour=1), box_rent_fee_month_billing.s())
 
 
@@ -70,7 +70,7 @@ def cancel_appointment():
     appointment_list = UserAppointment.objects.filter(flag=0, cancel_time__gte=start_time,
                                                       cancel_time__lte=current_time)
     for appointment in appointment_list:
-        detail_list = AppointmentDetail.objects.filter(appointment_id=appointment)
+        detail_list = AppointmentDetail.objects.filter(appointment_id=appointment, flag=0)
         for detail in detail_list:
             stock = SiteBoxStock.objects.get(site=detail.site_id, box_type=detail.box_type)
             stock.reserve_num -= detail.box_num
@@ -241,7 +241,8 @@ def box_rent_fee_month_billing():
                     box_rent_bill_month.on_site_nums = on_site_box_nums_month
                     box_rent_bill_month.save()
                 except BoxRentFeeByMonth.DoesNotExist, e:
-                    month_date = datetime.datetime(year=current_time.year, month=current_time.month, day=1, hour=12, tzinfo=tz)
+                    month_date = datetime.datetime(year=current_time.year, month=current_time.month, day=1, hour=12,
+                                                   tzinfo=tz)
                     box_rent_fee = BoxRentFeeByMonth(detail_id=uuid.uuid1(), enterprise=enterprise_obj,
                                                      date=month_date, off_site_nums=off_site_box_nums_month,
                                                      on_site_nums=on_site_box_nums_month,
