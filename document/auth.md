@@ -226,5 +226,29 @@ timestamp:加密时的utc时间戳
 ```
 
 
+### 运营平台登出接口
+#### 方法
+`POST`
+
+#### URL
+
+`api/v1/cloudbox/logout`
+
+#### Header
+
+```
+Authorization: 139a2d1c6f0a44909670f4e749a1397d
+```
+
+#### Return
+
+```
+{
+    "msg": "退出成功"
+}
+
+```
+
+
 
 
