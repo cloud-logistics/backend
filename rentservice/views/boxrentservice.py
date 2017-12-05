@@ -178,6 +178,9 @@ def finish_boxes_order(request):
         except RentLeaseInfo.DoesNotExist:
             return JsonResponse(retcode(errcode("9999", '租赁信息不存在'), "9999", '租赁信息不存在'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if rent_info_list.count() == 0:
+            return JsonResponse(retcode(errcode("9999", '租赁信息不存在或请求的云箱已归还'), "9999", '租赁信息不存在或请求的云箱已归还'), safe=True,
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         lease_info_list = []
         box_para_list = []
         for item in rent_info_list:
