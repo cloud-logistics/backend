@@ -63,7 +63,10 @@ def rent_boxes_order(request):
         except EnterpriseUser.DoesNotExist:
             return JsonResponse(retcode(errcode("9999", '预约单所属用户不存在'), "9999", '预约单所属用户不存在'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        appoint_detail_queryset = AppointmentDetail.objects.filter(appointment_id=user_appoint, site_id=site)
+        appoint_detail_queryset = AppointmentDetail.objects.filter(appointment_id=user_appoint, site_id=site, flag=0)
+        if appoint_detail_queryset.count() == 0:
+            return JsonResponse(retcode(errcode("9999", '没有可用预约单详情或预约单已完成'), "9999", '没有可用预约单详情或预约单已完成'), safe=True,
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         # 所租云箱必须隶属于当前site，否则报错
         box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list, siteinfo__id=site_id)
         if box_info_list.count() == 0:
@@ -72,6 +75,25 @@ def rent_boxes_order(request):
                                                                                   BoxInfoSerializer(box_info_list, many=True).data))
             return JsonResponse(retcode(errcode("9999", '堆场没有符合条件的云箱'), "9999", '堆场没有符合条件的云箱'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # map
+        # key=box_type_id, value=num
+        box_type_map = {}
+        for box_id in box_info_list:
+            box_info = BoxInfo.objects.get(deviceid=box_id, siteinfo__id=site_id, ava_flag='Y')
+            if box_info:
+                if box_info.type.id in box_type_map.keys():
+                    box_type_map[box_info.type.id] += 1
+                else:
+                    box_type_map[box_info.type.id] = 0
+        for key in box_type_map.keys():
+            stock = SiteBoxStock.objects.get(site=site, box_type_id=key)
+            if stock.ava_num < box_type_map[key]:
+                log.error("request box type stat is %s" % box_type_map)
+                log.error("SiteBoxStock box_type=%s, ava_num=%s" % (key, stock.ava_num))
+                return JsonResponse(retcode(errcode("9999", '堆场请求的云箱数目类型不匹配'), "9999", '堆场请求的云箱数目类型不匹配'), safe=True,
+                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            else:
+                continue
         log.info('box_id_list = %s, site_id = %s, query result list is %s' % (box_id_list, site_id,
                                                                               BoxInfoSerializer(box_info_list, many=True).data))
         lease_info_list = []
@@ -104,9 +126,14 @@ def rent_boxes_order(request):
                     stock.save()
                 else:
                     log.info("reserved_num less than appoint_detail.box_num")
-            # 预约单更新为已完成
-            user_appoint.flag = 1
-            user_appoint.save()
+            # 判断预约单状态是否完成
+            if appoint_detail_queryset:
+                unfinish_detail_counter = AppointmentDetail.objects.filter(appointment_id=appoint_detail_queryset[0].appointment_id, flag=0).count()
+                if unfinish_detail_counter == 0:
+                    user_appoint.flag = 1
+                    user_appoint.save()
+                else:
+                    log.info("预约单还未全部完成")
         ret['rent_lease_info_id_list'] = lease_info_list
         # 增加消息
         alias = []
@@ -152,6 +179,7 @@ def finish_boxes_order(request):
             return JsonResponse(retcode(errcode("9999", '租赁信息不存在'), "9999", '租赁信息不存在'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         lease_info_list = []
+        box_para_list = []
         for item in rent_info_list:
             item.rent_status = 1
             item.lease_end_time = datetime.datetime.now(tz=timezone)
@@ -161,17 +189,15 @@ def finish_boxes_order(request):
             item.on_site = site
             lease_info_list.append(item.lease_info_id)
             item.save()
+            box_para = {}
+            box_para['box_id'] = item.box.deviceid
+            box_para['type'] = 1
+            box_para_list.append(box_para)
         #update daily bill
         update_box_bill_daily()
         # update
         stock_data = {}
         stock_data['site_id'] = site_id
-        box_para_list = []
-        for item in box_info_list:
-            box_para = {}
-            box_para['box_id'] = item.deviceid
-            box_para['type'] = 1
-            box_para_list.append(box_para)
         stock_data['boxes'] = box_para_list
         enter_leave_site(stock_data)
         # 增加消息
