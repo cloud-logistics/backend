@@ -28,7 +28,6 @@ from django.contrib.sessions.models import Session
 
 
 log = logger.get_logger('monservice.view.py')
-file_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + 'mock_data.json'
 NOT_APPLICABLE = 'NA'
 ZERO = 0
 STATUS_NORMAL = '正常'
@@ -769,8 +768,8 @@ def options_to_show(request):
                     final_response['containerType'] = strip_tuple(container_type_list)
                 if item == 'currentStatus':
                     status_list = []
-                    status_list.append(to_str(IN_TRANSPORT))
-                    status_list.append(to_str(ANCHORED))
+                    # status_list.append(to_str(IN_TRANSPORT))
+                    # status_list.append(to_str(ANCHORED))
                     final_response['currentStatus'] = status_list
                 if item == 'location':
                     location_list = query_list(('select 0 as id, \'全部\' as location union ', '')[options_type != 1] +
