@@ -176,7 +176,12 @@ def del_enterprise_user(request, user_id):
     try:
         with transaction.atomic():
             del_user = EnterpriseUser.objects.get(user_id=user_id)
-            AuthUserGroup.objects.get(user_token=del_user.user_token).delete()
+            try:
+                auth_user_relation = AuthUserGroup.objects.get(user_token=del_user.user_token)
+                auth_user_relation.delete()
+            except AuthUserGroup.DoesNotExist, e:
+                log.error("AuthUserGroup 关系不存在")
+                log.error(repr(e))
             del_redis_token(del_user.user_token)
             del_user.delete()
         ret = {}
@@ -197,7 +202,7 @@ def list_enterprise_user(request, group):
         group_map[item.access_group_id] = item.group
     try:
         if group == 'all':
-            enterprise_user_ret = EnterpriseUser.objects.all()
+            enterprise_user_ret = EnterpriseUser.objects.all().exclude(group__group='admin')
             page = paginator.paginate_queryset(enterprise_user_ret, request)
             enterprise_user_ser = EnterpriseUserSerializer(page, many=True)
             revised_enterprise_user_list = []
@@ -248,10 +253,16 @@ def enterprise_user_fuzzy_query(request):
     except Exception, e:
         keyword = ''
         log.error(e.message)
-    user_data = EnterpriseUser.objects.filter(Q(user_name__contains=keyword) |
-                                              Q(user_phone__contains=keyword)).exclude(group__group='admin').order_by('user_name')
+    try:
+        enterprise_id = data['enterprise_id']
+    except Exception, e:
+        enterprise_id = ''
+        log.error(e.message)
+    user_data = EnterpriseUser.objects.filter(Q(user_name__contains=keyword) | Q(user_real_name__contains=keyword) |
+                                              Q(user_phone__contains=keyword)).exclude(group__group='admin')
+    sorted_user_data = user_data.filter(enterprise_id=enterprise_id).order_by('user_name')
     fuzzy_user_list = []
-    for item in user_data:
+    for item in sorted_user_data:
         ser_item = EnterpriseUserSerializer(item)
         ret = ser_item.data
         ret['group'] = item.group.group
