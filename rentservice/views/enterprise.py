@@ -105,6 +105,16 @@ def update_enterprise_info(request):
         enterprise_license_id_url = data['enterprise_license_id_url']
     except Exception:
         return JsonResponse(retcode(errcode("9999", '企业营业执照照片url不能为空'), "9999", '企业营业执照照片url不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        enterprise_homepage_url = data['enterprise_homepage_url']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '企业网址不能为空'), "9999", '企业网址不能为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        enterprise_address = data['enterprise_address']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '企业地址不能为空'), "9999", '企业地址不能为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
     ret = {}
     ret['enterprise_id'] = enterprise_id
     try:
@@ -117,6 +127,8 @@ def update_enterprise_info(request):
         enterprise_edit.enterprise_email = enterprise_email
         enterprise_edit.enterprise_deposit = enterprise_deposit
         enterprise_edit.last_update_time = datetime.datetime.now(tz)
+        enterprise_edit.enterprise_homepage_url = enterprise_homepage_url
+        enterprise_edit.enterprise_address = enterprise_address
         enterprise_edit.save()
     except EnterpriseInfo.DoesNotExist:
         return JsonResponse(retcode(errcode("9999", '请求修改的企业信息不存在'), "9999", '请求修改的企业信息不存在'), safe=True, status=status.HTTP_400_BAD_REQUEST)
