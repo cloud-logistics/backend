@@ -259,6 +259,7 @@ def box_inout(request):
         site_id = str(data['site_id'])  # 仓库id
         boxes = data['boxes']  # 箱子数组
         ts = str(time.time())[0:10]
+        box_type_set = set()
         with transaction.atomic():
             for box in boxes:
                 box_id = str(box['box_id'])     # 箱子id
@@ -270,15 +271,15 @@ def box_inout(request):
                 box = BoxInfo.objects.get(deviceid=box_id)
                 stock = SiteBoxStock.objects.get(site_id=site_id, box_type=box.type)
                 if type == '1':
-                    stock.ava_num += 1
                     box.siteinfo_id = site_id
                 else:
                     if stock.ava_num == 0:
                         return
-                    stock.ava_num -= 1
                     box.siteinfo = None
+                box_type_set.add(box.type)
                 box.save()
-                stock.save()
+
+        check_stock_ava_num(site_id, box_type_set)
 
     except Exception, e:
         log.error(e.message)
@@ -295,6 +296,7 @@ def enter_leave_site(data):
         site_id = str(data['site_id'])  # 仓库id
         boxes = data['boxes']  # 箱子数组
         ts = str(time.time())[0:10]
+        box_type_set = set()
         with transaction.atomic():
             for box in boxes:
                 box_id = str(box['box_id'])  # 箱子id
@@ -308,20 +310,20 @@ def enter_leave_site(data):
                         continue
 
                     box.siteinfo_id = site_id
-                    stock.ava_num += 1
                 else:
                     if stock.ava_num == 0:
                         log.error(str(stock.site_id) + '仓库' + str(box.type) + '型箱可用数为0.')
                         return
 
                     box.siteinfo = None
-                    stock.ava_num -= 1
 
                 history = SiteHistory(timestamp=ts, site_id=site_id, box_id=box_id, op_type=type)
 
+                box_type_set.add(box.type)
                 history.save()
                 box.save()
-                stock.save()
+
+        check_stock_ava_num(site_id, box_type_set)
 
     except Exception, e:
         log.error(e.message)
@@ -350,7 +352,7 @@ def dispatchout(request):
         dispatch = SiteDispatch.objects.get(did=dispatch_id)
         dispatch.status = 'dispatching'
         site = dispatch.start
-
+        box_type_set = set()
         boxes = data['boxes']                   # 箱子数组
         ts = str(time.time())[0:10]
         with transaction.atomic():
@@ -361,6 +363,7 @@ def dispatchout(request):
 
                 # 更新仓库箱子可用数量
                 box = BoxInfo.objects.get(deviceid=box_id)
+                box_type_set.add(box.type)
                 stock = SiteBoxStock.objects.get(site=site, box_type=box.type)
 
                 if box.siteinfo_id != site.id:
@@ -374,13 +377,11 @@ def dispatchout(request):
                     response_msg = {'result': 'False', 'code': '999999', 'msg': 'No Boxes.', 'status': 'error'}
                     return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-                stock.ava_num -= 1
-
                 history.save()
                 box.save()
-                stock.save()
         dispatch.save()
 
+        check_stock_ava_num(site.id, box_type_set)
     except Exception, e:
         log.error(e.message)
         response_msg = {'result': 'False', 'code': '999999', 'msg': e.message, 'status': 'error'}
@@ -419,6 +420,7 @@ def dispatchin(request):
         else:
             dispatch.done = newdone
 
+        box_type_set = set()
         ts = str(time.time())[0:10]
         with transaction.atomic():
             for box in boxes:
@@ -433,16 +435,17 @@ def dispatchin(request):
                     response_msg = {'result': 'False', 'code': '999999', 'msg': msg}
                     return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-                stock = SiteBoxStock.objects.get(site=site, box_type=box.type)
                 box.ava_flag = 'Y'
                 box.siteinfo = site
-                stock.ava_num += 1
+
+                box_type_set.add(box.type)
 
                 history.save()
                 box.save()
-                stock.save()
 
         dispatch.save()
+
+        check_stock_ava_num(site.id, box_type_set)
 
     except Exception, e:
         log.error(e.message)
@@ -451,7 +454,6 @@ def dispatchin(request):
     else:
         response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
-
 
 
 @csrf_exempt
@@ -481,6 +483,40 @@ def init_site(request):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
+# 出入仓完成后，检查修改可用数
+def check_stock_ava_num(site_id, box_type_set):
+    try:
+        with transaction.atomic():
+            for box_type in box_type_set:
+                count = BoxInfo.objects.filter(siteinfo_id=site_id, type_id=box_type).count()
+                stock = SiteBoxStock.objects.get(site_id=site_id, box_type_id=box_type)
+                stock.ava_num = count
+                stock.save()
+    except Exception, e:
+        log.error(e.message)
+
+
+# 测试用，检查所有仓库可用数与实际是否相符
+@csrf_exempt
+@api_view(['POST'])
+def check_all_num(request):
+    try:
+        sites = SiteInfo.objects.all()
+        with transaction.atomic():
+            for site in sites:
+                box_types = BoxTypeInfo.objects.all()
+                for box_type in box_types:
+                    count = BoxInfo.objects.filter(siteinfo_id=site.id, type_id=box_type.id).count()
+                    stock = SiteBoxStock.objects.get(site_id=site.id, box_type_id=box_type.id)
+                    stock.ava_num = count
+                    stock.save()
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'result': 'False', 'code': '999999', 'msg': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
 

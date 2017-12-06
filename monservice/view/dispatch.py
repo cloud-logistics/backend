@@ -25,6 +25,7 @@ high = 0.9
 ave = 0.5
 
 
+# 获取当天调度信息
 @csrf_exempt
 @api_view(['GET'])
 def get_dispatches(request):
@@ -46,6 +47,7 @@ def get_dispatches(request):
         return paginator.get_paginated_response(ret_ser.data, 'OK', 'query dispatch success')
 
 
+# 获取所有调度信息
 @csrf_exempt
 @api_view(['GET'])
 def get_dispatches_history(request):
@@ -67,6 +69,7 @@ def get_dispatches_history(request):
         return paginator.get_paginated_response(ret_ser.data, 'OK', 'query dispatch history success')
 
 
+# 获取站点的首条调度信息
 @csrf_exempt
 @api_view(['GET'])
 def get_dispatch_by_site(request, site_id):
@@ -74,7 +77,7 @@ def get_dispatch_by_site(request, site_id):
         dispatches = SiteDispatch.objects.filter(start_id=site_id, status='undispatch').order_by('did')
 
         if len(dispatches) == 0:
-            response_msg = {'result': 'False', 'code': '999999', 'msg': 'no dispatch for this site'}
+            response_msg = {'result': 'False', 'code': '999999', 'msg': 'No dispatch for this site'}
         else:
             dis = dispatches[0]
             response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success', 'dispatch_id': dis.did, 'count': dis.count}
@@ -86,6 +89,7 @@ def get_dispatch_by_site(request, site_id):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
+# 创建调度信息
 @csrf_exempt
 @api_view(['POST'])
 def create_dispatches(request):
