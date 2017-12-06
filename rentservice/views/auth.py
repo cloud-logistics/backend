@@ -225,14 +225,14 @@ def change_password(request):
         # check salt valid
         current_utc = int(time.time())
         if current_utc - timestamp > settings.SALT_DURATION:
-            return JsonResponse(retcode(errcode("4031", '登陆未经授权'), "4031", '非法登陆未经授权'), safe=True, status=status.HTTP_403_FORBIDDEN)
+            return JsonResponse(retcode(errcode("4031", '非法登陆未经授权'), "4031", '非法登陆未经授权'), safe=True, status=status.HTTP_403_FORBIDDEN)
         m2 = hashlib.md5()
         m2.update(user.user_password_encrypt + str(timestamp))
         gen_password = m2.hexdigest()
         log.info('origin_password=%s, gen_password=%s, user_password_encrypt=%s, timestamp=%s' %
                  (orig_password, gen_password, user.user_password_encrypt, timestamp))
         if gen_password != orig_password:
-            return JsonResponse(retcode(errcode("0403", '登陆未经授权'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
+            return JsonResponse(retcode(errcode("0403", '原始密码输入不正确'), "0403", '原始密码输入不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
         else:
             user.user_password_encrypt = new_password
             user.save()
