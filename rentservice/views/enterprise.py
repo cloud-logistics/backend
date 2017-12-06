@@ -215,6 +215,8 @@ def enterpriseuser_fuzzy_query(request):
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
     data = JSONParser().parse(request)
+    # group_id -> group.name
+    group_map = {}
     try:
         keyword = data['keyword']
     except Exception:
@@ -225,7 +227,17 @@ def enterpriseuser_fuzzy_query(request):
     except Exception:
         return JsonResponse(retcode(errcode("9999", '企业id为空'), "9999", '企业id为空'), safe=True,
                             status=status.HTTP_400_BAD_REQUEST)
-    user_data = EnterpriseUser.objects.filter(Q(user_name__contains=keyword), enterprise_id=enterprise_id).order_by('register_time')
-    page = paginator.paginate_queryset(user_data, request)
-    ser_ret = EnterpriseUserSerializer(page, many=True)
-    return paginator.get_paginated_response(ser_ret.data)
+    try:
+        user_data = EnterpriseUser.objects.filter(Q(user_name__contains=keyword), enterprise_id=enterprise_id).order_by('register_time')
+        for item in user_data:
+            group_map[item.group.access_group_id] = item.group.group
+        log.info("group_map= %s" % group_map)
+        page = paginator.paginate_queryset(user_data, request)
+        ser_ret = EnterpriseUserSerializer(page, many=True)
+        ser_data_list = []
+        for data in ser_ret.data:
+            data['group'] = group_map[data['group']]
+            ser_data_list.append(data)
+    except Exception, e:
+        log.error(repr(e))
+    return paginator.get_paginated_response(ser_data_list)
