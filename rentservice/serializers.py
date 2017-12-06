@@ -246,3 +246,16 @@ class ParamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Param
         fields = '__all__'
+
+
+class BoxInfoListSerializer(serializers.ModelSerializer):
+    type = BoxTypeInfoSerializer()
+    siteinfo = SiteInfoSerializer()
+    rent_status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BoxInfo
+        fields = '__all__'
+
+    def get_rent_status(self, obj):
+        return RentLeaseInfo.objects.filter(box=obj, rent_status=0).count()
