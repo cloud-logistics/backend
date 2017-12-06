@@ -682,15 +682,17 @@ def remove_basic_info(request, id):
     try:
         container_id = str(id)
         box = BoxInfo.objects.get(deviceid=container_id)
-        if box.siteinfo_id is None and box.ava_flag == 'Y':
-            response_msg = {'status': 'ERROR', 'msg': u'该箱子在运输中，无法删除！'}
-            return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if box.siteinfo_id is None:
+            if box.ava_flag == 'Y':
+                response_msg = {'status': 'ERROR', 'msg': u'该箱子在运输中，无法删除！'}
+                return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            else:
+                BoxInfo.objects.get(deviceid=container_id).delete()
         else:
+            BoxInfo.objects.get(deviceid=container_id).delete()
             stock = SiteBoxStock.objects.get(site_id=box.siteinfo_id, box_type=box.type)
             stock.ava_num -= 1
             stock.save()
-
-        BoxInfo.objects.get(deviceid=container_id).delete()
 
     except Exception, e:
         log.error(e.message)
