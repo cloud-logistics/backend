@@ -81,6 +81,7 @@ def add_enterprise_admin(request):
         group = data['group']
     except Exception:
         return JsonResponse(retcode({}, "9999", '企业用户所属群组不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    log.info("add enterprise user input data = %s" % data)
     try:
         try:
             enterprise = EnterpriseInfo.objects.get(enterprise_id=enterprise_id)
@@ -163,6 +164,7 @@ def update_enterprise_admin(request):
     except Exception, e:
         log.error(repr(e))
         user_nickname = ''
+    log.info("update enterprise user input data = %s" % data)
     try:
         group_obj = AccessGroup.objects.get(group=group)
     except AccessGroup.DoesNotExist:
