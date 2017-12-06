@@ -43,6 +43,7 @@ urlpatterns = [
     url(r'^distribution$', site.get_box_by_allsite),              # 获取热力图数据
     url(r'^siteStream/(?P<id>\d+)/', site.get_site_stream),       # 查询堆场进出箱子流水
     url(r'^boxinout$', site.box_inout),                           # 箱子进出仓库接口
+    url(r'^checknum$', site.check_all_num),                       # 测试检查仓库箱子可用数
 
     url(r'^querydispatch/(?P<site_id>\d+)/', dispatch.get_dispatch_by_site),      # 根据堆场查询调度信息
     url(r'^dispatchout$', site.dispatchout),                      # 调度出仓接口
