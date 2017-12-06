@@ -40,6 +40,7 @@ urlpatterns = [
     url(r'^typedispatch$', dispatch.get_type_dispatches),         # 获取按类型调度
     url(r'^disHistory$', dispatch.get_dispatches_history),        # 获取调度历史
     url(r'^dispatch/', dispatch.create_dispatches),               # 加入调度
+    url(r'^actdispatch$', dispatch.act_dispatches),               # 模拟调度过程
     url(r'^distribution$', site.get_box_by_allsite),              # 获取热力图数据
     url(r'^siteStream/(?P<id>\d+)/', site.get_site_stream),       # 查询堆场进出箱子流水
     url(r'^boxinout$', site.box_inout),                           # 箱子进出仓库接口

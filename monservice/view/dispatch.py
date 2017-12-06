@@ -11,13 +11,14 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from monservice.serializers import SiteInfoSerializer, SiteDispatchSerializer, SiteTypeDispatchSerializer
 import json
-from monservice.models import SiteInfo, SiteDispatch, SiteBoxStock, BoxTypeInfo, SiteTypeDispatch
+from monservice.models import SiteInfo, SiteDispatch, SiteBoxStock, BoxTypeInfo, SiteTypeDispatch, BoxInfo
 from util import logger
 from util.geo import get_distance
 import datetime
 import time
 from rest_framework.settings import api_settings
 from util.db import query_list
+from monservice.view.site import enter_leave_site
 
 log = logger.get_logger('monservice.dispatch.py')
 low = 0.1
@@ -108,6 +109,48 @@ def create_dispatches(request):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'status':'OK', 'msg': 'query dispatches success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+# 测试调度
+@csrf_exempt
+@api_view(['POST'])
+def act_dispatches(request):
+    try:
+        data = json.loads(request.body)
+        start_id = data['start_id']
+        finish_id = data['finish_id']
+
+        boxes = BoxInfo.objects.filter(siteinfo_id=start_id)
+        # 出仓
+        outstock = {}
+        outstock['site_id'] = str(start_id)
+        out_box_list = []
+        for box in boxes:
+            box_para = {}
+            box_para['box_id'] = box.deviceid
+            box_para['type'] = 0
+            out_box_list.append(box_para)
+        outstock['boxes'] = out_box_list
+        enter_leave_site(outstock)
+
+        instock = {}
+        instock['site_id'] = str(finish_id)
+        in_box_list = []
+        for box in boxes:
+            box_para = {}
+            box_para['box_id'] = box.deviceid
+            box_para['type'] = 1
+            in_box_list.append(box_para)
+        instock['boxes'] = in_box_list
+        enter_leave_site(instock)
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'code': 'ERROR', 'message': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status':'OK', 'msg': 'dispatch success'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
