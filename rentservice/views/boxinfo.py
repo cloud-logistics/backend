@@ -14,6 +14,7 @@ from monservice.models import Province
 from monservice.models import City
 from monservice.models import SiteInfo
 from rentservice.serializers import BoxInfoSerializer
+from rentservice.serializers import BoxInfoListSerializer
 from rentservice.serializers import BoxInfoResSerializer
 from rentservice.models import RentLeaseInfo
 from rentservice.serializers import RentLeaseBoxSerializer
@@ -90,7 +91,7 @@ def get_box_info_list(request):
     if condition == 'N':
         query_set = query_set.all()
     page = paginator.paginate_queryset(query_set, request)
-    ret_ser = BoxInfoSerializer(page, many=True)
+    ret_ser = BoxInfoListSerializer(page, many=True)
     return paginator.get_paginated_response(ret_ser.data)
 
 

@@ -246,3 +246,19 @@ class ParamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Param
         fields = '__all__'
+
+
+class BoxInfoListSerializer(serializers.ModelSerializer):
+    type = BoxTypeInfoSerializer()
+    siteinfo = SiteInfoSerializer()
+    rent_status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BoxInfo
+        fields = '__all__'
+
+    def get_rent_status(self, obj):
+        rent_status = RentLeaseInfo.objects.filter(box=obj, rent_status=0).count()
+        if obj.ava_flag == 'N':
+            rent_status = 2
+        return rent_status
