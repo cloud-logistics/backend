@@ -60,6 +60,16 @@ def add_enterprise_admin(request):
         log.error(repr(e))
         avatar_url = ''
     try:
+        user_gender = data['user_gender']
+    except Exception, e:
+        log.error(repr(e))
+        user_gender = ''
+    try:
+        user_nickname = data['user_nickname']
+    except Exception, e:
+        log.error(repr(e))
+        user_nickname = ''
+    try:
         enterprise_id = data['enterprise_id']
     except Exception:
         return JsonResponse(retcode({}, "9999", '企业信息id不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
@@ -98,7 +108,7 @@ def add_enterprise_admin(request):
                                               enterprise=enterprise, user_token=uuid.uuid4().hex, role=role,
                                               group=group_obj, user_alias_id=uuid.uuid1().hex, user_real_name=user_real_name,
                                               user_phone=user_phone, user_email=user_email, avatar_url=avatar_url,
-                                              user_password_encrypt=md5_pwd)
+                                              user_password_encrypt=md5_pwd, user_gender=user_gender, user_nickname=user_nickname)
                     new_user.save()
                     auth_user_group = AuthUserGroup(user_token=new_user.user_token, group=group_obj)
                     auth_user_group.save()
@@ -144,6 +154,16 @@ def update_enterprise_admin(request):
     except Exception:
         return JsonResponse(retcode({}, "9999", '头像url不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
+        user_gender = data['user_gender']
+    except Exception, e:
+        log.error(repr(e))
+        user_gender = ''
+    try:
+        user_nickname = data['user_nickname']
+    except Exception, e:
+        log.error(repr(e))
+        user_nickname = ''
+    try:
         group_obj = AccessGroup.objects.get(group=group)
     except AccessGroup.DoesNotExist:
         return JsonResponse(retcode({}, "9999", '修改企业用户群组不存在'), safe=True,
@@ -161,6 +181,8 @@ def update_enterprise_admin(request):
         user.avatar_url = avatar_url
         user.user_email = user_email
         user.user_phone = user_phone
+        user.user_gender = user_gender
+        user.user_nickname = user_nickname
         user.save()
     except EnterpriseUser.DoesNotExist, e:
         log.error(repr(e))
