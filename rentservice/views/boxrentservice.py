@@ -80,7 +80,7 @@ def rent_boxes_order(request):
         box_type_map = {}
         for box_id in box_info_list:
             try:
-                box_info = BoxInfo.objects.get(deviceid=box_id.id, siteinfo=site, ava_flag='Y')
+                box_info = BoxInfo.objects.get(deviceid=box_id.deviceid, siteinfo=site, ava_flag='Y')
             except BoxInfo.DoesNotExist:
                 log.error("BoxInfo.DoseNotExist box_id=%s, site=%s" % (box_id, site_id))
             if box_info:
