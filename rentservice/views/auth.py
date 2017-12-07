@@ -15,6 +15,7 @@ from rentservice.serializers import AccessGroupSerializer, EnterpriseUserSeriali
 import hashlib
 from django.conf import settings
 import time
+import uuid
 
 log = get_logger(__name__)
 
@@ -190,6 +191,9 @@ def auth_with_salt(request):
                  (password, gen_password, timestamp, username))
         if gen_password != password:
             return JsonResponse(retcode(errcode("0403", '用户不存在或用户密码不正确'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
+        log.info("login verify success, begin alias_id init")
+        user.user_alias_id = uuid.uuid1().hex
+        user.save()
     except EnterpriseUser.DoesNotExist, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0403", '用户不存在或用户密码不正确'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
@@ -244,3 +248,29 @@ def change_password(request):
     ret['group'] = user.group.group
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
+
+@csrf_exempt
+@api_view(['POST'])
+def auth_user_logout(request):
+    data = JSONParser().parse(request)
+    try:
+        user_id = data['user_id']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '用户id不能为空'), "9999", '用户id不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user = EnterpriseUser.objects.get(user_id=user_id)
+        if user.user_alias_id:
+            user.user_alias_id = ''
+        user.save()
+    except EnterpriseUser.DoesNotExist, e:
+        log.error(e)
+        return JsonResponse(retcode(errcode("0403", '登出用户不存在'), "0403", '登出用户不存在'), safe=True, status=status.HTTP_403_FORBIDDEN)
+    ser_user = EnterpriseUserSerializer(user)
+    ret = ser_user.data
+    ret['group'] = user.group.group
+    try:
+        del request.session[user.user_token]
+        log.info("user has logged out")
+    except Exception, e:
+        log.error(e)
+    return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)

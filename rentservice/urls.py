@@ -40,6 +40,7 @@ urlpatterns = [
     url(r'^auth/adminauthsalt$', auth.admin_auth_with_salt),  # 新增用户
     url(r'^auth/authsalt$', auth.auth_with_salt),  # user login verify
     url(r'^auth/pwdreset$', auth.change_password),  # 修改密码
+    url(r'^auth/logout$', auth.auth_user_logout),  # user log out
     url(r'^rentservice/site/list/province/(?P<province>[0-9]+)/city/(?P<city>[0-9]+)$', site.get_site_by_province),
     # 获取堆场列表
     url(r'^rentservice/site/detail/(?P<site_id>[0-9a-zA-Z-]+)$', site.get_site_detail),  # 获取堆场详情
