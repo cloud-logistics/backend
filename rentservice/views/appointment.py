@@ -105,11 +105,13 @@ def create_appointment(request):
             AppointmentDetail.objects.bulk_create(detail_list)
     except Exception as e:
         return JsonResponse(retcode({}, "9999", e.message), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    alias = []
-    alias.append(user_model.user_alias_id)
+
     message = u'您的租箱预约已经成功，请到指定仓库获取云箱'
     create_notify("云箱预约", message, user_id)
-    celery.send_push_message.delay(alias, message)
+    if user_model.user_alias_id is not None and user_model.user_alias_id != "":
+        alias = []
+        alias.append(user_model.user_alias_id)
+        celery.send_push_message.delay(alias, message)
     return JsonResponse(retcode(UserAppointmentSerializer(appointment_model).data, "0000", "Success"), safe=True,
                         status=status.HTTP_200_OK)
 

@@ -140,10 +140,11 @@ def rent_boxes_order(request):
                     log.info("预约单还未全部完成")
         ret['rent_lease_info_id_list'] = lease_info_list
         # 增加消息
-        alias = []
-        alias.append(enterprise_user.user_alias_id)
-        message = u'您的云箱已经租赁成功'
-        celery.send_push_message.delay(alias, message)
+        if enterprise_user.user_alias_id is not None and enterprise_user.user_alias_id != "":
+            alias = []
+            alias.append(enterprise_user.user_alias_id)
+            message = u'您的云箱已经租赁成功'
+            celery.send_push_message.delay(alias, message)
         notify_message = u'您的云箱已经租赁成功，箱子ID分别是'
         for _box in box_info_list:
             notify_message += u' [ %s ] ' % _box.deviceid
@@ -216,9 +217,10 @@ def finish_boxes_order(request):
         log.info("push message to app: begin")
         alias = []
         if rent_info_list:
-            alias.append(rent_info_list[0].user_id.user_alias_id)
-            message = u'您的云箱已经归还成功'
-            celery.send_push_message.delay(alias, message)
+            if rent_info_list[0].user_id.user_alias_id is not None and rent_info_list[0].user_id.user_alias_id != "":
+                alias.append(rent_info_list[0].user_id.user_alias_id)
+                message = u'您的云箱已经归还成功'
+                celery.send_push_message.delay(alias, message)
             notify_message = u'您的云箱已经归还成功，箱子ID分别是'
             for _box in box_info_list:
                 notify_message += u' [ %s ] ' % _box.deviceid
