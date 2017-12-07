@@ -109,6 +109,7 @@ class SiteInfo(models.Model):
     province = models.ForeignKey(Province, related_name='site_province_fk', default=1)
     nation = models.ForeignKey(Nation, related_name='site_nation_fk', default=1)
     volume = models.IntegerField(default=0)
+    telephone = models.CharField(max_length=20, default='')
 
 
 class BoxTypeInfo(models.Model):

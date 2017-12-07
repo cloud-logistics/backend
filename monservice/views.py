@@ -74,45 +74,10 @@ def realtime_message(request):
         id = NOT_APPLICABLE
         log.error(e.message)
 
-    if id == '':
-        mock_json = '''
-        {
-            "boxStatus": {
-                "num_of_collide": {
-                    "status": "正常",
-                    "value": 32
-                },
-                "num_of_door_open": {
-                    "status": "正常",
-                    "value": 47
-                }
-            },
-            "currentStatus": "在运",
-            "carrier": "中集智能",
-            "containerId": "TEST",
-            "containerType": "标准箱",
-            "position": {
-                "lat": 36.07,
-                "lng": 120.33
-            },
-            "humidity": {
-                "status": "正常",
-                "value": 81.3
-            },
-            "speed": 80.45,
-            "battery": {
-                "status": "正常",
-                "value": 0.8
-            },
-            "temperature": {
-                "status": "正常",
-                "value": 2.3
-            },
-            "locationName": "中国山东省青岛市市南区烟雨楼宾馆（苏州路）"
-        }
-
-        '''
-        return JsonResponse(json.loads(mock_json), safe=True, status=status.HTTP_200_OK)
+    count = BoxInfo.objects.filter(deviceid=id).count()
+    if count == 0:
+        response_msg = {'status': 'NoDataFound', 'msg': u'箱子不存在！'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
     # 获取承运方
     carrier_name = 'NA'
@@ -245,6 +210,11 @@ def realtime_position(request):
     except Exception, e:
         id = NOT_APPLICABLE
         log.error(e.message)
+
+    count = BoxInfo.objects.filter(deviceid=id).count()
+    if count == 0:
+        response_msg = {'status': 'NoDataFound', 'msg': u'箱子不存在！'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
     cur_data = query_list('select latitude,longitude from iot.monservice_sensordata '
                           'where deviceid = \'' + id + '\' '
@@ -463,6 +433,12 @@ def history_path(request):
 def box_history_path(request):
     try:
         deviceid = request.GET.get('containerId')
+
+        count = BoxInfo.objects.filter(deviceid=deviceid).count()
+        if count == 0:
+            response_msg = {'status': 'NoDataFound', 'msg': u'箱子不存在！'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
         start_time = request.GET.get('start_time')
         end_time = request.GET.get('end_time')
         locations = SensorData.objects.filter(deviceid=deviceid, timestamp__gte=start_time, timestamp__lte=end_time).exclude(longitude='0', latitude='0')
@@ -946,6 +922,12 @@ def indicator_history(request):
         id = json.loads(request.body)['containerId']
     except Exception, e:
         id= ""
+
+    count = BoxInfo.objects.filter(deviceid=id).count()
+    if count == 0:
+        response_msg = {'status': 'NoDataFound', 'msg': u'箱子不存在！'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
     try:
         indicator = json.loads(request.body)['requiredParam']
     except Exception, e:

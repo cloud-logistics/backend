@@ -35,6 +35,7 @@ def add_site(request):
         data = json.loads(request.body)
         location = to_str(data['location'])             # 仓库名称
         name = data['name']  # 名称
+        telephone = data['telephone']   # 联系方式
 
         if name == '':
             response_msg = {'status': 'ERROR', 'msg': u'仓库名称不能为空！'}
@@ -59,6 +60,15 @@ def add_site(request):
             response_msg = {'status': 'ERROR', 'msg': u'纬度不能为空！'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
+        if telephone == '':
+            response_msg = {'status': 'ERROR', 'msg': u'联系方式不能为空！'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
+        sites = SiteInfo.objects.filter(telephone=telephone)
+        if len(sites) > 0:
+            response_msg = {'status': 'ERROR', 'msg': u'联系方式已存在！'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
         volume = data['volume']                         # 仓库箱子容量
         city_id = data['city_id']                       # 城市
         province_id = data['province_id']               # 省
@@ -71,7 +81,7 @@ def add_site(request):
         site_code = generate_sid(city.city_name)        # 仓库代码
 
         site = SiteInfo(name= name, location=location, latitude=latitude, longitude=longitude, site_code=site_code,
-                        city= city, province=province, nation=nation, volume=volume)
+                        city= city, province=province, nation=nation, volume=volume, telephone=telephone)
         site.save()
 
         initialize_box_num(site.id)
@@ -125,12 +135,23 @@ def modify_site(request, id):
             response_msg = {'status': 'ERROR', 'msg': u'仓库名称已存在！'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
+        telephone = str(data['telephone'])
+        if telephone == '':
+            response_msg = {'status': 'ERROR', 'msg': u'联系方式不能为空！'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
+        sites = SiteInfo.objects.filter(telephone=telephone).exclude(id=id)
+        if sites.count() > 0:
+            response_msg = {'status': 'ERROR', 'msg': u'联系方式已存在！'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
         site.location = to_str(data['location'])  # 仓库位置
         site.longitude = to_str(data['longitude'])  # 经度
         site.latitude = to_str(data['latitude'])  # 纬度
         site.site_code = to_str(data['site_code'])  # 仓库代码
         site.volume = data['volume']  # 仓库箱子容量
         site.name = name
+        site.telephone = telephone
 
         city_id = data['city_id']  # 城市
         province_id = data['province_id']  # 省
