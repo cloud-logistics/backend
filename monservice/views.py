@@ -497,9 +497,9 @@ def status_summary(request):
         timestamp = item[1]
         longitude = cal_position((item[2], '0')[item[2] is None])
         latitude = cal_position((item[3], '0')[item[3] is None])
-        speed = float((item[4], 0)[item[4] is None])
-        temperature = float((item[5], 0)[item[5] is None])
-        humidity = float((item[6], 0)[item[6] is None])
+        speed = round(float((item[4], 0)[item[4] is None]), 2)
+        temperature = round(float((item[5], 0)[item[5] is None]), 2)
+        humidity = round(float((item[6], 0)[item[6] is None]), 2)
         collide = int((item[7], 0)[item[7] is None])
         light = float((item[8], 0)[item[8] is None])
         available_status = (item[9], u'N')[item[9] is None]
