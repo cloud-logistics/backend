@@ -15,6 +15,10 @@ import time
 import datetime
 from django.db import transaction
 from util.sid import generate_sid
+import httplib
+import urllib2
+import urllib
+
 
 log = logger.get_logger('monservice.site.py')
 
@@ -394,7 +398,8 @@ def dispatchout(request):
 
                 box.siteinfo = None
 
-                if stock.ava_num <= 0:
+                left_num = stock.ava_num - stock.reserve_num
+                if left_num <= 0:
                     response_msg = {'result': 'False', 'code': '999999', 'msg': 'No Boxes.', 'status': 'error'}
                     return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -481,7 +486,30 @@ def dispatchin(request):
 @api_view(['GET'])
 def init_site(request):
     try:
-        boxes = BoxInfo.objects.all()
+        types = BoxTypeInfo.objects.all()
+        requrl = 'http://127.0.0.1:8000/container/api/v1/cloudbox/monservice/basicInfoConfig'
+        for t in types:
+            for i in range(1, 21):
+                num_str = '%06d' % i
+                rfid = 'TEST' + str(t.id) + num_str
+                body_data = {   'rfid': rfid,
+                                'containerType': t.id,
+                                'factory': 1,
+                                'factoryLocation': 1,
+                                'batteryInfo': 1,
+                                'hardwareInfo': 1,
+                                'manufactureTime': '1509431998000'
+                            }
+
+                req = urllib2.Request(url=requrl)
+                req.add_header('Content-type', 'application/json')
+                req.add_header('Authorization', '139a2d1c6f0a44909670f4e749a1397d')
+                req.add_data(json.dumps(body_data))
+                res_data = urllib2.urlopen(req)
+                res = res_data.read()
+                log.info(res)
+
+        boxes = BoxInfo.objects.filter(tid__startswith='TEST')
         stock = {}
         stock['site_id'] = '1'
 
