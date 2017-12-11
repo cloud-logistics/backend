@@ -297,7 +297,7 @@ def update_box_bill_daily():
         user_obj_list = EnterpriseUser.objects.filter(user_id__in=user_list)
         log.info("update_box_bill_daily: user_list = %s" % user_list)
         for user in user_obj_list:
-            off_site_counts = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0).count()
+            off_site_counts = RentLeaseInfo.objects.filter(user_id=user, rent_status=0).count()
             on_site_counts = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0).count()
             rent_lease_info_list = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0)
             user_rent_fee_sum = 0
