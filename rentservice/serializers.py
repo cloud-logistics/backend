@@ -193,10 +193,22 @@ class BoxInfoResSerializer(serializers.ModelSerializer):
     produce_area = ProduceAreaSerializer()
     hardware = HardwareSerializer()
     battery = BatterySerializer()
+    rent_status = serializers.SerializerMethodField()
 
     class Meta:
         model = BoxInfo
         fields = '__all__'
+
+    def get_rent_status(self, obj):
+        rent_status = 0
+        status = RentLeaseInfo.objects.filter(box=obj, rent_status=0).count()
+        if status == 0 and obj.siteinfo is None:
+            rent_status = 2
+        elif status == 1:
+            rent_status = 1
+        if obj.ava_flag == 'N':
+            rent_status = 2
+        return rent_status
 
 
 class RentLeaseBoxSerializer(serializers.ModelSerializer):
@@ -258,7 +270,12 @@ class BoxInfoListSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_rent_status(self, obj):
-        rent_status = RentLeaseInfo.objects.filter(box=obj, rent_status=0).count()
+        rent_status = 0
+        status = RentLeaseInfo.objects.filter(box=obj, rent_status=0).count()
+        if status == 0 and obj.siteinfo is None:
+            rent_status = 2
+        elif status == 1:
+            rent_status = 1
         if obj.ava_flag == 'N':
             rent_status = 2
         return rent_status
