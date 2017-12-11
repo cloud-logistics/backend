@@ -42,6 +42,10 @@ def box_bill_real_time_all(request):
             temp['enterprise_id'] = item['enterprise']
             temp['enterprise_name'] = enterprise_id_map[item['enterprise']]
             ret_list.append(temp)
+        # update 在运
+        for enterprise_bill in ret_list:
+            enterprise_bill['off_num'] = \
+                RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise_bill['enterprise_id'], rent_status=0).count()
     except Exception, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0500", '云箱计费查询失败'), "0500", '云箱计费查询失败'), safe=True,
@@ -56,7 +60,7 @@ def enterprise_month_bill(request, enterprise_id):
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
     try:
-        box_rent_fee_month_bill = BoxRentFeeByMonth.objects.filter(enterprise=enterprise_id).order_by('-date')
+        box_rent_fee_month_bill = BoxRentFeeByMonth.objects.filter(enterprise=enterprise_id).order_by('date')
     except BoxRentFeeByMonth.DoesNotExist, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0500", '查询企业计费报表失败'), "0500", '查询企业计费报表失败'), safe=True,
