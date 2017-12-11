@@ -75,12 +75,20 @@ def rent_boxes_order(request):
                                                                                   BoxInfoSerializer(box_info_list, many=True).data))
             return JsonResponse(retcode(errcode("9999", '堆场没有符合条件的云箱'), "9999", '堆场没有符合条件的云箱'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        appoint_box_type_map = {}
+        for detail in appoint_detail_queryset:
+            if detail.box_type.id in appoint_box_type_map.keys():
+                pass
+            else:
+                appoint_box_type_map[detail.box_type.id] = detail.box_num
+        log.info("appoint_box_type_map = %s" % appoint_box_type_map)
         # map
         # key=box_type_id, value=num
         box_type_map = {}
         for box_id in box_info_list:
             try:
-                box_info = BoxInfo.objects.get(deviceid=box_id.deviceid, siteinfo=site, ava_flag='Y')
+                box_info = BoxInfo.objects.get(deviceid=box_id.deviceid, siteinfo=site, ava_flag='Y',
+                                               type__id__in=appoint_box_type_map.keys())
             except BoxInfo.DoesNotExist:
                 log.error("BoxInfo.DoseNotExist box_id=%s, site=%s" % (box_id, site_id))
             if box_info:
@@ -90,7 +98,7 @@ def rent_boxes_order(request):
                 else:
                     box_type_map[box_info.type.id] = 0
         for key in box_type_map.keys():
-            stock = SiteBoxStock.objects.get(site=site, box_type_id=key)
+            stock = SiteBoxStock.objects.get(site=site, box_type__id=key)
             if stock.ava_num < box_type_map[key]:
                 log.error("request box type stat is %s" % box_type_map)
                 log.error("SiteBoxStock box_type=%s, ava_num=%s" % (key, stock.ava_num))
