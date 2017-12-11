@@ -15,6 +15,10 @@ import time
 import datetime
 from django.db import transaction
 from util.sid import generate_sid
+import httplib
+import urllib2
+import urllib
+
 
 log = logger.get_logger('monservice.site.py')
 
@@ -35,6 +39,7 @@ def add_site(request):
         data = json.loads(request.body)
         location = to_str(data['location'])             # 仓库名称
         name = data['name']  # 名称
+        telephone = data['telephone']   # 联系方式
 
         if name == '':
             response_msg = {'status': 'ERROR', 'msg': u'仓库名称不能为空！'}
@@ -59,6 +64,15 @@ def add_site(request):
             response_msg = {'status': 'ERROR', 'msg': u'纬度不能为空！'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
+        if telephone == '':
+            response_msg = {'status': 'ERROR', 'msg': u'联系方式不能为空！'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
+        sites = SiteInfo.objects.filter(telephone=telephone)
+        if len(sites) > 0:
+            response_msg = {'status': 'ERROR', 'msg': u'联系方式已存在！'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
         volume = data['volume']                         # 仓库箱子容量
         city_id = data['city_id']                       # 城市
         province_id = data['province_id']               # 省
@@ -71,7 +85,7 @@ def add_site(request):
         site_code = generate_sid(city.city_name)        # 仓库代码
 
         site = SiteInfo(name= name, location=location, latitude=latitude, longitude=longitude, site_code=site_code,
-                        city= city, province=province, nation=nation, volume=volume)
+                        city= city, province=province, nation=nation, volume=volume, telephone=telephone)
         site.save()
 
         initialize_box_num(site.id)
@@ -125,12 +139,23 @@ def modify_site(request, id):
             response_msg = {'status': 'ERROR', 'msg': u'仓库名称已存在！'}
             return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
+        telephone = str(data['telephone'])
+        if telephone == '':
+            response_msg = {'status': 'ERROR', 'msg': u'联系方式不能为空！'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
+        sites = SiteInfo.objects.filter(telephone=telephone).exclude(id=id)
+        if sites.count() > 0:
+            response_msg = {'status': 'ERROR', 'msg': u'联系方式已存在！'}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
         site.location = to_str(data['location'])  # 仓库位置
         site.longitude = to_str(data['longitude'])  # 经度
         site.latitude = to_str(data['latitude'])  # 纬度
         site.site_code = to_str(data['site_code'])  # 仓库代码
         site.volume = data['volume']  # 仓库箱子容量
         site.name = name
+        site.telephone = telephone
 
         city_id = data['city_id']  # 城市
         province_id = data['province_id']  # 省
@@ -373,7 +398,8 @@ def dispatchout(request):
 
                 box.siteinfo = None
 
-                if stock.ava_num <= 0:
+                left_num = stock.ava_num - stock.reserve_num
+                if left_num <= 0:
                     response_msg = {'result': 'False', 'code': '999999', 'msg': 'No Boxes.', 'status': 'error'}
                     return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -460,7 +486,30 @@ def dispatchin(request):
 @api_view(['GET'])
 def init_site(request):
     try:
-        boxes = BoxInfo.objects.all()
+        types = BoxTypeInfo.objects.all()
+        requrl = 'http://127.0.0.1:8000/container/api/v1/cloudbox/monservice/basicInfoConfig'
+        for t in types:
+            for i in range(1, 21):
+                num_str = '%06d' % i
+                rfid = 'TEST' + str(t.id) + num_str
+                body_data = {   'rfid': rfid,
+                                'containerType': t.id,
+                                'factory': 1,
+                                'factoryLocation': 1,
+                                'batteryInfo': 1,
+                                'hardwareInfo': 1,
+                                'manufactureTime': '1509431998000'
+                            }
+
+                req = urllib2.Request(url=requrl)
+                req.add_header('Content-type', 'application/json')
+                req.add_header('Authorization', '139a2d1c6f0a44909670f4e749a1397d')
+                req.add_data(json.dumps(body_data))
+                res_data = urllib2.urlopen(req)
+                res = res_data.read()
+                log.info(res)
+
+        boxes = BoxInfo.objects.filter(tid__startswith='TEST')
         stock = {}
         stock['site_id'] = '1'
 
