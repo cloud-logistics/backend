@@ -202,8 +202,12 @@ def finish_boxes_order(request):
             rent_rate = get_rent_fee_rate(item)
             delta_datetime = item.lease_end_time - item.lease_start_time
             time_hours = (delta_datetime.days * 24 + delta_datetime.seconds / 3600)
+            log.info("delta_datetime days=%s, seconds=%s" % (delta_datetime.days, delta_datetime.seconds))
             if time_hours:
-                item.rent = time_hours * rent_rate
+                if delta_datetime.seconds % 3600:
+                    item.rent = (time_hours + 1) * rent_rate
+                else:
+                    item.rent = time_hours * rent_rate
             else:
                 #不足1小时按1小时算
                 item.rent = rent_rate * 1
