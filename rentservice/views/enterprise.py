@@ -52,7 +52,18 @@ def add_enterprise_info(request):
     try:
         enterprise_license_id_url = data['enterprise_license_id_url']
     except Exception:
-        return JsonResponse(retcode(errcode("9999", '企业营业执照照片url不能为空'), "9999", '企业营业执照照片url不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(retcode(errcode("9999", '企业营业执照照片url不能为空'), "9999", '企业营业执照照片url不能为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        enterprise_homepage_url = data['enterprise_homepage_url']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '企业网址不能为空'), "9999", '企业网址不能为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        enterprise_address = data['enterprise_address']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '企业地址不能为空'), "9999", '企业地址不能为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
     try:
         enterprise_info = EnterpriseInfo(enterprise_id=uuid.uuid1(), enterprise_name=enterprise_name,
                                          enterprise_tele=enterprise_tele, enterprise_license_id=enterprise_license_id,
@@ -60,7 +71,8 @@ def add_enterprise_info(request):
                                          enterprise_legal_rep_name=enterprise_legal_rep_name,
                                          enterprise_email=enterprise_email, enterprise_deposit=enterprise_deposit,
                                          enterprise_deposit_status=0, register_time=datetime.datetime.now(tz),
-                                         last_update_time=datetime.datetime.now(tz))
+                                         last_update_time=datetime.datetime.now(tz),
+                                         enterprise_homepage_url=enterprise_homepage_url, enterprise_address=enterprise_address)
         enterprise_info.save()
     except Exception, e:
         log.error(repr(e))
