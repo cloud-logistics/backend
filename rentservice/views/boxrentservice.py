@@ -297,7 +297,7 @@ def update_box_bill_daily():
         user_obj_list = EnterpriseUser.objects.filter(user_id__in=user_list)
         log.info("update_box_bill_daily: user_list = %s" % user_list)
         for user in user_obj_list:
-            # off_site_counts = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0).count()
+            off_site_counts = 0
             on_site_counts = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0).count()
             rent_lease_info_list = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0)
             user_rent_fee_sum = 0
@@ -310,7 +310,7 @@ def update_box_bill_daily():
                 log.info("update_box_bill_daily: off_site_counts=%s, on_site_counts=%s" % (off_site_counts, on_site_counts))
                 box_rent_fee = BoxRentFeeDetail(detail_id=uuid.uuid1(), enterprise=user.enterprise,
                                                 user=user, date=current_time,
-                                                off_site_nums=0,
+                                                off_site_nums=off_site_counts,
                                                 on_site_nums=on_site_counts, rent_fee=user_rent_fee_sum)
                 box_rent_fee.save()
     except Exception, e:
