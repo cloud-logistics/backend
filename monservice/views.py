@@ -1169,7 +1169,7 @@ def gps_info_trans(gpsinfo):
     :return str:
     '''
 
-    if gpsinfo == '0,0':
+    if gpsinfo == '0,0' or gpsinfo == '0.0,0.0':
         return ''
 
     ret_str = ''
