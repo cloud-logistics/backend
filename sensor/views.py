@@ -257,7 +257,10 @@ def build_precintl_sql(data):
     lat = str(data['latitude'])
     long = str(data['longitude'])
     timestamp = str(data['utc'])
-    speed = get_speed(deviceid, lat, long, timestamp)
+    speed = str(data['speed'])
+    if speed == '0':
+        speed = get_speed(deviceid, lat, long, timestamp)
+
     if lat == '0' or long == '0':
         location_data = get_location(deviceid, lat, long)
         lat = location_data['lat']
