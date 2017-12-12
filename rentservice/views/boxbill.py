@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view
 from rest_framework.settings import api_settings
 from rest_framework.parsers import JSONParser
 from rentservice.models import BoxRentFeeDetail, EnterpriseInfo, BoxRentFeeByMonth, RentLeaseInfo
+from monservice.models import City
 from rentservice.utils.retcode import retcode, errcode
 from rentservice.serializers import BoxRentFeeByMonthSerializer, RentLeaseInfoSerializer, EnterpriseInfoSerializer
 from rentservice.utils import logger
@@ -90,6 +91,11 @@ def enterprise_month_bill_detail(request, enterprise_id, date):
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     page = paginator.paginate_queryset(rent_info_list, request)
     ret_ser = RentLeaseInfoSerializer(page, many=True)
+    for item in ret_ser.data:
+        log.info("off city_code is %s" % item['off_site']['city'])
+        log.info("on city_code is %s" % item['on_site']['city'])
+        item['off_city'] = City.objects.get(id=item['off_site']['city']).city_name
+        item['on_city'] = City.objects.get(id=item['on_site']['city']).city_name
     return paginator.get_paginated_response(ret_ser.data)
 
 
