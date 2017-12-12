@@ -57,7 +57,7 @@ def containers_overview(request):
             lat = cal_position((item[2], '0')[item[2] is None])
             gps_dic = {'lng': float(lng), 'lat': float(lat)}
             container_dict['position'] = gps_dic
-            container_dict['detail'] = gps_info_trans("%s,%s" % (gps_dic['lat'], gps_dic['lng']))
+            # container_dict['detail'] = gps_info_trans("%s,%s" % (gps_dic['lat'], gps_dic['lng']))
             container_info_list.append(container_dict)
         return JsonResponse(container_info_list, safe=False, status=status.HTTP_200_OK)
     except Exception, e:
