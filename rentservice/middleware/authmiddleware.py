@@ -55,22 +55,22 @@ class AuthMiddleware(MiddlewareMixin):
                 log.info("request token %s" % token)
                 conn = self.get_connection_from_pool()
                 if token:
-                    try:
-                        sess = Session.objects.get(pk=request.session.session_key)
-                        sess_param = sess.get_decoded()
-                        if sess_param[token] and (token in sess_param.keys()):
-                            log.info('session is valid pass')
-                        else:
-                            log.info("session timeout or invalid session")
-                            return JsonResponse(retcode(errcode("0401", "session timeout or invalid session"),
-                                                        "0401", "session timeout or invalid session"),
-                                                safe=True,
-                                                status=status.HTTP_401_UNAUTHORIZED)
-                    except Session.DoesNotExist:
-                        return JsonResponse(retcode(errcode("0401", "no authorized, session invalid"),
-                                                    "0401", "no authorized, session invalid"),
-                                            safe=True,
-                                            status=status.HTTP_401_UNAUTHORIZED)
+                    # try:
+                    #     sess = Session.objects.get(pk=request.session.session_key)
+                    #     sess_param = sess.get_decoded()
+                    #     if sess_param[token] and (token in sess_param.keys()):
+                    #         log.info('session is valid pass')
+                    #     else:
+                    #         log.info("session timeout or invalid session")
+                    #         return JsonResponse(retcode(errcode("0401", "session timeout or invalid session"),
+                    #                                     "0401", "session timeout or invalid session"),
+                    #                             safe=True,
+                    #                             status=status.HTTP_401_UNAUTHORIZED)
+                    # except Session.DoesNotExist:
+                    #     return JsonResponse(retcode(errcode("0401", "no authorized, session invalid"),
+                    #                                 "0401", "no authorized, session invalid"),
+                    #                         safe=True,
+                    #                         status=status.HTTP_401_UNAUTHORIZED)
                     if conn.hexists(PERMISSION_GROUP_HASH, token):
                         group = conn.hget(PERMISSION_GROUP_HASH, token)
                         #admin level direct pass

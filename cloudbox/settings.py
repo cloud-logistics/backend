@@ -55,7 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 'rentservice.middleware.authmiddleware.AuthMiddleware',
+    'rentservice.middleware.authmiddleware.AuthMiddleware',
     'monservice.middleware.authmiddleware.AuthMiddleware',
 ]
 
