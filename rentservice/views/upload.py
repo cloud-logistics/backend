@@ -10,6 +10,7 @@ from rentservice.utils.retcode import retcode, errcode
 import uuid
 from qiniu import Auth, put_file, etag, urlsafe_base64_encode
 import qiniu.config
+import base64
 
 log = logger.get_logger(__name__)
 
@@ -41,7 +42,11 @@ class FileUploadView(views.APIView):
             tmpfile_path = os.path.join('.', file_obj.name)
             if os.path.exists(tmpfile_path):
                 q = Auth(self.access_key, self.secret_key)
-                key = "%s-%s" % (uuid.uuid1(), file_obj.name)
+                log.info("begin base64 filename")
+                file_name_base64 = base64.b64encode(self.to_str(file_obj.name))
+                log.info("filename=%s, filenametype=%s, base64filename=%s" % (file_obj.name, type(file_obj.name),
+                                                                              file_name_base64))
+                key = "%s-%s" % (uuid.uuid1(), file_name_base64)
                 token = q.upload_token(self.bucket_name, key, 3600)
                 ret, info = put_file(token, key, tmpfile_path)
                 if info.status_code == 200:
@@ -52,5 +57,13 @@ class FileUploadView(views.APIView):
         except Exception, e:
             log.error(repr(e))
             ret['error'] = e
+            os.remove(tmpfile_path)
             return Response(data=errcode('0500', ret), status=500)
         return Response(data=retcode(ret, "0000", "Succ"), status=200)
+
+    def to_str(self, str_or_unicode):
+        if isinstance(str_or_unicode, unicode):
+            value = str_or_unicode.encode('utf-8')
+        else:
+            value = str_or_unicode
+        return value
