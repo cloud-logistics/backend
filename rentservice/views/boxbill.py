@@ -26,27 +26,31 @@ timezone = pytz.timezone(settings.TIME_ZONE)
 @api_view(['GET'])
 def box_bill_real_time_all(request):
     ret_list = []
-    enterprise_id_map = {}
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
     try:
-        query_list = BoxRentFeeDetail.objects.select_related().values('enterprise').annotate(off_num=Sum('off_site_nums'),
-                                                               on_num=Sum('on_site_nums'), fee=Sum('rent_fee'))
         enterprise_query_list = EnterpriseInfo.objects.all()
         for enterprise in enterprise_query_list:
-            enterprise_id_map[enterprise.enterprise_id] = enterprise.enterprise_name
-        for item in query_list:
-            temp = {}
-            temp['on_num'] = item['on_num']
-            temp['off_num'] = item['off_num']
-            temp['fee'] = item['fee']
-            temp['enterprise_id'] = item['enterprise']
-            temp['enterprise_name'] = enterprise_id_map[item['enterprise']]
-            ret_list.append(temp)
-        # update 在运
-        for enterprise_bill in ret_list:
-            enterprise_bill['off_num'] = \
-                RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise_bill['enterprise_id'], rent_status=0).count()
+            rentlease_list = RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise.enterprise_id)
+            if rentlease_list:
+                on_num = 0
+                off_num = 0
+                fee = 0
+                bill = {}
+                for item in rentlease_list:
+                    if item.rent_status == 0:
+                        off_num = off_num + 1
+                    else:
+                        on_num = on_num + 1
+                    fee = fee + item.rent
+                bill['on_num'] = on_num
+                bill['off_num'] = off_num
+                bill['fee'] = fee
+                bill['enterprise_id'] = enterprise.enterprise_id
+                bill['enterprise_name'] = enterprise.enterprise_name
+                ret_list.append(bill)
+            else:
+                continue
     except Exception, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0500", '云箱计费查询失败'), "0500", '云箱计费查询失败'), safe=True,
@@ -112,22 +116,27 @@ def box_bill_real_time_all_filter(request):
     except Exception:
         return JsonResponse(retcode(errcode("9999", '关键字为空'), "9999", '关键字为空'), safe=True,
                             status=status.HTTP_400_BAD_REQUEST)
-    enterprise_all_list = EnterpriseInfo.objects.all()
-    enterprise_id_list = EnterpriseInfo.objects.filter(Q(enterprise_name__contains=keyword)).values_list('enterprise_id', flat=True)
+    enterprise_id_list = EnterpriseInfo.objects.filter(Q(enterprise_name__contains=keyword))
     try:
-        query_list = BoxRentFeeDetail.objects.select_related().values('enterprise').annotate(off_num=Sum('off_site_nums'),
-                                                               on_num=Sum('on_site_nums'), fee=Sum('rent_fee'))
-        for enterprise in enterprise_all_list:
-            enterprise_id_map[enterprise.enterprise_id] = enterprise.enterprise_name
-        for item in query_list:
-            temp = {}
-            temp['on_num'] = item['on_num']
-            temp['off_num'] = item['off_num']
-            temp['fee'] = item['fee']
-            temp['enterprise_id'] = item['enterprise']
-            temp['enterprise_name'] = enterprise_id_map[item['enterprise']]
-            if temp['enterprise_id'] in enterprise_id_list:
-                ret_list.append(temp)
+        for enterprise in enterprise_id_list:
+            rentlease_list = RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise.enterprise_id)
+            if rentlease_list:
+                on_num = 0
+                off_num = 0
+                fee = 0
+                bill = {}
+                for item in rentlease_list:
+                    if item.rent_status == 0:
+                        off_num = off_num + 1
+                    else:
+                        on_num = on_num + 1
+                    fee = fee + item.rent
+                bill['on_num'] = on_num
+                bill['off_num'] = off_num
+                bill['fee'] = fee
+                bill['enterprise_id'] = enterprise.enterprise_id
+                bill['enterprise_name'] = enterprise.enterprise_name
+                ret_list.append(bill)
             else:
                 continue
     except Exception, e:
