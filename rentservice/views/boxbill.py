@@ -16,7 +16,7 @@ from django.db.models import Sum
 import pytz
 from django.conf import settings
 from django.db.models import Q
-
+import datetime
 
 log = logger.get_logger(__name__)
 timezone = pytz.timezone(settings.TIME_ZONE)
@@ -26,12 +26,18 @@ timezone = pytz.timezone(settings.TIME_ZONE)
 @api_view(['GET'])
 def box_bill_real_time_all(request):
     ret_list = []
+    current_time = datetime.datetime.now(tz=timezone)
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
     try:
         enterprise_query_list = EnterpriseInfo.objects.all()
         for enterprise in enterprise_query_list:
-            rentlease_list = RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise.enterprise_id)
+            rentlease_list_with_today = RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise.enterprise_id,
+                                                                     lease_end_time__year=current_time.year,
+                                                                     lease_end_time__month=current_time.month)
+            rentlease_list = rentlease_list_with_today.exclude(lease_end_time__year=current_time.year,
+                                                               lease_end_time__month=current_time.month,
+                                                               lease_end_time__day=current_time.day)
             if rentlease_list:
                 on_num = 0
                 off_num = 0
@@ -107,7 +113,7 @@ def enterprise_month_bill_detail(request, enterprise_id, date):
 @api_view(['POST'])
 def box_bill_real_time_all_filter(request):
     ret_list = []
-    enterprise_id_map = {}
+    current_time = datetime.datetime.now(tz=timezone)
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
     data = JSONParser().parse(request)
@@ -119,7 +125,12 @@ def box_bill_real_time_all_filter(request):
     enterprise_id_list = EnterpriseInfo.objects.filter(Q(enterprise_name__contains=keyword))
     try:
         for enterprise in enterprise_id_list:
-            rentlease_list = RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise.enterprise_id)
+            rentlease_list_with_today = RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise.enterprise_id,
+                                                          lease_end_time__year=current_time.year,
+                                                          lease_end_time__month=current_time.month)
+            rentlease_list = rentlease_list_with_today.exclude(lease_end_time__year=current_time.year,
+                                                               lease_end_time__month=current_time.month,
+                                                               lease_end_time__day=current_time.day)
             if rentlease_list:
                 on_num = 0
                 off_num = 0
