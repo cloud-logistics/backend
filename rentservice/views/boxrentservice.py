@@ -220,7 +220,8 @@ def finish_boxes_order(request):
             box_para_list.append(box_para)
         #update daily bill
         update_box_bill_daily()
-        # update
+        # update month bill
+        update_box_bill_month()
         stock_data = {}
         stock_data['site_id'] = site_id
         stock_data['boxes'] = box_para_list

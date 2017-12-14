@@ -32,23 +32,23 @@ def box_bill_real_time_all(request):
     try:
         enterprise_query_list = EnterpriseInfo.objects.all()
         for enterprise in enterprise_query_list:
-            rentlease_list_with_today = RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise.enterprise_id,
-                                                                     lease_end_time__year=current_time.year,
-                                                                     lease_end_time__month=current_time.month)
-            rentlease_list = rentlease_list_with_today.exclude(lease_end_time__year=current_time.year,
-                                                               lease_end_time__month=current_time.month,
-                                                               lease_end_time__day=current_time.day)
+            rentlease_list = RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise.enterprise_id)
+            # rentlease_list = rentlease_list_with_today.exclude(lease_end_time__year=current_time.year,
+            #                                                    lease_end_time__month=current_time.month,
+            #                                                    lease_end_time__day=current_time.day)
             if rentlease_list:
                 on_num = 0
                 off_num = 0
                 fee = 0
                 bill = {}
                 for item in rentlease_list:
-                    if item.rent_status == 0:
+                    if item.rent_status == 0 and (not item.lease_end_time):
                         off_num = off_num + 1
-                    else:
+                    if item.lease_end_time \
+                            and (item.lease_end_time.year == current_time.year) \
+                            and (item.lease_end_time.month == current_time.month):
                         on_num = on_num + 1
-                    fee = fee + item.rent
+                        fee = fee + item.rent
                 bill['on_num'] = on_num
                 bill['off_num'] = off_num
                 bill['fee'] = fee
@@ -125,23 +125,25 @@ def box_bill_real_time_all_filter(request):
     enterprise_id_list = EnterpriseInfo.objects.filter(Q(enterprise_name__contains=keyword))
     try:
         for enterprise in enterprise_id_list:
-            rentlease_list_with_today = RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise.enterprise_id,
+            rentlease_list = RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise.enterprise_id,
                                                           lease_end_time__year=current_time.year,
                                                           lease_end_time__month=current_time.month)
-            rentlease_list = rentlease_list_with_today.exclude(lease_end_time__year=current_time.year,
-                                                               lease_end_time__month=current_time.month,
-                                                               lease_end_time__day=current_time.day)
+            # rentlease_list = rentlease_list_with_today.exclude(lease_end_time__year=current_time.year,
+            #                                                    lease_end_time__month=current_time.month,
+            #                                                    lease_end_time__day=current_time.day)
             if rentlease_list:
                 on_num = 0
                 off_num = 0
                 fee = 0
                 bill = {}
                 for item in rentlease_list:
-                    if item.rent_status == 0:
+                    if item.rent_status == 0 and (not item.lease_end_time):
                         off_num = off_num + 1
-                    else:
+                    if item.lease_end_time \
+                        and (item.lease_end_time.year == current_time.year) \
+                        and (item.lease_end_time.month == current_time.month):
                         on_num = on_num + 1
-                    fee = fee + item.rent
+                        fee = fee + item.rent
                 bill['on_num'] = on_num
                 bill['off_num'] = off_num
                 bill['fee'] = fee
