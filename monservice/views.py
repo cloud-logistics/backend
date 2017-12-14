@@ -491,7 +491,7 @@ def status_summary(request):
     data = query_list(sql)
 
     ret_data = []
-
+    deviceid_map = {}
     for item in data:
         deviceid = item[0]
         timestamp = item[1]
@@ -516,7 +516,9 @@ def status_summary(request):
                    'speed': speed, 'temperature': temperature, 'humidity': humidity, 'collide': collide,
                    'num_of_door_open': num_of_door_open, 'robot_operation_status': u'装箱', 'battery': light,
                    'available_status': available_status}
-        ret_data.append(element)
+        if deviceid not in deviceid_map:
+            ret_data.append(element)
+            deviceid_map[deviceid] = deviceid
     pagination_class = settings.api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
     page = paginator.paginate_queryset(ret_data, request)
