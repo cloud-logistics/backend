@@ -103,7 +103,7 @@ class AuthMiddleware(MiddlewareMixin):
                         log.info("request without valid token bypass, if the request is upload api")
                     else:
                         log.info("request without valid token reject")
-                        return JsonResponse(retcode(errcode("0401", "no authorized"), "0401", "no authorized, token is null"), safe=True,
+                        return JsonResponse(retcode(errcode("0401", "no authorized"), "0401", "令牌失效，请重新登陆"), safe=True,
                                             status=status.HTTP_401_UNAUTHORIZED)
             except Exception:
                 return JsonResponse(retcode(errcode("0401", "no authorized"), "0401", "no authorized exception"), safe=True,
