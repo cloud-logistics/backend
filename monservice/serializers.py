@@ -245,6 +245,15 @@ class SensorPathDataSerializer(serializers.ModelSerializer):
         fields = ('timestamp', 'longitude', 'latitude')
 
 
+class SensorDataSerializer(serializers.ModelSerializer):
+    longitude = serializers.ReadOnlyField(source='convert_longitude')
+    latitude = serializers.ReadOnlyField(source='convert_latitude')
+    class Meta:
+        model = SensorData
+        fields = ('timestamp', 'deviceid', 'temperature', 'humidity',
+                  'longitude', 'latitude', 'speed', 'collide', 'light')
+
+
 class BoxSummarySerializer(serializers.ModelSerializer):
     location_name = serializers.SerializerMethodField()
     battery = serializers.SerializerMethodField()

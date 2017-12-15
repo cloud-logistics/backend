@@ -1035,17 +1035,6 @@ def rent_real_time_msg(request):
                         safe=True, status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
-# @authentication_classes((SessionAuthentication, BasicAuthentication, JSONWebTokenAuthentication))
-# @permission_classes((IsAuthenticated,))
-def analysis_result(request):
-    # if request.user.has_perm('view_containerrentinfo'):
-    #     return JsonResponse({}, safe=True, status=status.HTTP_403_FORBIDDEN)
-    # else:
-    response = get_analysis_report()
-    return JsonResponse(response, safe=True, status=status.HTTP_200_OK)
-
-
 @api_view(['GET'])
 def operation_overview(request):
     sql_1 = 'select count(1) from iot.monservice_boxinfo'
@@ -1215,73 +1204,6 @@ def get_current_gpsinfo(container_id):
     return ret
 
 
-def get_analysis_report():
-    final_response = {}
-    final_response['carrier_sales_revenue'] = 86230000
-    final_response['profit_margin'] = 0.68
-    final_response['carrier_orders'] = 3402000
-    final_response['use_of_containers'] = 5927000
-    ret1, ret2, ret3, ret4 = gen_random_param_list()
-    final_response['transportation_category'] = {"airline": ret1, "highway": ret2, "ocean": ret3, "other": ret4}
-    ret1, ret2, ret3, ret4 = gen_random_param_list()
-    final_response['goods_category'] = {"fish": ret1, "beaf": ret2, "chip": ret3, "gold": ret4}
-    x_axis_time_list = gen_x_axis_time_list()
-    foo = random.SystemRandom()
-    final_response['history_revenue'] = [{"time": x_axis_time_list[0], "value": foo.randint(1000, 2000)},
-                                         {"time": x_axis_time_list[1], "value": foo.randint(2000, 3000)},
-                                         {"time": x_axis_time_list[2], "value": foo.randint(3000, 4000)},
-                                         {"time": x_axis_time_list[3], "value": foo.randint(4000, 5000)},
-                                         {"time": x_axis_time_list[4], "value": foo.randint(5000, 6000)},
-                                         {"time": x_axis_time_list[5], "value": foo.randint(7000, 8000)},
-                                         {"time": x_axis_time_list[6], "value": foo.randint(8000, 9000)},
-                                         {"time": x_axis_time_list[7], "value": foo.randint(9000, 10000)},
-                                         {"time": x_axis_time_list[8], "value": foo.randint(10000, 11000)},
-                                         {"time": x_axis_time_list[9], "value": foo.randint(12000, 13000)},
-                                         {"time": x_axis_time_list[10], "value": foo.randint(13000, 14000)},
-                                         {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
-                                         ]
-    final_response['history_profit_margin'] = [{"time": x_axis_time_list[0], "value": foo.uniform(0.1, 0.3)},
-                                               {"time": x_axis_time_list[1], "value": foo.uniform(0.2, 0.3)},
-                                               {"time": x_axis_time_list[2], "value": foo.uniform(0.3, 0.3)},
-                                               {"time": x_axis_time_list[3], "value": foo.uniform(0.3, 0.3)},
-                                               {"time": x_axis_time_list[4], "value": foo.uniform(0.4, 0.6)},
-                                               {"time": x_axis_time_list[5], "value": foo.uniform(0.5, 0.6)},
-                                               {"time": x_axis_time_list[6], "value": foo.uniform(0.5, 0.6)},
-                                               {"time": x_axis_time_list[7], "value": foo.uniform(0.6, 0.6)},
-                                               {"time": x_axis_time_list[8], "value": foo.uniform(0.7, 0.9)},
-                                               {"time": x_axis_time_list[9], "value": foo.uniform(0.7, 0.9)},
-                                               {"time": x_axis_time_list[10], "value": foo.uniform(0.8, 0.9)},
-                                               {"time": x_axis_time_list[11], "value": foo.uniform(0.8, 0.9)}
-                                              ]
-    final_response['history_orders'] = [{"time": x_axis_time_list[0], "value": foo.randint(1000, 2000)},
-                                         {"time": x_axis_time_list[1], "value": foo.randint(2000, 3000)},
-                                         {"time": x_axis_time_list[2], "value": foo.randint(3000, 4000)},
-                                         {"time": x_axis_time_list[3], "value": foo.randint(4000, 5000)},
-                                         {"time": x_axis_time_list[4], "value": foo.randint(5000, 6000)},
-                                         {"time": x_axis_time_list[5], "value": foo.randint(7000, 8000)},
-                                         {"time": x_axis_time_list[6], "value": foo.randint(8000, 9000)},
-                                         {"time": x_axis_time_list[7], "value": foo.randint(9000, 10000)},
-                                         {"time": x_axis_time_list[8], "value": foo.randint(10000, 11000)},
-                                         {"time": x_axis_time_list[9], "value": foo.randint(12000, 13000)},
-                                         {"time": x_axis_time_list[10], "value": foo.randint(13000, 14000)},
-                                         {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
-                                        ]
-    final_response['history_use_of_containers'] = [{"time": x_axis_time_list[0], "value": foo.randint(1000, 2000)},
-                                                   {"time": x_axis_time_list[1], "value": foo.randint(2000, 3000)},
-                                                   {"time": x_axis_time_list[2], "value": foo.randint(3000, 4000)},
-                                                   {"time": x_axis_time_list[3], "value": foo.randint(4000, 5000)},
-                                                   {"time": x_axis_time_list[4], "value": foo.randint(5000, 6000)},
-                                                   {"time": x_axis_time_list[5], "value": foo.randint(7000, 8000)},
-                                                   {"time": x_axis_time_list[6], "value": foo.randint(8000, 9000)},
-                                                   {"time": x_axis_time_list[7], "value": foo.randint(9000, 10000)},
-                                                   {"time": x_axis_time_list[8], "value": foo.randint(10000, 11000)},
-                                                   {"time": x_axis_time_list[9], "value": foo.randint(12000, 13000)},
-                                                   {"time": x_axis_time_list[10], "value": foo.randint(13000, 14000)},
-                                                   {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
-                                                   ]
-    return final_response
-
-
 def gen_random_param_list():
     foo = random.SystemRandom()
     param1 = foo.uniform(0.1, 0.3)
@@ -1307,54 +1229,6 @@ def gen_x_axis_time_list():
         for num in range(1, 13):
             ret_time_list.append("%s/%s" % (cur_year - 1, num))
     return ret_time_list
-
-
-#
-# def get_operation_overview():
-#     final_response = {}
-#     foo = random.SystemRandom()
-#     final_response['container_location'] = {"China": foo.randint(2000, 4000),
-#                                             "USA": foo.randint(2000, 4000),
-#                                             "Europe": foo.randint(1500, 3000),
-#                                             "India": foo.randint(1500, 3000),
-#                                             "Japan": foo.randint(1000, 2000),
-#                                             "Canada": foo.randint(500, 1000),
-#                                             "other": foo.randint(500, 1000)
-#                                             }
-#     container_num_int = 0
-#     for item in final_response['container_location'].values():
-#         container_num_int = container_num_int + item
-#     final_response['container_num'] = container_num_int
-#     final_response['container_on_lease'] = foo.randint(1000, container_num_int)
-#     final_response['container_on_transportation'] = container_num_int - final_response['container_on_lease']
-#     x_axis_time_list = gen_x_axis_time_list()
-#     final_response['container_on_lease_history'] = [{"time": x_axis_time_list[0], "value": foo.randint(1000, 2000)},
-#                                          {"time": x_axis_time_list[1], "value": foo.randint(2000, 3000)},
-#                                          {"time": x_axis_time_list[2], "value": foo.randint(3000, 4000)},
-#                                          {"time": x_axis_time_list[3], "value": foo.randint(4000, 5000)},
-#                                          {"time": x_axis_time_list[4], "value": foo.randint(5000, 6000)},
-#                                          {"time": x_axis_time_list[5], "value": foo.randint(7000, 8000)},
-#                                          {"time": x_axis_time_list[6], "value": foo.randint(8000, 9000)},
-#                                          {"time": x_axis_time_list[7], "value": foo.randint(9000, 10000)},
-#                                          {"time": x_axis_time_list[8], "value": foo.randint(10000, 11000)},
-#                                          {"time": x_axis_time_list[9], "value": foo.randint(12000, 13000)},
-#                                          {"time": x_axis_time_list[10], "value": foo.randint(13000, 14000)},
-#                                          {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
-#                                          ]
-#     final_response['container_on_transportation_history'] = [{"time": x_axis_time_list[0], "value": foo.randint(1000, 2000)},
-#                                          {"time": x_axis_time_list[1], "value": foo.randint(2000, 3000)},
-#                                          {"time": x_axis_time_list[2], "value": foo.randint(3000, 4000)},
-#                                          {"time": x_axis_time_list[3], "value": foo.randint(4000, 5000)},
-#                                          {"time": x_axis_time_list[4], "value": foo.randint(5000, 6000)},
-#                                          {"time": x_axis_time_list[5], "value": foo.randint(7000, 8000)},
-#                                          {"time": x_axis_time_list[6], "value": foo.randint(8000, 9000)},
-#                                          {"time": x_axis_time_list[7], "value": foo.randint(9000, 10000)},
-#                                          {"time": x_axis_time_list[8], "value": foo.randint(10000, 11000)},
-#                                          {"time": x_axis_time_list[9], "value": foo.randint(12000, 13000)},
-#                                          {"time": x_axis_time_list[10], "value": foo.randint(13000, 14000)},
-#                                          {"time": x_axis_time_list[11], "value": foo.randint(15000, 16000)}
-#                                         ]
-#     return final_response
 
 
 # 获取国家列表
@@ -1515,5 +1389,35 @@ def get_message(request):
     return JsonResponse({'alarm_count': alarm_count, 'undispach_count': undispach_count, 'message_count': message_count},
                         safe=True, status=status.HTTP_200_OK)
 
+
+@csrf_exempt
+@api_view(['POST'])
+def get_huaren_data(request):
+    data = {}
+    try:
+        data = JSONParser().parse(request)
+    except Exception:
+        return JsonResponse({'msg': 'request body is not json format'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        starttime = data['starttime']
+    except Exception:
+        return JsonResponse({'msg': 'starttime is required'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        endtime = data['endtime']
+    except Exception:
+        return JsonResponse({'msg': 'endtime is required'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        deviceids = data['deviceids']
+    except Exception:
+        return JsonResponse({'msg': 'deviceid is required'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
+    data = SensorData.objects.filter(timestamp__gte=starttime).filter(timestamp__lt=endtime).\
+        filter(deviceid__in=deviceids).order_by('deviceid')
+
+    pagination_class = settings.api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    page = paginator.paginate_queryset(data, request)
+    ret_list = SensorDataSerializer(page, many=True)
+    return paginator.get_paginated_response(ret_list.data, 'OK', 'query data success')
 
 
