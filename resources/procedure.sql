@@ -33,8 +33,10 @@
       v_battery_threshold_min,v_battery_threshold_max,
       v_operation_threshold_min,v_operation_threshold_max;
 
-    v_carrier_id := 1;
+    UPDATE iot.monservice_alarminfo SET alarm_status = 0
+    WHERE code = 6001 and alarm_status = 1 AND deviceid = NEW.endpointid;
 
+    v_carrier_id := 1;
 
     v_sql_insert := 'INSERT INTO iot.monservice_alarminfo(timestamp,
                                  deviceid,
