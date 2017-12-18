@@ -870,8 +870,9 @@ def login(request):
         return JsonResponse({'msg': '请输入密码'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
         timestamp = req_param['timestamp']
-    except Exception:
-        return JsonResponse({'msg': '请求异常'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
+    except Exception, e:
+        log.error(e.message)
+        return JsonResponse({'msg': '请指定时间戳'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
     if abs(int(str(time.time())[0:10]) - timestamp) < 60 * 5:
         sql = 'select user_token from iot.monservice_sysuser where user_name = \'' + username + \
@@ -1412,7 +1413,7 @@ def get_huaren_data(request):
         return JsonResponse({'msg': 'deviceid is required'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
     data = SensorData.objects.filter(timestamp__gte=starttime).filter(timestamp__lt=endtime).\
-        filter(deviceid__in=deviceids).order_by('deviceid')
+        filter(deviceid__in=deviceids).order_by('deviceid', 'timestamp')
 
     pagination_class = settings.api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
