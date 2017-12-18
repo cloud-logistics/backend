@@ -1422,3 +1422,15 @@ def get_huaren_data(request):
     return paginator.get_paginated_response(ret_list.data, 'OK', 'query data success')
 
 
+@csrf_exempt
+@api_view(['GET'])
+def fuzzy_deviceid(request):
+    deviceid = str(request.GET.get('deviceid'))
+    data = query_list('select deviceid from iot.monservice_boxinfo where deviceid like \'%' + deviceid + '%\' limit 10')
+    ret_data = []
+    for i in range(len(data)):
+        ret_data.append(data[i][0])
+    return JsonResponse({'data': ret_data}, safe=True, status=status.HTTP_200_OK)
+
+
+

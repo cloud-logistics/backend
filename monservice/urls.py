@@ -65,6 +65,7 @@ urlpatterns = [
     url(r'^allmaintenance$', maintenance.get_maintenance),                               # 查询维修点
 
     url(r'^getHuarenData$', views.get_huaren_data),               # 华人医药查询接口
+    url(r'^fuzzyDeviceid$', views.fuzzy_deviceid),                # deviceid模糊查询
 
 
 
