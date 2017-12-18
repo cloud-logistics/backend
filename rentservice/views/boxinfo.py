@@ -125,7 +125,8 @@ def get_box_stat(request, box_id):
         return JsonResponse(retcode({}, "9999", "云箱不存在"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     # 获取周区间
     today = datetime.datetime.today()
-    week_start = today - datetime.timedelta(days=today.weekday())
+    week_start_tmp = today - datetime.timedelta(days=today.weekday())
+    week_start = datetime.datetime(week_start_tmp.year,week_start_tmp.month, week_start_tmp.day, 0, 0, 0)
     week_end = today + datetime.timedelta(days=7 - today.weekday())
     week_queryset = RentLeaseInfo.objects.filter(rent_status=1, lease_start_time__gte=week_start,
                                                  lease_start_time__lte=week_end, box=box)
