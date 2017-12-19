@@ -26,7 +26,6 @@ urlpatterns = [
     url(r'^containerHistoryStatus$', views.indicator_history),    # 实时报文指标历史曲线
     url(r'^rentContainerHistory$', views.rent_container_history), # 租赁平台调用历史曲线
     url(r'^rentRealTimeMsg$', views.rent_real_time_msg),          # 租赁平台调用实时报文
-    url(r'^analysisresult$', views.analysis_result),              # 分析报告
     url(r'^boxStatus$', views.status_summary),                    # 云箱状态汇总
     url(r'^operationoverview$', views.operation_overview),        # 运营状态概览
     url(r'^getSecurityConfig$', views.get_security_config),       # 获取运行安全参数
@@ -64,4 +63,10 @@ urlpatterns = [
     url(r'^maintenance/(?P<maintenance_id>\d+)$', maintenance.delete_maintenance),       # 删除维修点
     url(r'^maintenance/(?P<maintenance_id>\d+)', maintenance.update_maintenance),        # 修改维修点
     url(r'^allmaintenance$', maintenance.get_maintenance),                               # 查询维修点
+
+    url(r'^getHuarenData$', views.get_huaren_data),               # 华人医药查询接口
+    url(r'^fuzzyDeviceid$', views.fuzzy_deviceid),                # deviceid模糊查询
+
+
+
 ]
