@@ -153,8 +153,10 @@ def realtime_message(request):
     try:
         box = BoxInfo.objects.get(deviceid=id)
         shipping_status = (AVAILABLE, UNAVAILABLE)[box.siteinfo_id is None]
+        siteName = SiteInfo.objects.get(id=box.siteinfo_id).name
     except Exception, e:
         shipping_status = UNAVAILABLE
+        siteName = ''
         log.error(e.message)
 
     # 计算温度是否在正常范围
@@ -193,6 +195,7 @@ def realtime_message(request):
                 'currentStatus': shipping_status,
                 'carrier': carrier_name, 'position': {'lng': longitude, 'lat': latitude},
                 'locationName': gps_info_trans("%s,%s" % (latitude, longitude)),
+                'siteName': siteName,
                 'speed': float(speed),
                 'temperature': {'value': float(temperature), 'status': temperature_status},
                 'humidity': {'value': float(humidity), 'status': humidity_status},
