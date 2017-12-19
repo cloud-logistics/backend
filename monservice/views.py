@@ -1410,7 +1410,12 @@ def get_huaren_data(request):
     try:
         deviceids = data['deviceids']
     except Exception:
-        return JsonResponse({'msg': 'deviceid is required'}, safe=True, status=status.HTTP_400_BAD_REQUEST)
+        log.info('deviceids is empty, select all')
+        deviceids = []
+
+    if len(deviceids) == 0:
+        # 华人指定查询的箱子
+        deviceids = ['01-03-17-09-00-20', '01-03-17-09-00-24']
 
     data = SensorData.objects.filter(timestamp__gte=starttime).filter(timestamp__lt=endtime).\
         filter(deviceid__in=deviceids).order_by('deviceid', 'timestamp')
