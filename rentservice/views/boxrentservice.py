@@ -352,7 +352,8 @@ def update_box_bill_month():
                     box_rent_bill_month.on_site_nums = on_site_box_nums_month
                     box_rent_bill_month.save()
                 except BoxRentFeeByMonth.DoesNotExist, e:
-                    month_date = datetime.datetime(current_time.year, current_time.month, 1)
+                    month_date = datetime.datetime(year=current_time.year, month=current_time.month, day=1, hour=12,
+                                                   tzinfo=timezone)
                     box_rent_fee = BoxRentFeeByMonth(detail_id=uuid.uuid1(), enterprise=enterprise_obj,
                                                      date=month_date, off_site_nums=off_site_box_nums_month,
                                                      on_site_nums=on_site_box_nums_month,
