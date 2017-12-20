@@ -58,6 +58,9 @@ def create_appointment(request):
         user_model = EnterpriseUser.objects.get(user_id=user_id)
     except EnterpriseUser.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "承运方用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
+    if user_model.enterprise.enterprise_deposit_status == 0:
+        return JsonResponse(retcode({}, "9999", "企业未缴押金，无法预约租箱"), safe=True,
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     try:
         with transaction.atomic():
             # 获取预约码
