@@ -49,6 +49,8 @@ urlpatterns = [
     url(r'^querydispatch/(?P<site_id>\d+)/', dispatch.get_dispatch_by_site),      # 根据堆场查询调度信息
     url(r'^dispatchout$', site.dispatchout),                      # 调度出仓接口
     url(r'^dispatchin$', site.dispatchin),                        # 调度入仓接口
+    url(r'^checkdispatchout$', site.check_dispatch_out),          # 检查调度出仓合法性
+    url(r'^checkdispatchin$', site.check_dispatch_in),            # 检查调度入仓合法性
 
     url(r'^nationlist$', views.get_nation_list),                          # 获取国家列表
     url(r'^provincelist/(?P<nation_id>\d+)$', views.get_province_list),   # 根据国家获取省列表

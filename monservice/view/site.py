@@ -417,6 +417,40 @@ def dispatchout(request):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
+# 英诺尔：检查调度出仓合法性
+@csrf_exempt
+@api_view(['POST'])
+def check_dispatch_out(request):
+    try:
+        data = json.loads(request.body)
+        dispatch_id = str(data['dispatch_id'])  # 调度id
+        dispatch = SiteDispatch.objects.get(did=dispatch_id)
+        site = dispatch.start
+        boxes = data['boxes']                   # 箱子数组
+        with transaction.atomic():
+            for box in boxes:
+                box_id = str(box['box_id'])     # 箱子id
+                box = BoxInfo.objects.get(deviceid=box_id)
+                stock = SiteBoxStock.objects.get(site=site, box_type=box.type)
+
+                if box.siteinfo_id != site.id:
+                    msg = 'Box: ' + str(box.deviceid) + ' is in site: ' + str(box.siteinfo_id)
+                    response_msg = {'result': 'False', 'code': '999999', 'msg': msg, 'status': 'error'}
+                    return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+                left_num = stock.ava_num - stock.reserve_num
+                if left_num <= 0:
+                    response_msg = {'result': 'False', 'code': '999999', 'msg': 'No Boxes.', 'status': 'error'}
+                    return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'result': 'False', 'code': '999999', 'msg': e.message, 'status': 'error'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success', 'status': 'dispatch'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
 
 # 英诺尔：调度入仓接口
 @csrf_exempt
@@ -472,6 +506,47 @@ def dispatchin(request):
         dispatch.save()
 
         check_stock_ava_num(site.id, box_type_set)
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'result': 'False', 'code': '999999', 'msg': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+# 英诺尔：检查调度入仓合法性
+@csrf_exempt
+@api_view(['POST'])
+def check_dispatch_in(request):
+    try:
+        data = json.loads(request.body)
+        dispatch_id = str(data['dispatch_id'])  # 调度id
+        dispatch = SiteDispatch.objects.get(did=dispatch_id)
+        site = dispatch.finish
+        current_site_id = str(data['site_id'])
+        if current_site_id != str(site.id):
+            msg = 'Wrong site. Finish site is: ' + str(site.id)
+            response_msg = {'result': 'False', 'code': '999999', 'msg': msg}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        boxes = data['boxes']
+        discount = len(boxes)
+        newdone = discount + dispatch.done
+        if newdone > dispatch.count:
+            msg = 'No more Dispatch.'
+            response_msg = {'result': 'False', 'code': '999999', 'msg': msg}
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        with transaction.atomic():
+            for box in boxes:
+                box_id = str(box['box_id'])
+                box = BoxInfo.objects.get(deviceid=box_id)
+                if box.siteinfo_id == site.id:
+                    msg = 'Box is already in site.'
+                    response_msg = {'result': 'False', 'code': '999999', 'msg': msg}
+                    return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     except Exception, e:
         log.error(e.message)
