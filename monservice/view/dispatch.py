@@ -194,11 +194,11 @@ def get_dispatch(sites):
         val, idx = min((val, idx) for (idx, val) in enumerate(dis_list))
         near_high_site = high_sites[idx]
 
-        need_count = int(low_site.volume * low * 2) - low_site.avanum
+        need_count = int(low_site.volume * ave * 0.8) - low_site.avanum
         if need_count <= 0:
             continue
 
-        offer_count = int((near_high_site.avanum - near_high_site.volume * ave) * low * 2)
+        offer_count = near_high_site.avanum - near_high_site.volume * ave
         if offer_count <= 0:
             continue
 
@@ -245,6 +245,7 @@ def save_dispatch(start_id, finish_id, count):
         log.error(e.message)
 
 
+# 带类型的调度信息
 @csrf_exempt
 @api_view(['GET'])
 def get_type_dispatches(request):
@@ -351,6 +352,7 @@ def save_type_dispatch(start_id, finish_id, type_id, count):
             log.error(e.message)
 
 
+# 生成调度ID
 def generate_dispath_id():
     type_code = '0'
     day = str(time.strftime('%Y%m%d', time.localtime(int(time.time()))))[3:]

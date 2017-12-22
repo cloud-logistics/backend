@@ -557,6 +557,7 @@ def check_dispatch_in(request):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
+# 初始化仓库，批量加入云箱
 @csrf_exempt
 @api_view(['GET'])
 def init_site(request):
