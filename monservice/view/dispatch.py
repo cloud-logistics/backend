@@ -207,7 +207,8 @@ def get_dispatch(sites):
         else:
             count = offer_count
 
-        if near_high_site.avanum - count < near_high_site.volume * ave:
+        near_high_site.avanum -= count
+        if near_high_site.avanum < near_high_site.volume * ave:
             high_sites.remove(near_high_site)
 
         low_sites.remove(low_site)
