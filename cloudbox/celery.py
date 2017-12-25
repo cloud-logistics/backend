@@ -76,6 +76,8 @@ def cancel_appointment():
             stock = SiteBoxStock.objects.get(site=detail.site_id, box_type=detail.box_type)
             stock.reserve_num -= detail.box_num
             stock.save()
+            detail.flag = 1
+            detail.save()
         appointment.flag = 2
         appointment.save()
     log.info("cancel appointment end....")

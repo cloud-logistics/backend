@@ -345,6 +345,8 @@ def cancel_appointment(request):
                 stock = SiteBoxStock.objects.get(site=detail.site_id, box_type=detail.box_type)
                 stock.reserve_num -= detail.box_num
                 stock.save()
+                detail.flag = 1
+                detail.save()
             # 更新appointment的flag为2（已取消）
             appointment.flag = 2
             appointment.save()
