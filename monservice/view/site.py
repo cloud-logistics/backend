@@ -180,7 +180,7 @@ def modify_site(request, id):
 # 获取全部仓库信息
 @csrf_exempt
 @api_view(['GET'])
-def get_sites(request):
+def get_sites_bak(request):
     try:
         pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
         paginator = pagination_class()
@@ -642,6 +642,85 @@ def check_all_num(request):
     else:
         response_msg = {'result': 'True', 'code': '000000', 'msg': 'Success'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+# 仓库过滤查询，统一接口
+@csrf_exempt
+@api_view(['GET'])
+def get_sites(request):
+    try:
+        query_set = SiteInfo.objects.all().order_by('id')
+        if 'province_id' in request.GET:
+            province_id = request.GET.get('province_id')
+            query_set = query_set.filter(province_id=province_id)
+        if 'city_id' in request.GET:
+            city_id = request.GET.get('city_id')
+            query_set = query_set.filter(city_id=city_id)
+        if 'min_volume' in request.GET:
+            min_volume = request.GET.get('min_volume')
+            query_set = query_set.filter(volume__gte=min_volume)
+        if 'max_volume' in request.GET:
+            max_volume = request.GET.get('max_volume')
+            query_set = query_set.filter(volume__lte=max_volume)
+        if 'key_word' in request.GET:
+            key_word = request.GET.get('key_word')
+            query_set = query_set.filter(name__contains=key_word)
+
+        pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+        paginator = pagination_class()
+        offset = request.GET.get('offset')
+        page = paginator.paginate_queryset(query_set, request)
+        ret_ser = SiteFullInfoSerializer(page, many=True)
+        if offset is None:
+            return JsonResponse({'data': {'results': SiteFullInfoSerializer(query_set, many=True).data}},
+                                safe=True, status=status.HTTP_200_OK)
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'code': 'ERROR', 'message': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return paginator.get_paginated_response(ret_ser.data, 'OK', u'查询全部仓库成功！')
+
+
+# 仓库过滤查询
+@csrf_exempt
+@api_view(['POST'])
+def query_sites(request):
+    try:
+        data = json.loads(request.body)
+        province_id = data['province_id']
+        city_id = data['city_id']
+        min_volume = data['min_volume']
+        max_volume = data['max_volume']
+        key_word = data['key_word']
+
+        if 'province_id' in data:
+            log.debug('test')
+        query_set = SiteInfo.objects.all().order_by('id')
+        if province_id != 0:
+            query_set = query_set.filter(province_id=province_id)
+        if city_id != 0:
+            query_set = query_set.filter(city_id=city_id)
+        if min_volume != -1 and max_volume != -1:
+            query_set = query_set.filter(volume__gte=min_volume, volume__lte=max_volume)
+        if key_word != '':
+            query_set = query_set.filter(name__contains=key_word)
+
+        pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+        paginator = pagination_class()
+        offset = request.GET.get('offset')
+        page = paginator.paginate_queryset(query_set, request)
+        ret_ser = SiteFullInfoSerializer(page, many=True)
+        if offset is None:
+            return JsonResponse({'data': {'results': SiteFullInfoSerializer(query_set, many=True).data}},
+                                safe=True, status=status.HTTP_200_OK)
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'code': 'ERROR', 'message': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return paginator.get_paginated_response(ret_ser.data, 'OK', u'查询全部仓库成功！')
+
 
 
 

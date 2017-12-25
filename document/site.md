@@ -525,4 +525,103 @@
 ```
 
 
+### 8. 条件查询仓库信息：
+
+#### URL：
+
+`container/api/v1/cloudbox/monservice/querysites?limit=10&offset=0`
+
+#### 方法：
+
+`POST`
+
+#### BODY:
+
+```
+{
+        "province_id": 1,
+        "city_id": 1,
+        "min_volume": 0,
+        "max_volume": 3000,
+        "key_word": "测试"
+}
+
+```
+
+
+##### 字段缺省值：
+
+```
+{
+        "province_id": 0,
+        "city_id": 0,
+        "min_volume": -1,
+        "max_volume": -1,
+        "key_word": ""
+}
+
+```
+
+
+#### 返回：
+
+```
+{
+    "message": "查询全部仓库成功！",
+    "code": "OK",
+    "data": {
+        "count": 1,
+        "limit": 10,
+        "results": [
+            {
+                "id": 145,
+                "city": {
+                    "id": 1,
+                    "city_name": "北京",
+                    "state_name": "北京",
+                    "nation_name": "中国",
+                    "longitude": "116.4073963",
+                    "latitude": "39.9041999",
+                    "area_name": "亚洲",
+                    "culture": "",
+                    "taboo": "",
+                    "picture_url": "",
+                    "sorted_key": "b",
+                    "flag": 0,
+                    "city_code": null,
+                    "nation": 1,
+                    "province": 1
+                },
+                "province": {
+                    "province_id": 1,
+                    "province_name": "北京市",
+                    "zip_code": "110000",
+                    "nation": 1
+                },
+                "nation": {
+                    "nation_id": 1,
+                    "nation_name": "中国",
+                    "pic_url": "http://ouq3fowh7.bkt.clouddn.com/%E5%9B%BD%E5%86%85.png",
+                    "sorted_key": "z",
+                    "nation_code": null
+                },
+                "name": "测试222222222222222",
+                "location": "425-4 Daejeon-ri, Oeseo-myeon, Sangju, Gyeongsangbuk-do, 韩国",
+                "latitude": "39.9041999",
+                "longitude": "116.4073963",
+                "site_code": "CNBJ000016",
+                "volume": 2222,
+                "telephone": "12123123"
+            }
+        ],
+        "links": {
+            "previous": null,
+            "next": null
+        },
+        "offset": 0
+    }
+}
+```
+
+
 

@@ -34,6 +34,7 @@ urlpatterns = [
     url(r'^sites/(?P<id>\d+)$', site.delete_site),                # 删除堆场
     url(r'^sites/(?P<id>\d+)', site.modify_site),                 # 修改堆场
     url(r'^allsites$', site.get_sites),                           # 查询堆场
+    url(r'^querysites$', site.query_sites),                       # 条件查询堆场
     url(r'^boxbysite/(?P<id>\d+)', site.get_site_boxes),          # 查询堆场箱子
     url(r'^dispatch$', dispatch.get_dispatches),                  # 获取调度
     url(r'^typedispatch$', dispatch.get_type_dispatches),         # 获取按类型调度
