@@ -253,6 +253,14 @@ def get_site_stream(request, id):
     try:
         ret_data = []
         data = SiteHistory.objects.filter(site_id=id)
+
+        if 'begin_time' in request.GET and 'end_time' in request.GET:
+            begin_time = request.GET.get('begin_time')
+            end_time = request.GET.get('end_time')
+            data = data.filter(timestamp__gte=begin_time, timestamp__lte=end_time)
+        if 'op_type' in request.GET:
+            op_type = request.GET.get('op_type')
+            data = data.filter(op_type=op_type)
         for record in data:
             ts = record.timestamp
             box_id = record.box_id

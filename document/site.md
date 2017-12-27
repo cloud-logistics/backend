@@ -379,7 +379,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/monservice/siteStream/1`
+`container/api/v1/cloudbox/monservice/siteStream/1?begin_time=1511944408&end_time=1511947277&op_type=0`
 
 #### 方法：
 
