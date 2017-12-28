@@ -226,8 +226,6 @@ def get_user_finished_list(request, user_id):
     except EnterpriseUser.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
     # 获取预约单列表
-    print _offset
-    print _limit
     _new_limit = _offset + _limit
     appointment_list = UserAppointment.objects.filter(user_id=user).exclude(flag=0).order_by('-appointment_time')[
                        _offset:_new_limit]
