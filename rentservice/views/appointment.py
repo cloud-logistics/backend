@@ -26,6 +26,7 @@ import datetime
 import uuid
 import pytz
 from cloudbox import celery
+from rentservice.utils import complex_page
 
 log = logger.get_logger(__name__)
 tz = pytz.timezone(settings.TIME_ZONE)
@@ -211,14 +212,27 @@ def get_user_process_list(request, user_id):
 @csrf_exempt
 @api_view(['GET'])
 def get_user_finished_list(request, user_id):
-    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    # pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    pagination_class = complex_page.ComplexPagination
+    param = request.query_params
+    _limit = 10
+    _offset = 0
+    if param:
+        _limit = int(param.get('limit'))
+        _offset = int(param.get('offset'))
     paginator = pagination_class()
     try:
         user = EnterpriseUser.objects.get(user_id=user_id)
     except EnterpriseUser.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
     # 获取预约单列表
-    appointment_list = UserAppointment.objects.filter(user_id=user).exclude(flag=0).order_by('-appointment_time')
+    print _offset
+    print _limit
+    _new_limit = _offset + _limit
+    appointment_list = UserAppointment.objects.filter(user_id=user).exclude(flag=0).order_by('-appointment_time')[
+                       _offset:_new_limit]
+    print len(appointment_list)
+    _count = UserAppointment.objects.filter(user_id=user).exclude(flag=0).count()
     ret = []
     for appointment_item in appointment_list:
         tmp_list = []
@@ -246,8 +260,8 @@ def get_user_finished_list(request, user_id):
                     'appointment_time': appointment_item.appointment_time,
                     'appointment_code': appointment_item.appointment_code, 'flag': appointment_item.flag,
                     'info': res_app_list})
-    page = paginator.paginate_queryset(ret, request)
-    ret_ser = AppointmentResSerializer(page, many=True)
+    paginator.paginate_queryset(ret, request, _count)
+    ret_ser = AppointmentResSerializer(ret, many=True)
     return paginator.get_paginated_response(ret_ser.data)
 
 

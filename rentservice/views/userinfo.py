@@ -15,7 +15,6 @@ from rentservice.models import NotifyMessage
 import pytz
 from django.conf import settings
 
-
 log = logger.get_logger(__name__)
 tz = pytz.timezone(settings.TIME_ZONE)
 
@@ -31,7 +30,7 @@ def get_process_order_list(request, user_id):
         return JsonResponse(retcode({}, "9999", "用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
 
     # 获取正在运行中的箱子
-    lease_list = RentLeaseInfo.objects.filter(on_site__isnull=True, user_id=user)
+    lease_list = RentLeaseInfo.objects.filter(rent_status=0, user_id=user)
     page = paginator.paginate_queryset(lease_list, request)
     ret_ser = RentLeaseInfoSerializer(page, many=True)
     return paginator.get_paginated_response(ret_ser.data)
@@ -48,7 +47,7 @@ def get_finished_order_list(request, user_id):
         return JsonResponse(retcode({}, "9999", "用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
 
     # 获取正在运行中的箱子
-    lease_list = RentLeaseInfo.objects.filter(on_site__isnull=False, user_id=user)
+    lease_list = RentLeaseInfo.objects.filter(rent_status=1, user_id=user)
     page = paginator.paginate_queryset(lease_list, request)
     ret_ser = RentLeaseInfoSerializer(page, many=True)
     return paginator.get_paginated_response(ret_ser.data)
@@ -67,7 +66,7 @@ def get_dash_data(request, user_id):
     # 获取在运箱子数量
     box_count = RentLeaseInfo.objects.filter(user_id=user, on_site__isnull=True).count()
     # 获取通知数量
-    notify_count = NotifyMessage.objects.filter(user=user,read_flag='N').count()
+    notify_count = NotifyMessage.objects.filter(user=user, read_flag='N').count()
     return JsonResponse(
         retcode({'appointment_count': appointment_count, 'box_count': box_count, 'notify_count': notify_count}, '0000',
                 'Success'), safe=True, status=status.HTTP_200_OK)
