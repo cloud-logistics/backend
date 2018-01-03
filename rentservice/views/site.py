@@ -23,14 +23,18 @@ from rentservice.serializers import SiteStatResSerializer
 from rentservice.serializers import AllSiteSerializer
 import pytz
 from django.conf import settings
+from django.core.cache.backends.base import DEFAULT_TIMEOUT
+from django.views.decorators.cache import cache_page
 
 log = logger.get_logger(__name__)
 tz = pytz.timezone(settings.TIME_ZONE)
+CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
 
 # 根据GPS定位信息获取附近20公里内的仓库
 @csrf_exempt
 @api_view(['GET'])
+@cache_page(CACHE_TTL)
 def get_site_list_nearby(request, latitude, longitude):
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
