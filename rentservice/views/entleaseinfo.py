@@ -12,10 +12,13 @@ from rentservice.models import RentLeaseInfo
 from rentservice.serializers import RentLeaseInfoSerializer
 import pytz
 from django.conf import settings
-
+from django.core.cache.backends.base import DEFAULT_TIMEOUT
+from django.views.decorators.cache import cache_page
 
 log = logger.get_logger(__name__)
 tz = pytz.timezone(settings.TIME_ZONE)
+
+CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
 
 # 企业查询在运云箱订单
@@ -26,7 +29,7 @@ def get_enterprise_lease_process_list(request, enterprise_id):
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
     try:
-        user = EnterpriseUser.objects.get(user_id=enterprise_id)
+        user = EnterpriseUser.objects.select_related('enterprise').get(user_id=enterprise_id)
     except EnterpriseUser.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "企业用户不存在"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     # 获取所有企业下所有用户的在运的订单
@@ -40,11 +43,12 @@ def get_enterprise_lease_process_list(request, enterprise_id):
 # enterprise_id实际传递值还是企业用户的user_id
 @csrf_exempt
 @api_view(['GET'])
+@cache_page(CACHE_TTL)
 def get_enterprise_lease_finish_list(request, enterprise_id):
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
     try:
-        user = EnterpriseUser.objects.get(user_id=enterprise_id)
+        user = EnterpriseUser.objects.select_related('enterprise').get(user_id=enterprise_id)
     except EnterpriseUser.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "企业用户不存在"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     # 获取所有企业下所有用户的在运的订单
