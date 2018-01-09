@@ -75,7 +75,7 @@ def get_dispatches_history(request):
 @api_view(['GET'])
 def get_dispatch_by_site(request, site_id):
     try:
-        dispatches = SiteDispatch.objects.filter(start_id=site_id, status='undispatch').order_by('did')
+        dispatches = SiteDispatch.objects.filter(start_id=site_id, status='undispatch', create_date__gte=datetime.date.today()).order_by('did')
 
         if len(dispatches) == 0:
             response_msg = {'result': 'False', 'code': '999999', 'msg': 'No dispatch for this site'}
