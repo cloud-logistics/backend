@@ -432,7 +432,7 @@ def check_dispatch_out(request):
     try:
         data = json.loads(request.body)
         dispatch_id = str(data['dispatch_id'])  # 调度id
-        dispatch = SiteDispatch.objects.get(did=dispatch_id)
+        dispatch = SiteDispatch.objects.get(did=dispatch_id, create_date__gte=datetime.date.today())
         site = dispatch.start
         boxes = data['boxes']                   # 箱子数组
         with transaction.atomic():
