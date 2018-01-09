@@ -29,9 +29,13 @@ from cloudbox import celery
 from rentservice.utils import complex_page
 from rentservice.utils.redistools import RedisTool
 import pickle
+from django.views.decorators.cache import cache_page
+from django.core.cache.backends.base import DEFAULT_TIMEOUT
 
 log = logger.get_logger(__name__)
 tz = pytz.timezone(settings.TIME_ZONE)
+
+CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
 APPOINTMENT_HASH = 'appointment'
 USER_ALIAS_ID_HASH = 'user_alias_id_hash'
@@ -220,6 +224,7 @@ def get_user_process_list(request, user_id):
 # 已完成的预约单查询
 @csrf_exempt
 @api_view(['GET'])
+@cache_page(CACHE_TTL)
 def get_user_finished_list(request, user_id):
     # pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
     pagination_class = complex_page.ComplexPagination
