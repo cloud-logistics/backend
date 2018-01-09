@@ -21,9 +21,11 @@ import pytz
 from django.conf import settings
 from .notify import create_notify
 from cloudbox import celery
+from rentservice.utils.redistools import RedisTool
 
 log = logger.get_logger(__name__)
 timezone = pytz.timezone(settings.TIME_ZONE)
+USER_ALIAS_ID_HASH = 'user_alias_id_hash'
 
 
 @csrf_exempt
@@ -147,10 +149,14 @@ def rent_boxes_order(request):
                 else:
                     log.info("预约单还未全部完成")
         ret['rent_lease_info_id_list'] = lease_info_list
+        conn = get_connection_from_pool()
         # 增加消息
-        if enterprise_user.user_alias_id is not None and enterprise_user.user_alias_id != "":
+        # if enterprise_user.user_alias_id is not None and enterprise_user.user_alias_id != "":
+        user_id = enterprise_user.user_id
+        if conn.hexists(USER_ALIAS_ID_HASH, user_id):
             alias = []
-            alias.append(enterprise_user.user_alias_id)
+            # alias.append(enterprise_user.user_alias_id)
+            alias.append(conn.hget(USER_ALIAS_ID_HASH, user_id))
             message = u'您的云箱已经租赁成功'
             celery.send_push_message.delay(alias, message)
         notify_message = u'您的云箱已经租赁成功，箱子ID分别是'
@@ -230,8 +236,12 @@ def finish_boxes_order(request):
         log.info("push message to app: begin")
         alias = []
         if rent_info_list:
-            if rent_info_list[0].user_id.user_alias_id is not None and rent_info_list[0].user_id.user_alias_id != "":
-                alias.append(rent_info_list[0].user_id.user_alias_id)
+            conn = get_connection_from_pool()
+            user_id = rent_info_list[0].user_id.user_id
+            # if rent_info_list[0].user_id.user_alias_id is not None and rent_info_list[0].user_id.user_alias_id != "":
+            if conn.hexists(USER_ALIAS_ID_HASH, user_id):
+                # alias.append(rent_info_list[0].user_id.user_alias_id)
+                alias.append(conn.hget(USER_ALIAS_ID_HASH, user_id))
                 message = u'您的云箱已经归还成功'
                 celery.send_push_message.delay(alias, message)
             notify_message = u'您的云箱已经归还成功，箱子ID分别是'
@@ -366,3 +376,7 @@ def update_box_bill_month():
     else:
         log.info("no BoxRentFeeDetail records. do nothing")
 
+
+def get_connection_from_pool():
+    redis_pool = RedisTool()
+    return redis_pool.get_connection()
