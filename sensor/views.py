@@ -345,6 +345,10 @@ def get_location(deviceid, lat, long):
 @csrf_exempt
 @api_view(['GET'])
 def get_data(request):
+    token = request.META.get('HTTP_TOKEN')
+    if token is None or token != 'a921a69a33ae461396167d112b813d90':
+        return JsonResponse(organize_result("False", "999999", "Unauthorized", {}),
+                            status=status.HTTP_401_UNAUTHORIZED, safe=True)
     try:
         today = str(time.strftime('%Y-%m-%d', time.localtime(int(time.time()))))
         day = request.GET.get('day')
@@ -387,6 +391,10 @@ def get_data(request):
 @csrf_exempt
 @api_view(['GET'])
 def dump_data(request):
+    token = request.META.get('HTTP_TOKEN')
+    if token is None or token != 'a921a69a33ae461396167d112b813d90':
+        return JsonResponse(organize_result("False", "999999", "Unauthorized", {}),
+                            status=status.HTTP_401_UNAUTHORIZED, safe=True)
     try:
         today = str(time.strftime('%Y-%m-%d', time.localtime(int(time.time()))))
         day = request.GET.get('day')
