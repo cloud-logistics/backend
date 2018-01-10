@@ -18,6 +18,12 @@ from sensor.errcode import *
 from util.geo import get_distance
 from util.geo import cal_speed
 
+from monservice.models import SensorData
+import time
+import zipfile
+import os
+from django.http import StreamingHttpResponse
+
 
 # logging
 log = logger.get_logger('view.py')
@@ -320,6 +326,7 @@ def get_speed(deviceid, lat, long, ts):
         log.error('get_speed error:' + e.message)
         return 0
 
+
 # 如果上报的经纬度是0，则以最后一次不是0的值替代
 def get_location(deviceid, lat, long):
     last_lat = '0'
@@ -333,3 +340,90 @@ def get_location(deviceid, lat, long):
 
     return {'lat': last_lat, 'long': last_long}
 
+
+# 获取获取每日导出的数据
+@csrf_exempt
+@api_view(['GET'])
+def get_data(request):
+    try:
+        today = str(time.strftime('%Y-%m-%d', time.localtime(int(time.time()))))
+        day = request.GET.get('day')
+        if day == '':
+            end_time_str = today + ' 00:00:00'
+            end_time = int(time.mktime(time.strptime(end_time_str, '%Y-%m-%d %H:%M:%S')))
+        else:
+            end_time = int(time.mktime(time.strptime(day, '%Y-%m-%d'))) + 3600 * 24
+
+    except Exception, e:
+        log.error(e.message)
+        return JsonResponse(organize_result("False", "999999", "parameter is required", '{}'),
+                            status=status.HTTP_400_BAD_REQUEST, safe=True)
+
+    start_time = end_time - 3600 * 24
+    save_path = '/opt/pg-data/dump_data/'
+    zip_file_name = 'sensor_data_' + time.strftime('%Y-%m-%d', time.localtime(start_time)) + '.zip'
+    download_file_name = save_path + zip_file_name
+    if os.path.exists(download_file_name):
+        def file_iterator(file_name, chunk_size=512):
+            with open(file_name) as f:
+                while True:
+                    c = f.read(chunk_size)
+                    if c:
+                        yield c
+                    else:
+                        break
+
+        response = StreamingHttpResponse(file_iterator(download_file_name))
+        response['Content-Type'] = 'application/octet-stream'
+        response['Content-Disposition'] = 'attachment;filename="{0}"'.format(zip_file_name)
+
+        return response
+    else:
+        return JsonResponse(organize_result("False", "999999", 'File dose not exists', '{}'),
+                            status=status.HTTP_400_BAD_REQUEST, safe=True)
+
+
+# 导出前一天的传感器数据
+@csrf_exempt
+@api_view(['GET'])
+def dump_data(request):
+    try:
+        today = str(time.strftime('%Y-%m-%d', time.localtime(int(time.time()))))
+        day = request.GET.get('day')
+        if day == '':
+            end_time_str = today + ' 00:00:00'
+            end_time = int(time.mktime(time.strptime(end_time_str, '%Y-%m-%d %H:%M:%S')))
+        else:
+            end_time = int(time.mktime(time.strptime(day, '%Y-%m-%d'))) + 3600 * 24
+
+    except Exception, e:
+        log.error(e.message)
+        return JsonResponse(organize_result("False", "999999", "parameter is required", '{}'),
+                            status=status.HTTP_400_BAD_REQUEST, safe=True)
+    try:
+        log.info("dump sensor data begin ...")
+        start_time = end_time - 3600 * 24
+
+        txt_file_name = 'sensor_data_' + time.strftime('%Y-%m-%d', time.localtime(start_time)) + '.txt'
+        zip_file_name = 'sensor_data_' + time.strftime('%Y-%m-%d', time.localtime(start_time)) + '.zip'
+        save_path = '/opt/pg-data/dump_data/'
+        full_name = save_path + txt_file_name
+        SensorData.objects.\
+            filter(timestamp__gte=start_time, timestamp__lt=end_time).to_csv(full_name)
+        log.info("dump sensor data finish, file_name:" + full_name)
+        if os.path.exists(full_name):
+            f = zipfile.ZipFile(save_path + zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+            f.write(full_name, txt_file_name)
+            f.close()
+            log.info("zip file finish, zip file name:" + zip_file_name)
+            os.remove(full_name)
+            log.info("remove file finish, file_name:" + full_name)
+        else:
+            log.error("dump sensor data error, file_name:" + full_name)
+    except Exception, e:
+        log.error('dump sensor data error, msg:' + e.message)
+        return JsonResponse(organize_result("False", "999999", 'ERROR', '{}'),
+                            status=status.HTTP_400_BAD_REQUEST, safe=True)
+
+    return JsonResponse(organize_result("True", "000000", 'OK', '{}'),
+                        status=status.HTTP_200_OK, safe=True)

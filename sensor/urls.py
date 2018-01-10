@@ -8,4 +8,7 @@ urlpatterns = [
     url(r'^sensor$', views.input_data),
     url(r'^handset/nextsite$', views.nextsite),
     url(r'^precintl/savedata$', views.save_precintl_data),
+    url(r'^getdata$', views.get_data),
+    url(r'^dumpdata$', views.dump_data),
+
 ]

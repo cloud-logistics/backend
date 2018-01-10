@@ -9,6 +9,7 @@ from django.db import models
 from django.db import models
 from django.contrib.auth.models import User
 from util.geo import cal_position
+from postgres_copy import CopyManager
 
 
 class AlertLevelInfo(models.Model):
@@ -184,6 +185,7 @@ class SensorData(models.Model):
     light = models.CharField(max_length=10)
     legacy = models.TextField(null=True)
     endpointid = models.CharField(max_length=48)
+    objects = CopyManager()
 
     def convert_longitude(self):
         return str(cal_position(self.longitude))

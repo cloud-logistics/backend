@@ -30,6 +30,7 @@ def setup_periodic_tasks(sender, **kwargs):
     # sender.add_periodic_task(crontab(minute=15, hour=0), box_rent_fee_daily_billing.s())
     sender.add_periodic_task(crontab(minute=0, hour=1), box_rent_fee_month_billing.s())
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), update_redis_auth_info.s())
+    sender.add_periodic_task(crontab(minute=0, hour=2), dump_sensor_data.s())
 
 
 @app.task
@@ -302,3 +303,39 @@ def update_redis_auth_info():
 @app.task(bind=True)
 def debug_task(self):
     print('Request: {0!r}'.format(self.request))
+
+
+# 定时导出传感器数据，海口数据仓库会定时获取
+@app.task
+def dump_sensor_data():
+    import os
+    import time
+    import zipfile
+    from util import logger
+    from monservice.models import SensorData
+    log = logger.get_logger(__name__)
+    try:
+        log.info("dump sensor data begin ...")
+        end_time_str = str(time.strftime('%Y-%m-%d', time.localtime(int(time.time())))) + ' 00:00:00'
+        end_time = int(time.mktime(time.strptime(end_time_str, '%Y-%m-%d %H:%M:%S')))
+        start_time = end_time - 3600 * 24
+        txt_file_name = 'sensor_data_' + time.strftime('%Y-%m-%d', time.localtime(start_time)) + '.txt'
+        zip_file_name = 'sensor_data_' + time.strftime('%Y-%m-%d', time.localtime(start_time)) + '.zip'
+        save_path = '/opt/pg-data/dump_data/'
+        full_name = save_path + txt_file_name
+        SensorData.objects.\
+            filter(timestamp__gte=start_time, timestamp__lt=end_time).to_csv(full_name)
+        log.info("dump sensor data finish, file_name:" + full_name)
+        if os.path.exists(full_name):
+            f = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+            f.write(full_name, txt_file_name)
+            f.close()
+            log.info("zip file finish, file_name:" + zip_file_name)
+            os.remove(full_name)
+            log.info("remove file finish, file_name:" + full_name)
+        else:
+            log.error("dump sensor data error, file_name:" + full_name)
+    except Exception, e:
+        log.error('dump sensor data error, msg:' + e.message)
+
+
