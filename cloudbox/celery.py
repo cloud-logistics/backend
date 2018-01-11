@@ -327,7 +327,7 @@ def dump_sensor_data():
             filter(timestamp__gte=start_time, timestamp__lt=end_time).to_csv(full_name)
         log.info("dump sensor data finish, file_name:" + full_name)
         if os.path.exists(full_name):
-            f = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+            f = zipfile.ZipFile(save_path + zip_file_name, 'w', zipfile.ZIP_DEFLATED)
             f.write(full_name, txt_file_name)
             f.close()
             log.info("zip file finish, file_name:" + zip_file_name)
