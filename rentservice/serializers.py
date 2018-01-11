@@ -124,6 +124,7 @@ class UserAppointmentSerializer(serializers.ModelSerializer):
 
 class AppointmentDetailSerializer(serializers.ModelSerializer):
     box_type = BoxTypeInfoSerializer()
+    site_id = SiteInfoSerializer()
 
     class Meta:
         model = AppointmentDetail

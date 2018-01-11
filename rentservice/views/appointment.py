@@ -31,6 +31,7 @@ from rentservice.utils.redistools import RedisTool
 import pickle
 from django.views.decorators.cache import cache_page
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
+from rentservice.models import EnterpriseInfo
 
 log = logger.get_logger(__name__)
 tz = pytz.timezone(settings.TIME_ZONE)
@@ -98,7 +99,8 @@ def create_appointment(request):
                 except Exception:
                     raise Exception("堆场可用箱子数量不能为空")
                 for _site_num in site_box_num:
-                    _stock_model = SiteBoxStock.objects.select_for_update().get(site=site_model, box_type=_site_num['box_type'])
+                    _stock_model = SiteBoxStock.objects.select_for_update().get(site=site_model,
+                                                                                box_type=_site_num['box_type'])
                     # 根据可用数量-已经预约数量是否大于当前租借数量判断是否可租
                     if _site_num['num'] > _stock_model.ava_num - _stock_model.reserve_num:
                         raise Exception("预约数量大于堆场可用箱子数量")
@@ -391,6 +393,47 @@ def cancel_appointment(request):
         log.error(repr(e))
         return JsonResponse(retcode({}, "9999", "取消预约失败"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return JsonResponse(retcode(UserAppointmentSerializer(appointment).data, "0000", "Success"), safe=True,
+                        status=status.HTTP_200_OK)
+
+
+# 获取企业预约单list
+@csrf_exempt
+@api_view(['POST'])
+def get_enterprise_appointment(request):
+    data = JSONParser().parse(request)
+    try:
+        enterprise_id = data['enterprise_id']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", "请输入企业用户id"), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        keyword = data['keyword']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", "请输入keyword"), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        enterprise = EnterpriseInfo.objects.get(enterprise_id=enterprise_id)
+    except EnterpriseInfo.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "企业信息不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    _appointment = UserAppointment.objects
+    if keyword != "":
+        _appointment.filter(appointment_code__contains=keyword)
+    ret = _appointment.filter(user_id__enterprise=enterprise).order_by("-appointment_code")
+    page = paginator.paginate_queryset(ret, request)
+    ret_ser = UserAppointmentSerializer(page, many=True)
+    return paginator.get_paginated_response(ret_ser.data)
+
+
+# 获取预约单detail信息
+@csrf_exempt
+@api_view(['GET'])
+def get_enterprise_appointment_detail(request, appointment_id):
+    try:
+        appointment = UserAppointment.objects.get(appointment_id=appointment_id)
+    except UserAppointment.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "预约单不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
+    ret = AppointmentDetail.objects.filter(appointment_id=appointment)
+    return JsonResponse(retcode(AppointmentDetailSerializer(ret, many=True).data, "0000", "Success"), safe=True,
                         status=status.HTTP_200_OK)
 
 
