@@ -330,7 +330,7 @@ def dump_sensor_data():
             f = zipfile.ZipFile(save_path + zip_file_name, 'w', zipfile.ZIP_DEFLATED)
             f.write(full_name, txt_file_name)
             f.close()
-            log.info("zip file finish, file_name:" + zip_file_name)
+            log.info("zip file finish, zip file name:" + zip_file_name)
             os.remove(full_name)
             log.info("remove file finish, file_name:" + full_name)
         else:
