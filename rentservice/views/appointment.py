@@ -97,7 +97,7 @@ def create_appointment(request):
                 except Exception:
                     raise Exception("堆场可用箱子数量不能为空")
                 for _site_num in site_box_num:
-                    _stock_model = SiteBoxStock.objects.get(site=site_model, box_type=_site_num['box_type'])
+                    _stock_model = SiteBoxStock.objects.select_for_update().get(site=site_model, box_type=_site_num['box_type'])
                     # 根据可用数量-已经预约数量是否大于当前租借数量判断是否可租
                     if _site_num['num'] > _stock_model.ava_num - _stock_model.reserve_num:
                         raise Exception("预约数量大于堆场可用箱子数量")
@@ -374,7 +374,7 @@ def cancel_appointment(request):
         with transaction.atomic():
             # 根据detail更新site stock的数量
             for detail in detail_list:
-                stock = SiteBoxStock.objects.get(site=detail.site_id, box_type=detail.box_type)
+                stock = SiteBoxStock.objects.select_for_update().get(site=detail.site_id, box_type=detail.box_type)
                 stock.reserve_num -= detail.box_num
                 stock.save()
                 detail.flag = 1
