@@ -38,6 +38,7 @@ tz = pytz.timezone(settings.TIME_ZONE)
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
 APPOINTMENT_HASH = 'appointment'
+USER_ALIAS_ID_HASH = 'user_alias_id_hash'
 
 
 # 创建预约单
@@ -120,9 +121,13 @@ def create_appointment(request):
 
     message = u'您的租箱预约已经成功，请到指定仓库获取云箱'
     create_notify("云箱预约", message, user_id)
-    if user_model.user_alias_id is not None and user_model.user_alias_id != "":
+    conn = get_connection_from_pool()
+    user_id = user_model.user_id
+    # if user_model.user_alias_id is not None and user_model.user_alias_id != "":
+    if conn.hexists(USER_ALIAS_ID_HASH, user_id):
         alias = []
-        alias.append(user_model.user_alias_id)
+        # alias.append(user_model.user_alias_id)
+        alias.append(conn.hget(USER_ALIAS_ID_HASH, user_id))
         celery.send_push_message.delay(alias, message)
     return JsonResponse(retcode(UserAppointmentSerializer(appointment_model).data, "0000", "Success"), safe=True,
                         status=status.HTTP_200_OK)

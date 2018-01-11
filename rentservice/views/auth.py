@@ -16,7 +16,10 @@ import hashlib
 from django.conf import settings
 import time
 import uuid
+from rentservice.utils.redistools import RedisTool
 
+
+USER_ALIAS_ID_HASH = 'user_alias_id_hash'
 log = get_logger(__name__)
 
 
@@ -192,8 +195,10 @@ def auth_with_salt(request):
         if gen_password != password:
             return JsonResponse(retcode(errcode("0403", '用户不存在或用户密码不正确'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
         log.info("login verify success, begin alias_id init")
-        user.user_alias_id = uuid.uuid1().hex
-        user.save()
+        conn = get_connection_from_pool()
+        conn.hset(USER_ALIAS_ID_HASH, user.user_id, uuid.uuid1().hex)
+        # user.user_alias_id = uuid.uuid1().hex
+        # user.save()
     except EnterpriseUser.DoesNotExist, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0403", '用户不存在或用户密码不正确'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
@@ -259,8 +264,11 @@ def auth_user_logout(request):
         return JsonResponse(retcode(errcode("9999", '用户id不能为空'), "9999", '用户id不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
         user = EnterpriseUser.objects.get(user_id=user_id)
-        if user.user_alias_id:
-            user.user_alias_id = ''
+        conn = get_connection_from_pool()
+        if conn.hexists(USER_ALIAS_ID_HASH, user.user_id):
+            conn.hdel(USER_ALIAS_ID_HASH, user.user_id)
+        # if user.user_alias_id:
+        #     user.user_alias_id = ''
         user.save()
     except EnterpriseUser.DoesNotExist, e:
         log.error(e)
@@ -274,3 +282,8 @@ def auth_user_logout(request):
     # except Exception, e:
     #     log.error(e)
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
+def get_connection_from_pool():
+    redis_pool = RedisTool()
+    return redis_pool.get_connection()

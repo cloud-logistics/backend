@@ -18,6 +18,12 @@ from sensor.errcode import *
 from util.geo import get_distance
 from util.geo import cal_speed
 
+from monservice.models import SensorData
+import time
+import zipfile
+import os
+from django.http import StreamingHttpResponse
+
 
 # logging
 log = logger.get_logger('view.py')
@@ -288,33 +294,37 @@ def build_precintl_sql(data):
 
 # 根据历史坐标计算平均速度
 def get_speed(deviceid, lat, long, ts):
-    last_data = query_list('select longitude,latitude,timestamp '
-                             'from iot.monservice_sensordata where deviceid = \'' + deviceid + '\' and longitude <> \'0\' and latitude <> \'0\' order by timestamp desc limit 2')
+    try:
+        last_data = query_list('select longitude,latitude,timestamp '
+                                 'from iot.monservice_sensordata where deviceid = \'' + deviceid + '\' and longitude <> \'0\' and latitude <> \'0\' order by timestamp desc limit 2')
 
-    if lat == '0' and long == '0':
-        if len(last_data) == 2:
-            start_latitude = last_data[0][1]
-            start_longitude = last_data[0][0]
-            end_latitude = last_data[1][1]
-            end_longitude = last_data[1][0]
-            start_time = last_data[0][2]
-            end_time = last_data[1][2]
-            speed = cal_speed(cal_position(start_latitude), cal_position(start_longitude), cal_position(end_latitude), cal_position(end_longitude), start_time, end_time)
-            return speed
+        if lat == '0' and long == '0':
+            if len(last_data) == 2:
+                start_latitude = last_data[0][1]
+                start_longitude = last_data[0][0]
+                end_latitude = last_data[1][1]
+                end_longitude = last_data[1][0]
+                start_time = last_data[0][2]
+                end_time = last_data[1][2]
+                speed = cal_speed(cal_position(start_latitude), cal_position(start_longitude), cal_position(end_latitude), cal_position(end_longitude), start_time, end_time)
+                return speed
+            else:
+                return 0
         else:
-            return 0
-    else:
-        if len(last_data) > 0:
-            start_latitude = lat
-            start_longitude = long
-            end_latitude = last_data[0][1]
-            end_longitude = last_data[0][0]
-            start_time = ts
-            end_time = last_data[0][2]
-            speed = cal_speed(cal_position(start_latitude), cal_position(start_longitude), cal_position(end_latitude), cal_position(end_longitude), start_time, end_time)
-            return speed
-        else:
-            return 0
+            if len(last_data) > 0:
+                start_latitude = lat
+                start_longitude = long
+                end_latitude = last_data[0][1]
+                end_longitude = last_data[0][0]
+                start_time = ts
+                end_time = last_data[0][2]
+                speed = cal_speed(cal_position(start_latitude), cal_position(start_longitude), cal_position(end_latitude), cal_position(end_longitude), start_time, end_time)
+                return speed
+            else:
+                return 0
+    except Exception, e:
+        log.error('get_speed error:' + e.message)
+        return 0
 
 
 # 如果上报的经纬度是0，则以最后一次不是0的值替代
@@ -330,3 +340,98 @@ def get_location(deviceid, lat, long):
 
     return {'lat': last_lat, 'long': last_long}
 
+
+# 获取获取每日导出的数据
+@csrf_exempt
+@api_view(['GET'])
+def get_data(request):
+    token = request.META.get('HTTP_TOKEN')
+    if token is None or token != 'a921a69a33ae461396167d112b813d90':
+        return JsonResponse(organize_result("False", "999999", "Unauthorized", {}),
+                            status=status.HTTP_401_UNAUTHORIZED, safe=True)
+    try:
+        today = str(time.strftime('%Y-%m-%d', time.localtime(int(time.time()))))
+        day = request.GET.get('day')
+        if day == '':
+            end_time_str = today + ' 00:00:00'
+            end_time = int(time.mktime(time.strptime(end_time_str, '%Y-%m-%d %H:%M:%S')))
+        else:
+            end_time = int(time.mktime(time.strptime(day, '%Y-%m-%d'))) + 3600 * 24
+
+    except Exception, e:
+        log.error(e.message)
+        return JsonResponse(organize_result("False", "999999", "parameter is required", '{}'),
+                            status=status.HTTP_400_BAD_REQUEST, safe=True)
+
+    start_time = end_time - 3600 * 24
+    save_path = '/opt/pg-data/dump_data/'
+    zip_file_name = 'sensor_data_' + time.strftime('%Y-%m-%d', time.localtime(start_time)) + '.zip'
+    download_file_name = save_path + zip_file_name
+    if os.path.exists(download_file_name):
+        def file_iterator(file_name, chunk_size=512):
+            with open(file_name) as f:
+                while True:
+                    c = f.read(chunk_size)
+                    if c:
+                        yield c
+                    else:
+                        break
+
+        response = StreamingHttpResponse(file_iterator(download_file_name))
+        response['Content-Type'] = 'application/octet-stream'
+        response['Content-Disposition'] = 'attachment;filename="{0}"'.format(zip_file_name)
+
+        return response
+    else:
+        return JsonResponse(organize_result("False", "999999", 'File dose not exists', '{}'),
+                            status=status.HTTP_400_BAD_REQUEST, safe=True)
+
+
+# 导出前一天的传感器数据
+@csrf_exempt
+@api_view(['GET'])
+def dump_data(request):
+    token = request.META.get('HTTP_TOKEN')
+    if token is None or token != 'a921a69a33ae461396167d112b813d90':
+        return JsonResponse(organize_result("False", "999999", "Unauthorized", {}),
+                            status=status.HTTP_401_UNAUTHORIZED, safe=True)
+    try:
+        today = str(time.strftime('%Y-%m-%d', time.localtime(int(time.time()))))
+        day = request.GET.get('day')
+        if day == '':
+            end_time_str = today + ' 00:00:00'
+            end_time = int(time.mktime(time.strptime(end_time_str, '%Y-%m-%d %H:%M:%S')))
+        else:
+            end_time = int(time.mktime(time.strptime(day, '%Y-%m-%d'))) + 3600 * 24
+
+    except Exception, e:
+        log.error(e.message)
+        return JsonResponse(organize_result("False", "999999", "parameter is required", '{}'),
+                            status=status.HTTP_400_BAD_REQUEST, safe=True)
+    try:
+        log.info("dump sensor data begin ...")
+        start_time = end_time - 3600 * 24
+
+        txt_file_name = 'sensor_data_' + time.strftime('%Y-%m-%d', time.localtime(start_time)) + '.txt'
+        zip_file_name = 'sensor_data_' + time.strftime('%Y-%m-%d', time.localtime(start_time)) + '.zip'
+        save_path = '/opt/pg-data/dump_data/'
+        full_name = save_path + txt_file_name
+        SensorData.objects.\
+            filter(timestamp__gte=start_time, timestamp__lt=end_time).to_csv(full_name)
+        log.info("dump sensor data finish, file_name:" + full_name)
+        if os.path.exists(full_name):
+            f = zipfile.ZipFile(save_path + zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+            f.write(full_name, txt_file_name)
+            f.close()
+            log.info("zip file finish, zip file name:" + zip_file_name)
+            os.remove(full_name)
+            log.info("remove file finish, file_name:" + full_name)
+        else:
+            log.error("dump sensor data error, file_name:" + full_name)
+    except Exception, e:
+        log.error('dump sensor data error, msg:' + e.message)
+        return JsonResponse(organize_result("False", "999999", 'ERROR', '{}'),
+                            status=status.HTTP_400_BAD_REQUEST, safe=True)
+
+    return JsonResponse(organize_result("True", "000000", 'OK', '{}'),
+                        status=status.HTTP_200_OK, safe=True)
