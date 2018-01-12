@@ -417,7 +417,7 @@ def get_enterprise_appointment(request):
     paginator = pagination_class()
     _appointment = UserAppointment.objects
     if keyword != "":
-        _appointment.filter(appointment_code__contains=keyword)
+        _appointment = _appointment.filter(appointment_code__contains=keyword)
     ret = _appointment.filter(user_id__enterprise=enterprise).order_by("-appointment_code")
     page = paginator.paginate_queryset(ret, request)
     ret_ser = UserAppointmentSerializer(page, many=True)
