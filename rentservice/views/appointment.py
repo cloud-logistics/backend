@@ -71,7 +71,7 @@ def create_appointment(request):
         return JsonResponse(retcode({}, "9999", "承运方用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
     if user_model.enterprise.enterprise_deposit_status == 0:
         return JsonResponse(retcode({}, "9999", "企业未缴押金，无法预约租箱"), safe=True,
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                            status=status.HTTP_200_OK)
     try:
         with transaction.atomic():
             # 获取预约码
@@ -120,7 +120,10 @@ def create_appointment(request):
             AppointmentDetail.objects.bulk_create(detail_list)
     except Exception as e:
         code, msg = e.args
-        return JsonResponse(retcode({}, code, msg), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if code == '0000':
+            return JsonResponse(retcode({}, code, msg), safe=True, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse(retcode({}, code, msg), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     message = u'您的租箱预约已经成功，请到指定仓库获取云箱'
     create_notify("云箱预约", message, user_id)
