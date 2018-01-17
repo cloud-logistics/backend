@@ -22,6 +22,7 @@ import random
 from monservice.serializers import *
 from monservice.models import *
 from math import ceil
+from monservice.view.dispatch import generate_dispatches
 
 
 log = logger.get_logger('monservice.view.py')
@@ -1388,6 +1389,8 @@ def save_safe_settings(request, type_id):
 def get_message(request):
     alarm_count = AlarmInfo.objects.filter(alarm_status=1).count()
     dispatches = SiteDispatch.objects.filter(create_date__gte=datetime.date.today()).order_by('did')
+    if len(dispatches) == 0:
+        dispatches = generate_dispatches()
     undispach_count = len(dispatches)
     message_count = alarm_count + undispach_count
     return JsonResponse({'alarm_count': alarm_count, 'undispach_count': undispach_count, 'message_count': message_count},
