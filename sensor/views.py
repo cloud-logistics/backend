@@ -18,7 +18,7 @@ from sensor.errcode import *
 from util.geo import get_distance
 from util.geo import cal_speed
 
-from monservice.models import SensorData
+from monservice.models import SensorData, BoxInfo
 import time
 import zipfile
 import os
@@ -435,3 +435,19 @@ def dump_data(request):
 
     return JsonResponse(organize_result("True", "000000", 'OK', '{}'),
                         status=status.HTTP_200_OK, safe=True)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def cal_alarm(request):
+    try:
+        log.info("cal missing alarm begin ...")
+        result = BoxInfo.objects.raw("SELECT deviceid,iot.cal_missing_alarm() from iot.monservice_boxinfo limit 1")
+        log.info("cal missing alarm result:" + str(len(list(result))))
+        log.info("cal missing alarm end ...")
+        return JsonResponse(organize_result("True", "000000", 'OK', '{}'),
+                            status=status.HTTP_200_OK, safe=True)
+    except Exception, e:
+        log.error('cal missing alarm error, msg:' + e.message)
+        return JsonResponse(organize_result("False", "999999", 'ERROR', '{}'),
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR, safe=True)

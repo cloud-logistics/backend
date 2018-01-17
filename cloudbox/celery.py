@@ -31,6 +31,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(crontab(minute=0, hour=1), box_rent_fee_month_billing.s())
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), update_redis_auth_info.s())
     sender.add_periodic_task(crontab(minute=0, hour=2), dump_sensor_data.s())
+    sender.add_periodic_task(crontab(minute='*/5', hour='*'), cal_missing_alarm.s())
 
 
 @app.task
@@ -339,3 +340,16 @@ def dump_sensor_data():
         log.error('dump sensor data error, msg:' + e.message)
 
 
+# 计算失联告警
+@app.task
+def cal_missing_alarm():
+    from monservice.models import BoxInfo
+    from util import logger
+    log = logger.get_logger(__name__)
+    try:
+        log.info("cal missing alarm begin ...")
+        result = BoxInfo.objects.raw("SELECT deviceid,iot.cal_missing_alarm() from iot.monservice_boxinfo limit 1")
+        log.info("cal missing alarm result:" + str(len(list(result))))
+        log.info("cal missing alarm end ...")
+    except Exception, e:
+        log.error('cal missing alarm error, msg:' + e.message)
