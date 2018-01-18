@@ -356,7 +356,7 @@ def enter_leave_site(data):
                 history.save()
                 box.save()
 
-        check_stock_ava_num(site_id, box_type_set)
+        # check_stock_ava_num(site_id, box_type_set)
 
     except Exception, e:
         log.error(e.message)
