@@ -350,6 +350,7 @@ def enter_leave_site(data):
 
                     box.siteinfo = None
 
+                box.ava_flag = 'Y'
                 history = SiteHistory(timestamp=ts, site_id=site_id, box_id=box_id, op_type=type)
 
                 box_type_set.add(box.type)
@@ -402,14 +403,14 @@ def dispatchout(request):
                 if box.siteinfo_id != site.id:
                     msg = 'Box: ' + str(box.deviceid) + ' is in site: ' + str(box.siteinfo_id)
                     response_msg = {'result': 'False', 'code': '999999', 'msg': msg, 'status': 'error'}
-                    return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
                 box.siteinfo = None
 
                 left_num = stock.ava_num - stock.reserve_num
                 if left_num <= 0:
                     response_msg = {'result': 'False', 'code': '999999', 'msg': 'No Boxes.', 'status': 'error'}
-                    return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
                 history.save()
                 box.save()
@@ -445,12 +446,12 @@ def check_dispatch_out(request):
                 if box.siteinfo_id != site.id:
                     msg = 'Box: ' + str(box.deviceid) + ' is in site: ' + str(box.siteinfo_id)
                     response_msg = {'result': 'False', 'code': '999999', 'msg': msg, 'status': 'error'}
-                    return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
                 left_num = stock.ava_num - stock.reserve_num
                 if left_num <= 0:
                     response_msg = {'result': 'False', 'code': '999999', 'msg': 'No Boxes.', 'status': 'error'}
-                    return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception, e:
         log.error(e.message)
@@ -474,7 +475,7 @@ def dispatchin(request):
         if current_site_id != str(site.id):
             msg = 'Wrong site. Finish site is: ' + str(site.id)
             response_msg = {'result': 'False', 'code': '999999', 'msg': msg}
-            return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
         boxes = data['boxes']
         discount = len(boxes)
@@ -482,7 +483,7 @@ def dispatchin(request):
         if newdone > dispatch.count:
             msg = 'No more Dispatch.'
             response_msg = {'result': 'False', 'code': '999999', 'msg': msg}
-            return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
         elif newdone == dispatch.count:
             dispatch.done = newdone
             dispatch.status = 'dispatched'
@@ -502,7 +503,7 @@ def dispatchin(request):
                 if box.siteinfo_id == site.id:
                     msg = 'Box already in site.'
                     response_msg = {'result': 'False', 'code': '999999', 'msg': msg}
-                    return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
                 box.ava_flag = 'Y'
                 box.siteinfo = site
@@ -538,7 +539,7 @@ def check_dispatch_in(request):
         if current_site_id != str(site.id):
             msg = 'Wrong site. Finish site is: ' + str(site.id)
             response_msg = {'result': 'False', 'code': '999999', 'msg': msg}
-            return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
         boxes = data['boxes']
         discount = len(boxes)
@@ -546,7 +547,7 @@ def check_dispatch_in(request):
         if newdone > dispatch.count:
             msg = 'No more Dispatch.'
             response_msg = {'result': 'False', 'code': '999999', 'msg': msg}
-            return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
         with transaction.atomic():
             for box in boxes:
@@ -555,7 +556,7 @@ def check_dispatch_in(request):
                 if box.siteinfo_id == site.id:
                     msg = 'Box is already in site.'
                     response_msg = {'result': 'False', 'code': '999999', 'msg': msg}
-                    return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception, e:
         log.error(e.message)
@@ -571,12 +572,13 @@ def check_dispatch_in(request):
 @api_view(['GET'])
 def init_site(request):
     try:
+        site_id = str(request.GET.get('site_id'))
         types = BoxTypeInfo.objects.all()
         requrl = 'http://127.0.0.1:8000/container/api/v1/cloudbox/monservice/basicInfoConfig'
         for t in types:
             for i in range(1, 21):
                 num_str = '%06d' % i
-                rfid = 'TEST' + str(t.id) + num_str
+                rfid = 'AYT' + site_id + str(t.id) + num_str
                 body_data = {   'rfid': rfid,
                                 'containerType': t.id,
                                 'factory': 1,
@@ -591,12 +593,11 @@ def init_site(request):
                 req.add_header('Authorization', '139a2d1c6f0a44909670f4e749a1397d')
                 req.add_data(json.dumps(body_data))
                 res_data = urllib2.urlopen(req)
-                res = res_data.read()
-                log.info(res)
 
-        boxes = BoxInfo.objects.filter(tid__startswith='TEST')
+        box_id_head = 'AYT' + site_id
+        boxes = BoxInfo.objects.filter(tid__startswith=box_id_head)
         stock = {}
-        stock['site_id'] = '1'
+        stock['site_id'] = site_id
 
         box_list = []
         for box in boxes:

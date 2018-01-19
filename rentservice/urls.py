@@ -118,4 +118,7 @@ urlpatterns = [
     url(r'^rentservice/param/set$', param.set_param),
     url(r'^rentservice/param/all$', param.get_all_params),
     url(r'^param/get/(?P<param_key>[0-9a-zA-Z_-]+)$', param.get_param),
+    url(r'^rentservice/appointment/enterpriselist$', appointment.get_enterprise_appointment),
+    url(r'^rentservice/appointment/enterprise/(?P<appointment_id>[0-9a-zA-Z-]+)/detail$',
+        appointment.get_enterprise_appointment_detail),
 ]

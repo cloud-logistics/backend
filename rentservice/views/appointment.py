@@ -31,6 +31,7 @@ from rentservice.utils.redistools import RedisTool
 import pickle
 from django.views.decorators.cache import cache_page
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
+from rentservice.models import EnterpriseInfo
 
 log = logger.get_logger(__name__)
 tz = pytz.timezone(settings.TIME_ZONE)
@@ -70,7 +71,7 @@ def create_appointment(request):
         return JsonResponse(retcode({}, "9999", "承运方用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
     if user_model.enterprise.enterprise_deposit_status == 0:
         return JsonResponse(retcode({}, "9999", "企业未缴押金，无法预约租箱"), safe=True,
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                            status=status.HTTP_200_OK)
     try:
         with transaction.atomic():
             # 获取预约码
@@ -90,18 +91,19 @@ def create_appointment(request):
                 try:
                     site_id = site['site_id']
                 except Exception:
-                    raise Exception("堆场信息不能为空")
+                    raise Exception("9999", "堆场信息不能为空")
                 site_model = SiteInfo.objects.get(id=site_id)
                 # 获取堆场的可用数量信息
                 try:
                     site_box_num = site['site_box_num']
                 except Exception:
-                    raise Exception("堆场可用箱子数量不能为空")
+                    raise Exception("9999", "堆场可用箱子数量不能为空")
                 for _site_num in site_box_num:
-                    _stock_model = SiteBoxStock.objects.get(site=site_model, box_type=_site_num['box_type'])
+                    _stock_model = SiteBoxStock.objects.select_for_update().get(site=site_model,
+                                                                                box_type=_site_num['box_type'])
                     # 根据可用数量-已经预约数量是否大于当前租借数量判断是否可租
                     if _site_num['num'] > _stock_model.ava_num - _stock_model.reserve_num:
-                        raise Exception("预约数量大于堆场可用箱子数量")
+                        raise Exception("0000", "预约数量大于堆场可用箱子数量")
                     # 更新box_type&site_id预约数量
                     upd_res_num = _stock_model.reserve_num + _site_num['num']
                     _stock_model.reserve_num = upd_res_num
@@ -117,7 +119,11 @@ def create_appointment(request):
             # 批量insert appointment detail
             AppointmentDetail.objects.bulk_create(detail_list)
     except Exception as e:
-        return JsonResponse(retcode({}, "9999", e.message), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        code, msg = e.args
+        if code == '0000':
+            return JsonResponse(retcode({}, code, msg), safe=True, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse(retcode({}, code, msg), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     message = u'您的租箱预约已经成功，请到指定仓库获取云箱'
     create_notify("云箱预约", message, user_id)
@@ -137,14 +143,23 @@ def create_appointment(request):
 @csrf_exempt
 @api_view(['GET'])
 def get_list_by_user(request, user_id):
-    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    # pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    pagination_class = complex_page.ComplexPagination
+    param = request.query_params
+    _limit = 10
+    _offset = 0
+    if param:
+        _limit = int(param.get('limit'))
+        _offset = int(param.get('offset'))
     paginator = pagination_class()
     try:
         user = EnterpriseUser.objects.get(user_id=user_id)
     except EnterpriseUser.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
     # 获取预约单列表
-    appointment_list = UserAppointment.objects.filter(user_id=user)
+    _new_limit = _offset + _limit
+    appointment_list = UserAppointment.objects.filter(user_id=user).order_by('-appointment_time')[_offset:_new_limit]
+    _count = UserAppointment.objects.filter(user_id=user).count()
     ret = []
     for appointment_item in appointment_list:
         tmp_list = []
@@ -172,8 +187,8 @@ def get_list_by_user(request, user_id):
                     'appointment_time': appointment_item.appointment_time,
                     'appointment_code': appointment_item.appointment_code, 'flag': appointment_item.flag,
                     'info': res_app_list})
-    page = paginator.paginate_queryset(ret, request)
-    ret_ser = AppointmentResSerializer(page, many=True)
+    paginator.paginate_queryset(ret, request, _count)
+    ret_ser = AppointmentResSerializer(ret, many=True)
     return paginator.get_paginated_response(ret_ser.data)
 
 
@@ -181,14 +196,24 @@ def get_list_by_user(request, user_id):
 @csrf_exempt
 @api_view(['GET'])
 def get_user_process_list(request, user_id):
-    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    # pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    pagination_class = complex_page.ComplexPagination
+    param = request.query_params
+    _limit = 10
+    _offset = 0
+    if param:
+        _limit = int(param.get('limit'))
+        _offset = int(param.get('offset'))
     paginator = pagination_class()
     try:
         user = EnterpriseUser.objects.get(user_id=user_id)
     except EnterpriseUser.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
     # 获取预约单列表
-    appointment_list = UserAppointment.objects.filter(user_id=user, flag=0)
+    _new_limit = _offset + _limit
+    appointment_list = UserAppointment.objects.filter(user_id=user, flag=0).order_by('-appointment_time')[
+                       _offset:_new_limit]
+    _count = UserAppointment.objects.filter(user_id=user, flag=0).count()
     ret = []
     for appointment_item in appointment_list:
         tmp_list = []
@@ -216,8 +241,8 @@ def get_user_process_list(request, user_id):
                     'appointment_time': appointment_item.appointment_time,
                     'appointment_code': appointment_item.appointment_code, 'flag': appointment_item.flag,
                     'info': res_app_list})
-    page = paginator.paginate_queryset(ret, request)
-    ret_ser = AppointmentResSerializer(page, many=True)
+    paginator.paginate_queryset(ret, request, _count)
+    ret_ser = AppointmentResSerializer(ret, many=True)
     return paginator.get_paginated_response(ret_ser.data)
 
 
@@ -379,7 +404,7 @@ def cancel_appointment(request):
         with transaction.atomic():
             # 根据detail更新site stock的数量
             for detail in detail_list:
-                stock = SiteBoxStock.objects.get(site=detail.site_id, box_type=detail.box_type)
+                stock = SiteBoxStock.objects.select_for_update().get(site=detail.site_id, box_type=detail.box_type)
                 stock.reserve_num -= detail.box_num
                 stock.save()
                 detail.flag = 1
@@ -391,6 +416,47 @@ def cancel_appointment(request):
         log.error(repr(e))
         return JsonResponse(retcode({}, "9999", "取消预约失败"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return JsonResponse(retcode(UserAppointmentSerializer(appointment).data, "0000", "Success"), safe=True,
+                        status=status.HTTP_200_OK)
+
+
+# 获取企业预约单list
+@csrf_exempt
+@api_view(['POST'])
+def get_enterprise_appointment(request):
+    data = JSONParser().parse(request)
+    try:
+        enterprise_id = data['enterprise_id']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", "请输入企业用户id"), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        keyword = data['keyword']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", "请输入keyword"), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        enterprise = EnterpriseInfo.objects.get(enterprise_id=enterprise_id)
+    except EnterpriseInfo.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "企业信息不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+    _appointment = UserAppointment.objects
+    if keyword != "":
+        _appointment = _appointment.filter(appointment_code__contains=keyword)
+    ret = _appointment.filter(user_id__enterprise=enterprise).order_by("-appointment_code")
+    page = paginator.paginate_queryset(ret, request)
+    ret_ser = UserAppointmentSerializer(page, many=True)
+    return paginator.get_paginated_response(ret_ser.data)
+
+
+# 获取预约单detail信息
+@csrf_exempt
+@api_view(['GET'])
+def get_enterprise_appointment_detail(request, appointment_id):
+    try:
+        appointment = UserAppointment.objects.get(appointment_id=appointment_id)
+    except UserAppointment.DoesNotExist:
+        return JsonResponse(retcode({}, "9999", "预约单不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
+    ret = AppointmentDetail.objects.filter(appointment_id=appointment)
+    return JsonResponse(retcode(AppointmentDetailSerializer(ret, many=True).data, "0000", "Success"), safe=True,
                         status=status.HTTP_200_OK)
 
 
