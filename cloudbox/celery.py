@@ -353,3 +353,97 @@ def cal_missing_alarm():
         log.info("cal missing alarm end ...")
     except Exception, e:
         log.error('cal missing alarm error, msg:' + e.message)
+
+
+@app.task
+def update_box_bill_daily():
+    from rentservice.models import BoxRentFeeDetail, RentLeaseInfo, EnterpriseUser
+    from rentservice.utils import logger
+    import uuid
+    import datetime
+    import pytz
+    from django.conf import settings
+    from django.db import transaction
+    log = logger.get_logger(__name__)
+    timezone = pytz.timezone(settings.TIME_ZONE)
+    current_time = datetime.datetime.now(tz=timezone)
+    log.info("update_box_bill_daily: compute begin")
+    try:
+        user_list = RentLeaseInfo.objects.filter(rent_status=1, sum_flag=0).values_list('user_id', flat=True)
+        user_obj_list = EnterpriseUser.objects.select_related('enterprise').filter(user_id__in=user_list)
+        log.info("update_box_bill_daily: user_list = %s" % user_list)
+        for user in user_obj_list:
+            off_site_counts = 0
+            on_site_counts = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0).count()
+            rent_lease_info_list = RentLeaseInfo.objects.select_for_update().filter(user_id=user, rent_status=1, sum_flag=0)
+            user_rent_fee_sum = 0
+            with transaction.atomic():
+                for rent_lease_info in rent_lease_info_list:
+                    user_rent_fee_sum = user_rent_fee_sum + rent_lease_info.rent
+                    rent_lease_info.sum_flag = 1
+                    rent_lease_info.last_update_time = current_time
+                    rent_lease_info.save()
+                log.info("update_box_bill_daily: off_site_counts=%s, on_site_counts=%s" % (off_site_counts, on_site_counts))
+                box_rent_fee = BoxRentFeeDetail(detail_id=uuid.uuid1(), enterprise=user.enterprise,
+                                                user=user, date=current_time,
+                                                off_site_nums=off_site_counts,
+                                                on_site_nums=on_site_counts, rent_fee=user_rent_fee_sum)
+                box_rent_fee.save()
+    except Exception, e:
+        log.error(repr(e))
+    log.info("update_box_bill_daily: compute finsih")
+
+
+@app.task
+def update_box_bill_month_async():
+    from rentservice.models import BoxRentFeeDetail, EnterpriseInfo, BoxRentFeeByMonth
+    from rentservice.utils import logger
+    import uuid
+    import datetime
+    import pytz
+    from django.conf import settings
+    log = logger.get_logger(__name__)
+    timezone = pytz.timezone(settings.TIME_ZONE)
+    log.info("update_box_bill_daily: compute begin")
+    current_time = datetime.datetime.now(tz=timezone)
+    if BoxRentFeeDetail.objects.all().count() > 0:
+        log.info("box_rent_fee_month_billing: compute begin")
+        try:
+            enterprise_list = BoxRentFeeDetail.objects.values('enterprise').distinct()
+            for enterprise in enterprise_list:
+                enterprise_obj = EnterpriseInfo.objects.get(enterprise_id=enterprise['enterprise'])
+                query_list = BoxRentFeeDetail.objects.filter(enterprise=enterprise_obj,
+                                                                 date__year=current_time.year,
+                                                                 date__month=current_time.month)
+                off_site_box_nums_month = 0
+                on_site_box_nums_month = 0
+                rent_fee_month = 0
+                for box_rent_day in query_list:
+                    rent_fee_month = rent_fee_month + box_rent_day.rent_fee
+                    on_site_box_nums_month = on_site_box_nums_month + box_rent_day.on_site_nums
+                    off_site_box_nums_month = off_site_box_nums_month + box_rent_day.off_site_nums
+                log.info(
+                    "enterprise_id = %s, rent_fee_month=%s, on_site_box_nums_month=%s,off_site_box_nums_month=%s"
+                    % (enterprise['enterprise'], rent_fee_month, on_site_box_nums_month, off_site_box_nums_month))
+                try:
+                    box_rent_bill_month = BoxRentFeeByMonth.objects.get(enterprise=enterprise_obj,
+                                                                        date__year=current_time.year,
+                                                                        date__month=current_time.month)
+                    box_rent_bill_month.rent_fee = rent_fee_month
+                    box_rent_bill_month.off_site_nums = off_site_box_nums_month
+                    box_rent_bill_month.on_site_nums = on_site_box_nums_month
+                    box_rent_bill_month.save()
+                except BoxRentFeeByMonth.DoesNotExist, e:
+                    month_date = datetime.datetime(year=current_time.year, month=current_time.month, day=1, hour=12,
+                                                   tzinfo=timezone)
+                    box_rent_fee = BoxRentFeeByMonth(detail_id=uuid.uuid1(), enterprise=enterprise_obj,
+                                                     date=month_date, off_site_nums=off_site_box_nums_month,
+                                                     on_site_nums=on_site_box_nums_month,
+                                                     rent_fee=rent_fee_month)
+                    box_rent_fee.save()
+                    log.error(repr(e))
+        except Exception, e:
+            log.error(repr(e))
+        log.info("box_rent_fee_month_billing: compute finsih")
+    else:
+        log.info("no BoxRentFeeDetail records. do nothing")
