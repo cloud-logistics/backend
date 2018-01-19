@@ -196,7 +196,7 @@ def finish_boxes_order(request):
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list)
         try:
-            rent_info_list = RentLeaseInfo.objects.filter(box_id__in=box_id_list, rent_status=0)
+            rent_info_list = RentLeaseInfo.objects.select_related('user_id', 'box__type').filter(box_id__in=box_id_list, rent_status=0)
         except RentLeaseInfo.DoesNotExist:
             return JsonResponse(retcode(errcode("9999", '租赁信息不存在'), "9999", '租赁信息不存在'), safe=True,
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -230,7 +230,7 @@ def finish_boxes_order(request):
             box_para_list.append(box_para)
             box_type_set.add(item.box.type.id)
         #update daily bill
-        celery.update_box_bill_daily()
+        # celery.update_box_bill_daily()
         # update month bill
         # celery.update_box_bill_month_async()
         stock_data = {}
