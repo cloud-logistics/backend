@@ -192,17 +192,17 @@ def finish_boxes_order(request):
         try:
             site = SiteInfo.objects.get(id=site_id)
         except SiteInfo.DoesNotExist:
-            return JsonResponse(retcode(errcode("9999", '仓库不存在'), "9999", '仓库不存在'), safe=True,
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse(retcode(errcode("9101", '仓库不存在'), "9101", '仓库不存在'), safe=True,
+                                status=status.HTTP_200_OK)
         box_info_list = BoxInfo.objects.filter(ava_flag='Y', deviceid__in=box_id_list)
         try:
             rent_info_list = RentLeaseInfo.objects.select_related('user_id', 'box__type').filter(box_id__in=box_id_list, rent_status=0)
         except RentLeaseInfo.DoesNotExist:
-            return JsonResponse(retcode(errcode("9999", '租赁信息不存在'), "9999", '租赁信息不存在'), safe=True,
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse(retcode(errcode("9102", '租赁信息不存在'), "9102", '租赁信息不存在'), safe=True,
+                                status=status.HTTP_200_OK)
         if rent_info_list.count() == 0:
-            return JsonResponse(retcode(errcode("9999", '租赁信息不存在或请求的云箱已归还'), "9999", '租赁信息不存在或请求的云箱已归还'), safe=True,
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse(retcode(errcode("9103", '租赁信息不存在或请求的云箱已归还'), "9103", '租赁信息不存在或请求的云箱已归还'), safe=True,
+                                status=status.HTTP_200_OK)
         lease_info_list = []
         box_para_list = []
         box_type_set = set()
