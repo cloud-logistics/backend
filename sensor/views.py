@@ -23,6 +23,8 @@ import time
 import zipfile
 import os
 from django.http import StreamingHttpResponse
+from django.db import connection
+
 
 
 # logging
@@ -243,7 +245,10 @@ def save_precintl_data(request):
             log.debug('receive request body:' + request.body)
             parameter = JSONParser().parse(request)
             sql = build_precintl_sql(parameter)
-            save_to_db(sql)
+            # save_to_db(sql)
+            cursor = connection.cursor()
+            result = cursor.execute(sql)
+            # log.info("insert data result:" + str(type(result)))
             log.info('insert data to database successfully')
             return JsonResponse(organize_result("True", "000000", "OK", '{}'), status=status.HTTP_200_OK, safe=True)
         except Exception, e:
