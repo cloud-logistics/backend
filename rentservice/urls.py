@@ -18,6 +18,7 @@ from rentservice.views import boxbill
 from rentservice.views import notify
 from rentservice.views import dashboard
 from rentservice.views import param
+from rentservice.views import crypt
 
 urlpatterns = [
     url(r'^rentservice/enterprise/enterpriseinfo/addenterpriseinfo/$', enterprise.add_enterprise_info),  # 企业信息增加接口
@@ -121,4 +122,6 @@ urlpatterns = [
     url(r'^rentservice/appointment/enterpriselist$', appointment.get_enterprise_appointment),
     url(r'^rentservice/appointment/enterprise/(?P<appointment_id>[0-9a-zA-Z-]+)/detail$',
         appointment.get_enterprise_appointment_detail),
+    url(r'^rentservice/blecrypt/enc$', crypt.ble_encrypt),
+    url(r'^rentservice/blecrypt/dec', crypt.ble_decrypt),
 ]

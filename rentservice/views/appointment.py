@@ -397,7 +397,7 @@ def cancel_appointment(request):
     try:
         appointment = UserAppointment.objects.get(appointment_id=data['appointment_id'], flag=0)
     except UserAppointment.DoesNotExist:
-        return JsonResponse(retcode({}, "9999", "预约单不存在或已取消"), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse(retcode({}, "9999", "预约单不存在或已取消"), safe=True, status=status.HTTP_200_OK)
     # 获取预约单详情，并根据预约单详情将已经预留的数量回退
     detail_list = AppointmentDetail.objects.filter(appointment_id=appointment, flag=0)
     try:
