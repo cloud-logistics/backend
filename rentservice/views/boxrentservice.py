@@ -22,6 +22,7 @@ from django.conf import settings
 from .notify import create_notify
 from cloudbox import celery
 from rentservice.utils.redistools import RedisTool
+import json
 # from rentservice.tasks import update_box_bill_month, update_box_bill_daily
 
 log = logger.get_logger(__name__)
@@ -130,19 +131,25 @@ def rent_boxes_order(request):
             # SiteBoxStock update
             stock_data['boxes'] = box_para_list
             enter_leave_site(stock_data)
+            redis_update_content={}
+            conn = get_connection_from_pool()
             # 结束预约
             for appoint_detail in appoint_detail_queryset:
                 appoint_detail.flag = 1
                 appoint_detail.save()
-                stock = SiteBoxStock.objects.select_for_update().get(site=site, box_type=appoint_detail.box_type)
-                orig_num = stock.reserve_num
-                ava_orig = stock.ava_num
-                if (orig_num >= appoint_detail.box_num) and (ava_orig >= appoint_detail.box_num):
-                    stock.reserve_num = orig_num - appoint_detail.box_num
-                    stock.ava_num = ava_orig - appoint_detail.box_num
-                    stock.save()
-                else:
-                    log.info("reserved_num less than appoint_detail.box_num")
+                redis_update_content['site'] = site.id
+                redis_update_content['box_type'] = appoint_detail.box_type.id
+                redis_update_content['box_num'] = appoint_detail.box_num
+                conn.rpush(settings.REDIS_KEY_SITE_BOX_STOCK, json.dumps(redis_update_content))
+                # stock = SiteBoxStock.objects.select_for_update().get(site=site, box_type=appoint_detail.box_type)
+                # orig_num = stock.reserve_num
+                # ava_orig = stock.ava_num
+                # if (orig_num >= appoint_detail.box_num) and (ava_orig >= appoint_detail.box_num):
+                #     stock.reserve_num = orig_num - appoint_detail.box_num
+                #     stock.ava_num = ava_orig - appoint_detail.box_num
+                #     stock.save()
+                # else:
+                #     log.info("reserved_num less than appoint_detail.box_num")
             # 判断预约单状态是否完成
             if appoint_detail_queryset:
                 unfinish_detail_counter = AppointmentDetail.objects.filter(appointment_id=appoint_detail_queryset[0].appointment_id, flag=0).count()
@@ -152,7 +159,7 @@ def rent_boxes_order(request):
                 else:
                     log.info("预约单还未全部完成")
         ret['rent_lease_info_id_list'] = lease_info_list
-        conn = get_connection_from_pool()
+
         # 增加消息
         # if enterprise_user.user_alias_id is not None and enterprise_user.user_alias_id != "":
         user_id = enterprise_user.user_id
