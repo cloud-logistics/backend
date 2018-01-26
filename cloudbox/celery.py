@@ -33,6 +33,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(crontab(minute=0, hour=2), dump_sensor_data.s())
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), cal_missing_alarm.s())
     sender.add_periodic_task(crontab(minute='*/2', hour='*'), update_site_box_stock.s())
+    sender.add_periodic_task(crontab(minute='*/2', hour='*'), cancel_site_box_stock.s())
 
 
 @app.task
@@ -325,7 +326,7 @@ def dump_sensor_data():
         zip_file_name = 'sensor_data_' + time.strftime('%Y-%m-%d', time.localtime(start_time)) + '.zip'
         save_path = '/opt/pg-data/dump_data/'
         full_name = save_path + txt_file_name
-        SensorData.objects.\
+        SensorData.objects. \
             filter(timestamp__gte=start_time, timestamp__lt=end_time).to_csv(full_name)
         log.info("dump sensor data finish, file_name:" + full_name)
         if os.path.exists(full_name):
@@ -376,7 +377,8 @@ def update_box_bill_daily():
         for user in user_obj_list:
             off_site_counts = 0
             on_site_counts = RentLeaseInfo.objects.filter(user_id=user, rent_status=1, sum_flag=0).count()
-            rent_lease_info_list = RentLeaseInfo.objects.select_for_update().filter(user_id=user, rent_status=1, sum_flag=0)
+            rent_lease_info_list = RentLeaseInfo.objects.select_for_update().filter(user_id=user, rent_status=1,
+                                                                                    sum_flag=0)
             user_rent_fee_sum = 0
             with transaction.atomic():
                 for rent_lease_info in rent_lease_info_list:
@@ -384,7 +386,8 @@ def update_box_bill_daily():
                     rent_lease_info.sum_flag = 1
                     rent_lease_info.last_update_time = current_time
                     rent_lease_info.save()
-                log.info("update_box_bill_daily: off_site_counts=%s, on_site_counts=%s" % (off_site_counts, on_site_counts))
+                log.info(
+                    "update_box_bill_daily: off_site_counts=%s, on_site_counts=%s" % (off_site_counts, on_site_counts))
                 box_rent_fee = BoxRentFeeDetail(detail_id=uuid.uuid1(), enterprise=user.enterprise,
                                                 user=user, date=current_time,
                                                 off_site_nums=off_site_counts,
@@ -414,8 +417,8 @@ def update_box_bill_month_async():
             for enterprise in enterprise_list:
                 enterprise_obj = EnterpriseInfo.objects.get(enterprise_id=enterprise['enterprise'])
                 query_list = BoxRentFeeDetail.objects.filter(enterprise=enterprise_obj,
-                                                                 date__year=current_time.year,
-                                                                 date__month=current_time.month)
+                                                             date__year=current_time.year,
+                                                             date__month=current_time.month)
                 off_site_box_nums_month = 0
                 on_site_box_nums_month = 0
                 rent_fee_month = 0
@@ -517,7 +520,67 @@ def update_site_box_stock():
     log.info("update_site_box_stock: compute end")
 
 
-
-
-
-
+@app.task
+def cancel_site_box_stock():
+    from monservice.models import SiteBoxStock
+    from rentservice.utils import logger
+    from rentservice.utils.redistools import RedisTool
+    import json
+    log = logger.get_logger(__name__)
+    redis_pool = RedisTool()
+    log.info("update_site_box_stock: compute begin")
+    CANCEL_HASH = 'cancel_hash'
+    try:
+        conn = redis_pool.get_connection()
+        len_queue = conn.llen(CANCEL_HASH)
+        log.info("update_site_box_stock: len_queue = %s" % len_queue)
+        site_type_num_hash = {}
+        if len_queue > 0:
+            # log.debug("update_list = %s" % update_list)
+            for index in xrange(0, len_queue):
+                try:
+                    item = conn.lpop(CANCEL_HASH)
+                    item_dict = json.loads(item)
+                    tmp_key = str(item_dict['site']) + '#' + str(item_dict['box_type'])
+                    if tmp_key in site_type_num_hash.keys():
+                        try:
+                            site_type_num_hash[tmp_key] += int(item_dict['box_num'])
+                        except Exception, e:
+                            site_type_num_hash[tmp_key] -= int(item_dict['box_num'])
+                            log.error(repr(e))
+                            log.error("update_site_box_stock: restore initial value")
+                    else:
+                        site_type_num_hash[tmp_key] = int(item_dict['box_num'])
+                except Exception, e:
+                    log.error(repr(e))
+                    log.error("update_site_box_stock: redis queue consume failure, push message into queue again")
+                    conn.rpush(CANCEL_HASH, item)
+            log.info("update_site_box_stock: site_type_num_hash = %s" % json.dumps(site_type_num_hash))
+            for k in site_type_num_hash.keys():
+                log.info("update_site_box_stock: k = %s, v = %s" % (k, site_type_num_hash[k]))
+                log.info("k type is %s" % type(k))
+                if isinstance(k, unicode):
+                    para_list = k.split('#')
+                    log.info("update_site_box_stock: split key to site=%s, box_type=%s" % (para_list[0], para_list[1]))
+                    site = int(para_list[0])
+                    box_type = int(para_list[1])
+                    try:
+                        stock = SiteBoxStock.objects.get(site_id=site, box_type_id=box_type)
+                        orig_num = stock.reserve_num
+                        # ava_orig = stock.ava_num
+                        appoint_num = int(site_type_num_hash[k])
+                        if orig_num >= appoint_num:
+                            stock.reserve_num = orig_num - appoint_num
+                            # stock.ava_num = ava_orig - appoint_num
+                            stock.save()
+                        else:
+                            log.info("update_site_box_stock: reserved_num less than appoint_detail.box_num")
+                    except SiteBoxStock.DoesNotExist, e:
+                        log.error(repr(e))
+                else:
+                    log.info("update_site_box_stock: site_type_num_hash k is not str")
+        else:
+            log.info("update_site_box_stock: REDIS_KEY_SITE_BOX_STOCK is NULL")
+    except Exception, e:
+        log.error(repr(e))
+    log.info("update_site_box_stock: compute end")

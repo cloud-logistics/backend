@@ -40,6 +40,7 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
 APPOINTMENT_HASH = 'appointment'
 USER_ALIAS_ID_HASH = 'user_alias_id_hash'
+CANCEL_HASH = 'cancel_hash'
 
 
 # 创建预约单
@@ -399,14 +400,21 @@ def cancel_appointment(request):
     except UserAppointment.DoesNotExist:
         return JsonResponse(retcode({}, "9999", "预约单不存在或已取消"), safe=True, status=status.HTTP_200_OK)
     # 获取预约单详情，并根据预约单详情将已经预留的数量回退
-    detail_list = AppointmentDetail.objects.filter(appointment_id=appointment, flag=0)
+    detail_list = AppointmentDetail.objects.select_related('appointment_id', 'box_type').filter(
+        appointment_id=appointment, flag=0)
+    redis_update_content = {}
+    conn = get_connection_from_pool()
     try:
         with transaction.atomic():
             # 根据detail更新site stock的数量
             for detail in detail_list:
-                stock = SiteBoxStock.objects.select_for_update().get(site=detail.site_id, box_type=detail.box_type)
-                stock.reserve_num -= detail.box_num
-                stock.save()
+                # stock = SiteBoxStock.objects.select_for_update().get(site=detail.site_id, box_type=detail.box_type)
+                # stock.reserve_num -= detail.box_num
+                # stock.save()
+                redis_update_content['site'] = detail.site_id_id
+                redis_update_content['box_type'] = detail.box_type.id
+                redis_update_content['box_num'] = detail.box_num
+                conn.rpush(CANCEL_HASH, json.dumps(redis_update_content))
                 detail.flag = 1
                 detail.save()
             # 更新appointment的flag为2（已取消）
