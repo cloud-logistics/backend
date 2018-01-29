@@ -277,7 +277,7 @@ def alarm_monitor(request):
         battery = record[13]
         robert_operation_status = record[14]
         endpointid = record[15]
-        location_name = gps_info_trans("%s,%s" % (latitude, longitude)).decode("utf-8")
+        location_name = u''  # gps_info_trans("%s,%s" % (latitude, longitude)).decode("utf-8")
         ret_data.append({'timestamp': timestamp, 'deviceid': deviceid,
                          'level': 1, 'status': u'', 'carrier': 1, 'alarm_status': 1,
                          'error_description': error_description, 'code': error_code,
