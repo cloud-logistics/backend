@@ -623,8 +623,8 @@ def check_stock_ava_num(site_id, box_type_set):
     try:
         with transaction.atomic():
             for box_type in box_type_set:
+                stock = SiteBoxStock.objects.select_for_update().get(site_id=site_id, box_type_id=box_type)
                 count = BoxInfo.objects.filter(siteinfo_id=site_id, type_id=box_type).count()
-                stock = SiteBoxStock.objects.get(site_id=site_id, box_type_id=box_type)
                 stock.ava_num = count
                 stock.save()
     except Exception, e:
