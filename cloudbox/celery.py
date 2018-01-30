@@ -107,6 +107,8 @@ def generate_site_stat():
     now = datetime.datetime.now(tz=tz)
     start_time = now + datetime.timedelta(days=-1)
     stat_day = start_time.strftime('%Y-%m-%d')
+    if SiteStat.objects.filter(stat_day=stat_day).count() > 0:
+        return
     for site in site_list:
         # 获取所有转出的箱子信息 上一日的所有数据
         box_out = RentLeaseInfo.objects.filter(off_site=site, lease_start_time__gte=start_time)
