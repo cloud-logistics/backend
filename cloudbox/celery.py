@@ -27,6 +27,7 @@ def setup_periodic_tasks(sender, **kwargs):
     # sender.add_periodic_task(crontab(minute='*/15', hour='*'), billing.s())
     sender.add_periodic_task(crontab(minute='*/15', hour='*'), cancel_appointment.s())
     sender.add_periodic_task(crontab(minute=1, hour=0), generate_site_stat.s())
+    # sender.add_periodic_task(crontab(minute='*/2',hour='*'), generate_site_stat.s())
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), update_box_bill_daily.s())
     sender.add_periodic_task(crontab(minute=0, hour=1), box_rent_fee_month_billing.s())
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), update_redis_auth_info.s())
@@ -107,6 +108,11 @@ def generate_site_stat():
     now = datetime.datetime.now(tz=tz)
     start_time = now + datetime.timedelta(days=-1)
     stat_day = start_time.strftime('%Y-%m-%d')
+    _count = SiteStat.objects.filter(stat_day=stat_day).count()
+    if _count > 0:
+        log.info("the count is %d" % _count)
+        return
+    log.info("generate site stat start........")
     for site in site_list:
         # 获取所有转出的箱子信息 上一日的所有数据
         box_out = RentLeaseInfo.objects.filter(off_site=site, lease_start_time__gte=start_time)
