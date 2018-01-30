@@ -236,3 +236,5 @@ CACHES = {
 }
 
 CACHE_TTL = 60
+
+REDIS_KEY_SITE_BOX_STOCK = 'site_box_stock_update'
