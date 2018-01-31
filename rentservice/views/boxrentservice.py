@@ -100,7 +100,8 @@ def rent_boxes_order(request):
                     orig = box_type_map[box_info.type.id]
                     box_type_map[box_info.type.id] = orig + 1
                 else:
-                    box_type_map[box_info.type.id] = 0
+                    box_type_map[box_info.type.id] = 1
+        log.info("stat:box_type_map = %s" % box_type_map)
         for key in box_type_map.keys():
             stock = SiteBoxStock.objects.get(site=site, box_type__id=key)
             if stock.ava_num < box_type_map[key]:
@@ -139,7 +140,12 @@ def rent_boxes_order(request):
                 appoint_detail.save()
                 redis_update_content['site'] = site.id
                 redis_update_content['box_type'] = appoint_detail.box_type.id
-                redis_update_content['box_num'] = appoint_detail.box_num
+                if redis_update_content['box_type'] in box_type_map.keys():
+                    redis_update_content['ava_num'] = box_type_map[appoint_detail.box_type.id]
+                    log.info("box_num set into the real number")
+                else:
+                    redis_update_content['ava_num'] = 0
+                redis_update_content['reserve_num'] = appoint_detail.box_num
                 conn.rpush(settings.REDIS_KEY_SITE_BOX_STOCK, json.dumps(redis_update_content))
                 # stock = SiteBoxStock.objects.select_for_update().get(site=site, box_type=appoint_detail.box_type)
                 # orig_num = stock.reserve_num
