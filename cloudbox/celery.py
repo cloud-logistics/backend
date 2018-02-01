@@ -29,7 +29,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(crontab(minute=1, hour=0), generate_site_stat.s())
     # sender.add_periodic_task(crontab(minute='*/2',hour='*'), generate_site_stat.s())
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), update_box_bill_daily.s())
-    sender.add_periodic_task(crontab(minute=0, hour=1), box_rent_fee_month_billing.s())
+    sender.add_periodic_task(crontab(minute=5, hour=0), box_rent_fee_month_billing.s())
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), update_redis_auth_info.s())
     sender.add_periodic_task(crontab(minute=0, hour=2), dump_sensor_data.s())
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), cal_missing_alarm.s())
@@ -227,6 +227,15 @@ def box_rent_fee_month_billing():
     log = logger.get_logger(__name__)
     log.info("BoxRentFeeByMonth billing begin ...")
     current_time = datetime.datetime.now(tz=tz)
+    if current_time.day == 1:
+        if current_time.month == 1:
+            revised_current_year = current_time.year - 1
+        else:
+            revised_current_year = current_time.year
+        revised_current_month = current_time.month - 1
+    else:
+        revised_current_month = current_time.month
+        revised_current_year = current_time.year
     if BoxRentFeeDetail.objects.all().count() > 0:
         log.info("box_rent_fee_month_billing: compute begin")
         try:
@@ -234,8 +243,8 @@ def box_rent_fee_month_billing():
             for enterprise in enterprise_list:
                 enterprise_obj = EnterpriseInfo.objects.get(enterprise_id=enterprise['enterprise'])
                 query_list = BoxRentFeeDetail.objects.filter(enterprise=enterprise_obj,
-                                                             date__year=current_time.year,
-                                                             date__month=current_time.month)
+                                                             date__year=revised_current_year,
+                                                             date__month=revised_current_month)
                 off_site_box_nums_month = 0
                 on_site_box_nums_month = 0
                 rent_fee_month = 0
@@ -247,14 +256,14 @@ def box_rent_fee_month_billing():
                          % (enterprise['enterprise'], rent_fee_month, on_site_box_nums_month, off_site_box_nums_month))
                 try:
                     box_rent_bill_month = BoxRentFeeByMonth.objects.get(enterprise=enterprise_obj,
-                                                                        date__year=current_time.year,
-                                                                        date__month=current_time.month)
+                                                                        date__year=revised_current_year,
+                                                                        date__month=revised_current_month)
                     box_rent_bill_month.rent_fee = rent_fee_month
                     box_rent_bill_month.off_site_nums = off_site_box_nums_month
                     box_rent_bill_month.on_site_nums = on_site_box_nums_month
                     box_rent_bill_month.save()
                 except BoxRentFeeByMonth.DoesNotExist, e:
-                    month_date = datetime.datetime(year=current_time.year, month=current_time.month, day=1, hour=12,
+                    month_date = datetime.datetime(year=revised_current_year, month=revised_current_month, day=1, hour=12,
                                                    tzinfo=tz)
                     box_rent_fee = BoxRentFeeByMonth(detail_id=uuid.uuid1(), enterprise=enterprise_obj,
                                                      date=month_date, off_site_nums=off_site_box_nums_month,
