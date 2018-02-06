@@ -40,28 +40,39 @@ REDIS_MAP_KEY = 'gpsmap'
 def containers_overview(request):
     try:
         container_info_list = []
-        data = query_list('select box_info.deviceid,box_type_info.box_type_name, '
-                          'C.latitude,C.longitude '
-                          'from iot.monservice_boxinfo box_info '
-                          'left join iot.monservice_boxtypeinfo box_type_info '
-                          'on box_info.type_id = box_type_info.id ' 
-                          'left join '
-                          '(select B.* from (select max(timestamp) as timestamp ,deviceid ' 
-                          'from iot.monservice_sensordata group by deviceid) A ' 
+        data = query_list('select count(1) as cnt, longitude, latitude from '
+                          '(select case when site_flag = 0 then CAST(round(CAST (iot.fn_cal_postion(longitude) AS NUMERIC), 2) AS TEXT) '
+                          '        else longitude end as longitude,'
+                          'case when site_flag = 0 then CAST(round(CAST (iot.fn_cal_postion(latitude) AS NUMERIC), 2) AS TEXT) '
+                          '     else latitude end as latitude '
+                          'from '
+                          '(select case when siteinfo_id is not null then site_longitude '
+                          '		 else longitude end as longitude,'
+                          'case when siteinfo_id is not null then site_latitude '
+                          '     else latitude end as latitude,'
+                          'case when siteinfo_id is not null then 1 else 0 end as site_flag from '
+                          '(select D.longitude,D.latitude,'
+                          'D.deviceid,E.siteinfo_id,F.longitude as site_longitude,F.latitude as site_latitude from '
+                          '(select max(B.id) as id '
+                          'from (select max(timestamp) as timestamp ,deviceid '
+                          'from iot.monservice_sensordata group by deviceid) A '
                           'left join iot.monservice_sensordata B '
-                          'on A.timestamp = B.timestamp and A.deviceid = B.deviceid) C '
-                          'on box_info.deviceid = C.deviceid '
-                          'order by deviceid asc')
+                          'on A.timestamp = B.timestamp and A.deviceid = B.deviceid '
+                          'group by A.deviceid) C '
+                          'inner join iot.monservice_sensordata D on C.id = D.id '
+                          'inner join iot.monservice_boxinfo E on D.deviceid = E.deviceid '
+                          'left join iot.monservice_siteinfo F on E.siteinfo_id = F.id) G) H) K group by longitude,latitude '
+                          'order by cnt desc')
         for item in data:
             container_dict = {}
-            container_dict['title'] = item[0]
-            lng = cal_position((item[3], '0')[item[3] is None])
-            lat = cal_position((item[2], '0')[item[2] is None])
-            gps_dic = {'lng': float(lng), 'lat': float(lat)}
-            container_dict['position'] = gps_dic
-            # container_dict['detail'] = gps_info_trans("%s,%s" % (gps_dic['lat'], gps_dic['lng']))
+            cnt = item[0]
+            lng = (item[1], '0')[item[1] is None]
+            lat = (item[2], '0')[item[2] is None]
+            container_dict['cnt'] = cnt
+            container_dict['lng'] = lng
+            container_dict['lat'] = lat
             container_info_list.append(container_dict)
-        return JsonResponse(container_info_list, safe=False, status=status.HTTP_200_OK)
+        return JsonResponse({'data': container_info_list}, safe=False, status=status.HTTP_200_OK)
     except Exception, e:
         log.error('containers_overview response error, msg: ' + e.__str__())
         return JsonResponse('', safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
