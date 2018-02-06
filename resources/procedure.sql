@@ -451,6 +451,10 @@ DECLARE
   latitude_or_longitude := $1;
   v_final := latitude_or_longitude;
 
+  IF POSITION('.' IN latitude_or_longitude) > 0 THEN
+    RETURN latitude_or_longitude;
+  END IF;
+
   IF LENGTH(latitude_or_longitude) > 6 THEN
     SELECT SUBSTRING(latitude_or_longitude FROM 1 FOR LENGTH(latitude_or_longitude) - 6) INTO v_integer;
     SELECT SUBSTRING(latitude_or_longitude FROM (LENGTH(latitude_or_longitude) - 5)) INTO v_decimal;
