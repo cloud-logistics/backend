@@ -122,12 +122,15 @@ def box_bill_real_time_all_filter(request):
     except Exception:
         return JsonResponse(retcode(errcode("9999", '关键字为空'), "9999", '关键字为空'), safe=True,
                             status=status.HTTP_400_BAD_REQUEST)
+    log.info("input keyword is %s" % keyword)
+    log.debug("input keyword type is %s" % type(keyword))
     enterprise_id_list = EnterpriseInfo.objects.filter(Q(enterprise_name__contains=keyword))
+    enterprise_id_list_ser = EnterpriseInfoSerializer(enterprise_id_list, many=True)
+    log.debug("enterprise_id_list is %s" % enterprise_id_list_ser.data)
+    log.debug("current_time.year=%s, current_time.month=%s" % (current_time.year, current_time.month))
     try:
         for enterprise in enterprise_id_list:
-            rentlease_list = RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise.enterprise_id,
-                                                          lease_end_time__year=current_time.year,
-                                                          lease_end_time__month=current_time.month)
+            rentlease_list = RentLeaseInfo.objects.filter(user_id__enterprise__enterprise_id=enterprise.enterprise_id)
             # rentlease_list = rentlease_list_with_today.exclude(lease_end_time__year=current_time.year,
             #                                                    lease_end_time__month=current_time.month,
             #                                                    lease_end_time__day=current_time.day)
@@ -151,6 +154,7 @@ def box_bill_real_time_all_filter(request):
                 bill['enterprise_name'] = enterprise.enterprise_name
                 ret_list.append(bill)
             else:
+                log.info("rentlease_list is null")
                 continue
     except Exception, e:
         log.error(repr(e))
