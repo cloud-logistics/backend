@@ -72,7 +72,8 @@ def containers_overview(request):
             container_dict['lng'] = lng
             container_dict['lat'] = lat
             container_info_list.append(container_dict)
-        return JsonResponse({'data': container_info_list}, safe=False, status=status.HTTP_200_OK)
+
+        return JsonResponse({'data': container_info_list, 'container_num': BoxInfo.objects.count()}, safe=False, status=status.HTTP_200_OK)
     except Exception, e:
         log.error('containers_overview response error, msg: ' + e.__str__())
         return JsonResponse('', safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
