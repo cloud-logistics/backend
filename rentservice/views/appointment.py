@@ -104,7 +104,7 @@ def create_appointment(request):
                                                                                 box_type=_site_num['box_type'])
                     # 根据可用数量-已经预约数量是否大于当前租借数量判断是否可租
                     if _site_num['num'] > _stock_model.ava_num - _stock_model.reserve_num:
-                        raise Exception("0000", "预约数量大于堆场可用箱子数量")
+                        raise Exception("9999", "预约数量大于堆场可用箱子数量")
                     # 更新box_type&site_id预约数量
                     upd_res_num = _stock_model.reserve_num + _site_num['num']
                     _stock_model.reserve_num = upd_res_num
