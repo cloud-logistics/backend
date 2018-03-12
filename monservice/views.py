@@ -685,6 +685,23 @@ def remove_basic_info(request, id):
         return JsonResponse(response_msg, safe=False, status=status.HTTP_200_OK)
 
 
+
+# 删除云箱基础信息
+@csrf_exempt
+@api_view(['DELETE'])
+def delete_all_boxes(request):
+    try:
+        BoxInfo.objects.exclude(tid__startswith='XLJ').delete()
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'status': 'ERROR', 'msg': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': u'删除云箱基础信息成功！'}
+        return JsonResponse(response_msg, safe=False, status=status.HTTP_200_OK)
+
+
 # 根据堆场ID获取堆场内的云箱
 @csrf_exempt
 @api_view(['GET'])

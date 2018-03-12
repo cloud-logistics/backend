@@ -71,6 +71,8 @@ urlpatterns = [
     url(r'^getHuarenData$', views.get_huaren_data),               # 华人医药查询接口
     url(r'^fuzzyDeviceid$', views.fuzzy_deviceid),                # deviceid模糊查询
 
+    url(r'^allboxes$', views.delete_all_boxes),                   # 删除所有箱子
+
 
 
 ]
