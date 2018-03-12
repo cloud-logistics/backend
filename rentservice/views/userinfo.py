@@ -47,7 +47,7 @@ def get_finished_order_list(request, user_id):
         return JsonResponse(retcode({}, "9999", "用户不存在"), safe=True, status=status.HTTP_404_NOT_FOUND)
 
     # 获取正在运行中的箱子
-    lease_list = RentLeaseInfo.objects.filter(rent_status=1, user_id=user)
+    lease_list = RentLeaseInfo.objects.filter(rent_status=1, user_id=user).order_by("-lease_end_time")
     page = paginator.paginate_queryset(lease_list, request)
     ret_ser = RentLeaseInfoSerializer(page, many=True)
     return paginator.get_paginated_response(ret_ser.data)

@@ -28,6 +28,7 @@ from monservice.view.dispatch import generate_dispatches
 log = logger.get_logger('monservice.view.py')
 NOT_APPLICABLE = 'NA'
 ZERO = 0
+ONE_HUNDRED = 100
 STATUS_NORMAL = '正常'
 STATUS_ABNORMAL = '异常'
 UNAVAILABLE = '不可用'
@@ -39,28 +40,40 @@ REDIS_MAP_KEY = 'gpsmap'
 def containers_overview(request):
     try:
         container_info_list = []
-        data = query_list('select box_info.deviceid,box_type_info.box_type_name, '
-                          'C.latitude,C.longitude '
-                          'from iot.monservice_boxinfo box_info '
-                          'left join iot.monservice_boxtypeinfo box_type_info '
-                          'on box_info.type_id = box_type_info.id ' 
-                          'left join '
-                          '(select B.* from (select max(timestamp) as timestamp ,deviceid ' 
-                          'from iot.monservice_sensordata group by deviceid) A ' 
+        data = query_list('select count(1) as cnt, longitude, latitude from '
+                          '(select case when site_flag = 0 then CAST(round(CAST (iot.fn_cal_postion(longitude) AS NUMERIC), 2) AS TEXT) '
+                          '        else longitude end as longitude,'
+                          'case when site_flag = 0 then CAST(round(CAST (iot.fn_cal_postion(latitude) AS NUMERIC), 2) AS TEXT) '
+                          '     else latitude end as latitude '
+                          'from '
+                          '(select case when siteinfo_id is not null then site_longitude '
+                          '		 else longitude end as longitude,'
+                          'case when siteinfo_id is not null then site_latitude '
+                          '     else latitude end as latitude,'
+                          'case when siteinfo_id is not null then 1 else 0 end as site_flag from '
+                          '(select D.longitude,D.latitude,'
+                          'D.deviceid,E.siteinfo_id,F.longitude as site_longitude,F.latitude as site_latitude from '
+                          '(select max(B.id) as id '
+                          'from (select max(timestamp) as timestamp ,deviceid '
+                          'from iot.monservice_sensordata group by deviceid) A '
                           'left join iot.monservice_sensordata B '
-                          'on A.timestamp = B.timestamp and A.deviceid = B.deviceid) C '
-                          'on box_info.deviceid = C.deviceid '
-                          'order by deviceid asc')
+                          'on A.timestamp = B.timestamp and A.deviceid = B.deviceid '
+                          'group by A.deviceid) C '
+                          'inner join iot.monservice_sensordata D on C.id = D.id '
+                          'inner join iot.monservice_boxinfo E on D.deviceid = E.deviceid '
+                          'left join iot.monservice_siteinfo F on E.siteinfo_id = F.id) G) H) K group by longitude,latitude '
+                          'order by cnt desc')
         for item in data:
             container_dict = {}
-            container_dict['title'] = item[0]
-            lng = cal_position((item[3], '0')[item[3] is None])
-            lat = cal_position((item[2], '0')[item[2] is None])
-            gps_dic = {'lng': float(lng), 'lat': float(lat)}
-            container_dict['position'] = gps_dic
-            # container_dict['detail'] = gps_info_trans("%s,%s" % (gps_dic['lat'], gps_dic['lng']))
+            cnt = item[0]
+            lng = (item[1], '0')[item[1] is None]
+            lat = (item[2], '0')[item[2] is None]
+            container_dict['cnt'] = cnt
+            container_dict['lng'] = lng
+            container_dict['lat'] = lat
             container_info_list.append(container_dict)
-        return JsonResponse(container_info_list, safe=False, status=status.HTTP_200_OK)
+
+        return JsonResponse({'data': container_info_list, 'container_num': BoxInfo.objects.count()}, safe=False, status=status.HTTP_200_OK)
     except Exception, e:
         log.error('containers_overview response error, msg: ' + e.__str__())
         return JsonResponse('', safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -84,7 +97,8 @@ def realtime_message(request):
     carrier_name = 'NA'
 
     # 获取云箱型号
-    box_type_data = query_list('select box_type_info.box_type_name from iot.monservice_boxinfo box_info '
+    box_type_data = query_list('select box_type_info.box_type_name'
+                               ' from iot.monservice_boxinfo box_info '
                                'left join iot.monservice_boxtypeinfo box_type_info on box_info.type_id = box_type_info.id '
                                'where box_info.deviceid = \'' + id + '\' group by box_type_info.box_type_name')
 
@@ -139,15 +153,15 @@ def realtime_message(request):
         operation_threshold_min = threshold_data[0][9]
 
     else:
-        temperature_threshold_max = ZERO
+        temperature_threshold_max = ONE_HUNDRED
         temperature_threshold_min = ZERO
-        humidity_threshold_max = ZERO
+        humidity_threshold_max = ONE_HUNDRED
         humidity_threshold_min = ZERO
-        collision_threshold_max = ZERO
+        collision_threshold_max = ONE_HUNDRED
         collision_threshold_min = ZERO
-        battery_threshold_max = ZERO
+        battery_threshold_max = ONE_HUNDRED
         battery_threshold_min = ZERO
-        operation_threshold_max = ZERO
+        operation_threshold_max = ONE_HUNDRED
         operation_threshold_min = ZERO
 
     # 计算箱子在运还是停靠
@@ -163,14 +177,20 @@ def realtime_message(request):
     # 计算温度是否在正常范围
     if float(temperature_threshold_min) <= float(temperature) <= float(temperature_threshold_max):
         temperature_status = STATUS_NORMAL
+        temperature_diff = ZERO
     else:
         temperature_status = STATUS_ABNORMAL
+        temperature_diff = (float(temperature)-temperature_threshold_min, float(temperature)-temperature_threshold_max) \
+            [float(temperature) > temperature_threshold_max]
 
     # 计算湿度是否在正常范围
     if humidity_threshold_min <= float(humidity) <= humidity_threshold_max:
         humidity_status = STATUS_NORMAL
+        humidity_diff = ZERO
     else:
         humidity_status = STATUS_ABNORMAL
+        humidity_diff = (float(humidity)-humidity_threshold_min, float(humidity)-humidity_threshold_max) \
+            [float(humidity) > humidity_threshold_max]
 
     # 计算电量是否咋正常范围
     battery = light           # 后续需要修改为真实值, 目前使用light字段表示电量
@@ -197,10 +217,16 @@ def realtime_message(request):
                 'carrier': carrier_name, 'position': {'lng': longitude, 'lat': latitude},
                 'locationName': gps_info_trans("%s,%s" % (latitude, longitude)),
                 'siteName': siteName,
-                'speed': float(speed),
-                'temperature': {'value': float(temperature), 'status': temperature_status},
-                'humidity': {'value': float(humidity), 'status': humidity_status},
-                'battery': {'value': float(battery), 'status': battery_status},
+                'speed': round(float(speed), 2),
+                'temperature': {'value': round(float(temperature), 2), 'status': temperature_status,
+                                'temperature_threshold_max': temperature_threshold_max,
+                                'temperature_threshold_min': temperature_threshold_min,
+                                'temperature_diff': round(float(temperature_diff), 2)},
+                'humidity': {'value': round(float(humidity), 2), 'status': humidity_status,
+                             'humidity_threshold_max': humidity_threshold_max,
+                             'humidity_threshold_min': humidity_threshold_min,
+                             'humidity_diff': round(float(humidity_diff), 2)},
+                'battery': {'value': round(float(battery), 2), 'status': battery_status},
                 'boxStatus': {'num_of_collide': {'value': int(collide), 'status': collide_status},
                               'num_of_door_open': {'value': int(num_of_door_open), 'status': door_open_status}}}
     return JsonResponse(ret_data, safe=True, status=status.HTTP_200_OK)
@@ -1048,8 +1074,8 @@ def rent_real_time_msg(request):
         position_name = ''
         latitude = 0
         longitude = 0
-    return JsonResponse({'data': {'temperature': temperature,
-                                  'humidity': humidity,
+    return JsonResponse({'data': {'temperature': round(float(temperature), 2),
+                                  'humidity': round(float(humidity), 2),
                                   'position_name': position_name,
                                   'latitude': latitude,
                                   'longitude': longitude},

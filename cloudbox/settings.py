@@ -93,7 +93,7 @@ DATABASES = {
         },
         'NAME': 'cloudbox',
         'USER': 'postgres',
-        'PASSWORD': 'postgres',
+        'PASSWORD': '@CloudBox601',
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }
@@ -236,3 +236,5 @@ CACHES = {
 }
 
 CACHE_TTL = 60
+
+REDIS_KEY_SITE_BOX_STOCK = 'site_box_stock_update'

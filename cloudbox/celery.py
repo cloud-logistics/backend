@@ -27,8 +27,9 @@ def setup_periodic_tasks(sender, **kwargs):
     # sender.add_periodic_task(crontab(minute='*/15', hour='*'), billing.s())
     sender.add_periodic_task(crontab(minute='*/15', hour='*'), cancel_appointment.s())
     sender.add_periodic_task(crontab(minute=1, hour=0), generate_site_stat.s())
+    # sender.add_periodic_task(crontab(minute='*/2',hour='*'), generate_site_stat.s())
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), update_box_bill_daily.s())
-    sender.add_periodic_task(crontab(minute=0, hour=1), box_rent_fee_month_billing.s())
+    sender.add_periodic_task(crontab(minute=5, hour=0), box_rent_fee_month_billing.s())
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), update_redis_auth_info.s())
     sender.add_periodic_task(crontab(minute=0, hour=2), dump_sensor_data.s())
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), cal_missing_alarm.s())
@@ -107,8 +108,11 @@ def generate_site_stat():
     now = datetime.datetime.now(tz=tz)
     start_time = now + datetime.timedelta(days=-1)
     stat_day = start_time.strftime('%Y-%m-%d')
-    if SiteStat.objects.filter(stat_day=stat_day).count() > 0:
+    _count = SiteStat.objects.filter(stat_day=stat_day).count()
+    if _count > 0:
+        log.info("the count is %d" % _count)
         return
+    log.info("generate site stat start........")
     for site in site_list:
         # 获取所有转出的箱子信息 上一日的所有数据
         box_out = RentLeaseInfo.objects.filter(off_site=site, lease_start_time__gte=start_time)
@@ -223,6 +227,15 @@ def box_rent_fee_month_billing():
     log = logger.get_logger(__name__)
     log.info("BoxRentFeeByMonth billing begin ...")
     current_time = datetime.datetime.now(tz=tz)
+    if current_time.day == 1:
+        if current_time.month == 1:
+            revised_current_year = current_time.year - 1
+        else:
+            revised_current_year = current_time.year
+        revised_current_month = current_time.month - 1
+    else:
+        revised_current_month = current_time.month
+        revised_current_year = current_time.year
     if BoxRentFeeDetail.objects.all().count() > 0:
         log.info("box_rent_fee_month_billing: compute begin")
         try:
@@ -230,8 +243,8 @@ def box_rent_fee_month_billing():
             for enterprise in enterprise_list:
                 enterprise_obj = EnterpriseInfo.objects.get(enterprise_id=enterprise['enterprise'])
                 query_list = BoxRentFeeDetail.objects.filter(enterprise=enterprise_obj,
-                                                             date__year=current_time.year,
-                                                             date__month=current_time.month)
+                                                             date__year=revised_current_year,
+                                                             date__month=revised_current_month)
                 off_site_box_nums_month = 0
                 on_site_box_nums_month = 0
                 rent_fee_month = 0
@@ -243,14 +256,14 @@ def box_rent_fee_month_billing():
                          % (enterprise['enterprise'], rent_fee_month, on_site_box_nums_month, off_site_box_nums_month))
                 try:
                     box_rent_bill_month = BoxRentFeeByMonth.objects.get(enterprise=enterprise_obj,
-                                                                        date__year=current_time.year,
-                                                                        date__month=current_time.month)
+                                                                        date__year=revised_current_year,
+                                                                        date__month=revised_current_month)
                     box_rent_bill_month.rent_fee = rent_fee_month
                     box_rent_bill_month.off_site_nums = off_site_box_nums_month
                     box_rent_bill_month.on_site_nums = on_site_box_nums_month
                     box_rent_bill_month.save()
                 except BoxRentFeeByMonth.DoesNotExist, e:
-                    month_date = datetime.datetime(year=current_time.year, month=current_time.month, day=1, hour=12,
+                    month_date = datetime.datetime(year=revised_current_year, month=revised_current_month, day=1, hour=12,
                                                    tzinfo=tz)
                     box_rent_fee = BoxRentFeeByMonth(detail_id=uuid.uuid1(), enterprise=enterprise_obj,
                                                      date=month_date, off_site_nums=off_site_box_nums_month,
@@ -470,7 +483,8 @@ def update_site_box_stock():
         conn = redis_pool.get_connection()
         len_queue = conn.llen(REDIS_KEY_SITE_BOX_STOCK)
         log.info("update_site_box_stock: len_queue = %s" % len_queue)
-        site_type_num_hash = {}
+        site_type_ava_num_hash = {}
+        site_type_reserv_num_hash = {}
         if len_queue > 0:
             # log.debug("update_list = %s" % update_list)
             for index in xrange(0, len_queue):
@@ -478,43 +492,60 @@ def update_site_box_stock():
                     item = conn.lpop(REDIS_KEY_SITE_BOX_STOCK)
                     item_dict = json.loads(item)
                     tmp_key = str(item_dict['site']) + '#' + str(item_dict['box_type'])
-                    if tmp_key in site_type_num_hash.keys():
+                    if tmp_key in site_type_ava_num_hash.keys():
                         try:
-                            site_type_num_hash[tmp_key] += int(item_dict['box_num'])
+                            site_type_ava_num_hash[tmp_key] += int(item_dict['ava_num'])
                         except Exception, e:
-                            site_type_num_hash[tmp_key] -= int(item_dict['box_num'])
+                            site_type_ava_num_hash[tmp_key] -= int(item_dict['ava_num'])
                             log.error(repr(e))
                             log.error("update_site_box_stock: restore initial value")
                     else:
-                        site_type_num_hash[tmp_key] = int(item_dict['box_num'])
+                        site_type_ava_num_hash[tmp_key] = int(item_dict['ava_num'])
+                    if tmp_key in site_type_reserv_num_hash.keys():
+                        try:
+                            site_type_reserv_num_hash[tmp_key] += int(item_dict['reserve_num'])
+                        except Exception, e:
+                            site_type_reserv_num_hash[tmp_key] -= int(item_dict['reserve_num'])
+                            log.error(repr(e))
+                            log.error("update_site_box_stock: restore initial value")
+                    else:
+                        site_type_reserv_num_hash[tmp_key] = int(item_dict['reserve_num'])
                 except Exception, e:
                     log.error(repr(e))
                     log.error("update_site_box_stock: redis queue consume failure, push message into queue again")
                     conn.rpush(REDIS_KEY_SITE_BOX_STOCK, item)
-            log.info("update_site_box_stock: site_type_num_hash = %s" % json.dumps(site_type_num_hash))
-            for k in site_type_num_hash.keys():
-                log.info("update_site_box_stock: k = %s, v = %s" % (k, site_type_num_hash[k]))
-                log.info("k type is %s" % type(k))
+            log.info("update_site_box_stock: site_type_reserv_num_hash = %s" % json.dumps(site_type_reserv_num_hash))
+            log.info("update_site_box_stock: site_type_ava_num_hash = %s" % json.dumps(site_type_ava_num_hash))
+            for k in site_type_ava_num_hash.keys():
+                log.info(
+                    "update_site_box_stock: site_type_ava_num_hash k = %s, v = %s" % (k, site_type_ava_num_hash[k]))
+                log.info(
+                    "update_site_box_stock: site_type_reserv_num_hash k = %s, v = %s" % (k, site_type_reserv_num_hash[k]))
                 if isinstance(k, unicode):
                     para_list = k.split('#')
-                    log.info("update_site_box_stock: split key to site=%s, box_type=%s" % (para_list[0], para_list[1]))
+                    log.info("update_site_box_stock:site_type_ava_num_hash split key to site=%s, box_type=%s"
+                             % (para_list[0], para_list[1]))
                     site = int(para_list[0])
                     box_type = int(para_list[1])
                     try:
                         stock = SiteBoxStock.objects.get(site_id=site, box_type_id=box_type)
-                        orig_num = stock.reserve_num
+                        reserve_orig = stock.reserve_num
                         ava_orig = stock.ava_num
-                        appoint_num = int(site_type_num_hash[k])
-                        if (orig_num >= appoint_num) and (ava_orig >= appoint_num):
-                            stock.reserve_num = orig_num - appoint_num
-                            stock.ava_num = ava_orig - appoint_num
-                            stock.save()
+                        ava_update_num = int(site_type_ava_num_hash[k])
+                        reserve_update_num = int(site_type_reserv_num_hash[k])
+                        if ava_orig >= ava_update_num:
+                            stock.ava_num = ava_orig - ava_update_num
                         else:
-                            log.info("update_site_box_stock: reserved_num less than appoint_detail.box_num")
+                            log.info("update_site_box_stock: ava_num less than appoint_detail.box_num")
+                        if reserve_orig >= reserve_update_num:
+                            stock.reserve_num = reserve_orig - reserve_update_num
+                        else:
+                            log.info("update_site_box_stock: reserve_num less than appoint_detail.box_num")
+                        stock.save()
                     except SiteBoxStock.DoesNotExist, e:
                         log.error(repr(e))
                 else:
-                    log.info("update_site_box_stock: site_type_num_hash k is not str")
+                    log.info("update_site_box_stock: site_type_ava_num_hash k is not str")
         else:
             log.info("update_site_box_stock: REDIS_KEY_SITE_BOX_STOCK is NULL")
     except Exception, e:
