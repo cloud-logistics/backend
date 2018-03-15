@@ -5,6 +5,9 @@ from django.db import models
 from util.geo import cal_position
 
 # Create your models here.
+import datetime
+from django.utils import timezone
+import pytz
 
 
 # 角色
@@ -105,3 +108,39 @@ class AccessUrlGroup(models.Model):
     access_url_id = models.CharField(max_length=48, primary_key=True)
     access_url_set = models.CharField(max_length=128)
     access_group = models.ForeignKey(AccessGroup, related_name='access_url_group_fk')
+
+
+class EnterpriseInfo(models.Model):
+    enterprise_id = models.CharField(max_length=48, primary_key=True)
+    enterprise_name = models.CharField(max_length=128)
+    enterprise_tele = models.CharField(max_length=32)
+    enterprise_license_id = models.CharField(max_length=32)
+    enterprise_license_id_url = models.CharField(max_length=256)
+    enterprise_legal_rep_name = models.CharField(max_length=128)
+    enterprise_email = models.CharField(max_length=128)
+    enterprise_deposit = models.BigIntegerField(default=0)
+    enterprise_deposit_status = models.IntegerField(default=0)
+    enterprise_address = models.CharField(max_length=128, default='')
+    enterprise_homepage_url = models.CharField(max_length=128, default='')
+    register_time = models.DateTimeField(default=datetime.datetime.today())
+    last_update_time = models.DateTimeField(default=datetime.datetime.today())
+
+
+class EnterpriseUser(models.Model):
+    user_id = models.CharField(max_length=48, primary_key=True)
+    user_name = models.CharField(max_length=48)
+    user_password = models.CharField(max_length=32)
+    register_time = models.DateTimeField(default=datetime.datetime.today())
+    status = models.CharField(max_length=16)
+    avatar_url = models.CharField(max_length=256)
+    user_phone = models.CharField(max_length=16)
+    user_email = models.CharField(max_length=128)
+    enterprise = models.ForeignKey(EnterpriseInfo, related_name='enterprise_user_enterprise_info_fk', null=True)
+    user_token = models.CharField(max_length=64, default='')
+    role = models.CharField(max_length=16, default='user')
+    group = models.ForeignKey(AccessGroup, null=True)
+    user_real_name = models.CharField(max_length=48, default='')
+    user_gender = models.CharField(max_length=8, default='')
+    user_nickname = models.CharField(max_length=48, default='')
+    user_alias_id = models.CharField(max_length=64, default='')
+    user_password_encrypt = models.CharField(max_length=256, default='')
