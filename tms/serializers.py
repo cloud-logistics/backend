@@ -6,8 +6,7 @@ from rest_framework import serializers
 from models import AccessGroup
 from models import AuthUserGroup
 from models import AccessUrlGroup
-from models import EnterpriseInfo
-from models import EnterpriseUser
+from models import User
 
 
 class SensorDataSerializer(serializers.ModelSerializer):
@@ -39,14 +38,14 @@ class AccessUrlGroupSerializer(serializers.ModelSerializer):
         model = AccessUrlGroup
         fields = '__all__'
 
+#
+# class EnterpriseInfoSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = EnterpriseInfo
+#         fields = '__all__'
 
-class EnterpriseInfoSerializer(serializers.ModelSerializer):
+
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = EnterpriseInfo
-        fields = '__all__'
-
-
-class EnterpriseUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EnterpriseUser
+        model = User
         exclude = ('user_password', 'user_password_encrypt')

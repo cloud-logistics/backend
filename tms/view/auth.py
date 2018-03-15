@@ -7,11 +7,11 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
-from tms.models import EnterpriseUser, AuthUserGroup, AccessGroup
+from tms.models import User, AuthUserGroup, AccessGroup
 from tms.utils.retcode import retcode, errcode
 from tms.utils.logger import get_logger
 from rest_framework.settings import api_settings
-from tms.serializers import AccessGroupSerializer, EnterpriseUserSerializer
+from tms.serializers import AccessGroupSerializer, UserSerializer
 import hashlib
 from django.conf import settings
 import time
@@ -67,8 +67,8 @@ def auth(request):
     except Exception:
         return JsonResponse(retcode(errcode("9999", '注册密码不能为空'), "9999", '注册密码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
-        user = EnterpriseUser.objects.get(user_name=username, user_password=password)
-    except EnterpriseUser.DoesNotExist, e:
+        user = User.objects.get(user_name=username, user_password=password)
+    except User.DoesNotExist, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0403", '用户不存在或用户密码不正确'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
     ser_user = EnterpriseUserSerializer(user)
@@ -97,7 +97,7 @@ def group_detail(request, access_group_id):
     try:
         group = AccessGroup.objects.get(access_group_id=access_group_id)
         ser_group = AccessGroupSerializer(group)
-    except EnterpriseUser.DoesNotExist:
+    except User.DoesNotExist:
         return JsonResponse(retcode(errcode("9999", "查询用户信息失败"), "9999", "查询用户信息失败"), safe=True,
                             status=status.HTTP_400_BAD_REQUEST)
     return JsonResponse(retcode(ser_group.data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
@@ -116,11 +116,11 @@ def admin_auth(request):
     except Exception:
         return JsonResponse(retcode(errcode("9999", '注册密码不能为空'), "9999", '注册密码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
-        user = EnterpriseUser.objects.get(user_name=username, user_password=password, group__group='admin')
-    except EnterpriseUser.DoesNotExist, e:
+        user = User.objects.get(user_name=username, user_password=password, group__group='admin')
+    except User.DoesNotExist, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0403", '用户不存在或用户密码不正确'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
-    ser_user = EnterpriseUserSerializer(user)
+    ser_user = UserSerializer(user)
     ret = ser_user.data
     ret['group'] = user.group.group
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
@@ -143,7 +143,7 @@ def admin_auth_with_salt(request):
     except Exception:
         return JsonResponse(retcode(errcode("9999", '异常错误'), "9999", '异常错误'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
-        user = EnterpriseUser.objects.get(user_name=username, group__group='admin')
+        user = User.objects.get(user_name=username, group__group='admin')
         # check salt valid
         current_utc = int(time.time())
         if current_utc - timestamp > settings.SALT_DURATION:
@@ -155,10 +155,10 @@ def admin_auth_with_salt(request):
                  (password, gen_password, timestamp, username))
         if gen_password != password:
             return JsonResponse(retcode(errcode("0403", '用户不存在或用户密码不正确'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
-    except EnterpriseUser.DoesNotExist, e:
+    except User.DoesNotExist, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0403", '用户不存在或用户密码不正确'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
-    ser_user = EnterpriseUserSerializer(user)
+    ser_user = UserSerializer(user)
     ret = ser_user.data
     ret['group'] = user.group.group
     # request.session[user.user_token] = user.user_token
@@ -182,7 +182,7 @@ def auth_with_salt(request):
     except Exception:
         return JsonResponse(retcode(errcode("9999", '异常错误'), "9999", '异常错误'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
-        user = EnterpriseUser.objects.get(user_name=username)
+        user = User.objects.get(user_name=username)
         # check salt valid
         current_utc = int(time.time())
         if current_utc - timestamp > settings.SALT_DURATION:
@@ -199,10 +199,10 @@ def auth_with_salt(request):
         conn.hset(USER_ALIAS_ID_HASH, user.user_id, uuid.uuid1().hex)
         # user.user_alias_id = uuid.uuid1().hex
         # user.save()
-    except EnterpriseUser.DoesNotExist, e:
+    except User.DoesNotExist, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0403", '用户不存在或用户密码不正确'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
-    ser_user = EnterpriseUserSerializer(user)
+    ser_user = User(user)
     ret = ser_user.data
     ret['group'] = user.group.group
     # request.session[user.user_token] = user.user_token
@@ -230,7 +230,7 @@ def change_password(request):
     except Exception:
         return JsonResponse(retcode(errcode("9999", '异常错误'), "9999", '异常错误'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
-        user = EnterpriseUser.objects.get(user_id=user_id)
+        user = User.objects.get(user_id=user_id)
         # check salt valid
         current_utc = int(time.time())
         if current_utc - timestamp > settings.SALT_DURATION:
@@ -245,10 +245,10 @@ def change_password(request):
         else:
             user.user_password_encrypt = new_password
             user.save()
-    except EnterpriseUser.DoesNotExist, e:
+    except User.DoesNotExist, e:
         log.error(e)
         return JsonResponse(retcode(errcode("0403", '用户不存在或用户密码不正确'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
-    ser_user = EnterpriseUserSerializer(user)
+    ser_user = UserSerializer(user)
     ret = ser_user.data
     ret['group'] = user.group.group
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
@@ -263,17 +263,17 @@ def auth_user_logout(request):
     except Exception:
         return JsonResponse(retcode(errcode("9999", '用户id不能为空'), "9999", '用户id不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
-        user = EnterpriseUser.objects.get(user_id=user_id)
+        user = User.objects.get(user_id=user_id)
         conn = get_connection_from_pool()
         if conn.hexists(USER_ALIAS_ID_HASH, user.user_id):
             conn.hdel(USER_ALIAS_ID_HASH, user.user_id)
         # if user.user_alias_id:
         #     user.user_alias_id = ''
         user.save()
-    except EnterpriseUser.DoesNotExist, e:
+    except User.DoesNotExist, e:
         log.error(e)
         return JsonResponse(retcode(errcode("0403", '登出用户不存在'), "0403", '登出用户不存在'), safe=True, status=status.HTTP_403_FORBIDDEN)
-    ser_user = EnterpriseUserSerializer(user)
+    ser_user = UserSerializer(user)
     ret = ser_user.data
     ret['group'] = user.group.group
     # try:

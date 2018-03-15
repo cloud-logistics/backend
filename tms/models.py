@@ -10,6 +10,23 @@ from django.utils import timezone
 import pytz
 
 
+class AccessGroup(models.Model):
+    access_group_id = models.CharField(max_length=48, primary_key=True)
+    group = models.CharField(max_length=32)
+
+
+class AuthUserGroup(models.Model):
+    auth_id = models.CharField(max_length=48, primary_key=True)
+    user_token = models.CharField(max_length=64)
+    group = models.ForeignKey(AccessGroup, related_name='auth_user_group_fk')
+
+
+class AccessUrlGroup(models.Model):
+    access_url_id = models.CharField(max_length=48, primary_key=True)
+    access_url_set = models.CharField(max_length=128)
+    access_group = models.ForeignKey(AccessGroup, related_name='access_url_group_fk')
+
+
 # 角色
 class Role(models.Model):
     role_id = models.CharField(max_length=128, default='', primary_key=True)
@@ -21,6 +38,20 @@ class Role(models.Model):
 class User(models.Model):
     user_id = models.CharField(max_length=128, default='', primary_key=True)
     role = models.ForeignKey(Role, related_name='user_role_fk')
+    user_password = models.CharField(max_length=32)
+    register_time = models.DateTimeField(default=datetime.datetime.today())
+    status = models.CharField(max_length=16)
+    avatar_url = models.CharField(max_length=256)
+    user_phone = models.CharField(max_length=16)
+    user_email = models.CharField(max_length=128)
+    # enterprise = models.ForeignKey(EnterpriseInfo, related_name='enterprise_user_enterprise_info_fk', null=True)
+    user_token = models.CharField(max_length=64, default='')
+    group = models.ForeignKey(AccessGroup, null=True)
+    user_real_name = models.CharField(max_length=48, default='')
+    user_gender = models.CharField(max_length=8, default='')
+    user_nickname = models.CharField(max_length=48, default='')
+    user_alias_id = models.CharField(max_length=64, default='')
+    user_password_encrypt = models.CharField(max_length=256, default='')
 
 
 # 卡车水槽
@@ -92,55 +123,3 @@ class OperateHistory(models.Model):
     operate_type = models.IntegerField  # 操作类型: 1 捕捞 2 装车 3 商家收货
     user = models.ForeignKey(User, related_name='operate_history_user')
 
-
-class AccessGroup(models.Model):
-    access_group_id = models.CharField(max_length=48, primary_key=True)
-    group = models.CharField(max_length=32)
-
-
-class AuthUserGroup(models.Model):
-    auth_id = models.CharField(max_length=48, primary_key=True)
-    user_token = models.CharField(max_length=64)
-    group = models.ForeignKey(AccessGroup, related_name='auth_user_group_fk')
-
-
-class AccessUrlGroup(models.Model):
-    access_url_id = models.CharField(max_length=48, primary_key=True)
-    access_url_set = models.CharField(max_length=128)
-    access_group = models.ForeignKey(AccessGroup, related_name='access_url_group_fk')
-
-
-class EnterpriseInfo(models.Model):
-    enterprise_id = models.CharField(max_length=48, primary_key=True)
-    enterprise_name = models.CharField(max_length=128)
-    enterprise_tele = models.CharField(max_length=32)
-    enterprise_license_id = models.CharField(max_length=32)
-    enterprise_license_id_url = models.CharField(max_length=256)
-    enterprise_legal_rep_name = models.CharField(max_length=128)
-    enterprise_email = models.CharField(max_length=128)
-    enterprise_deposit = models.BigIntegerField(default=0)
-    enterprise_deposit_status = models.IntegerField(default=0)
-    enterprise_address = models.CharField(max_length=128, default='')
-    enterprise_homepage_url = models.CharField(max_length=128, default='')
-    register_time = models.DateTimeField(default=datetime.datetime.today())
-    last_update_time = models.DateTimeField(default=datetime.datetime.today())
-
-
-class EnterpriseUser(models.Model):
-    user_id = models.CharField(max_length=48, primary_key=True)
-    user_name = models.CharField(max_length=48)
-    user_password = models.CharField(max_length=32)
-    register_time = models.DateTimeField(default=datetime.datetime.today())
-    status = models.CharField(max_length=16)
-    avatar_url = models.CharField(max_length=256)
-    user_phone = models.CharField(max_length=16)
-    user_email = models.CharField(max_length=128)
-    enterprise = models.ForeignKey(EnterpriseInfo, related_name='enterprise_user_enterprise_info_fk', null=True)
-    user_token = models.CharField(max_length=64, default='')
-    role = models.CharField(max_length=16, default='user')
-    group = models.ForeignKey(AccessGroup, null=True)
-    user_real_name = models.CharField(max_length=48, default='')
-    user_gender = models.CharField(max_length=8, default='')
-    user_nickname = models.CharField(max_length=48, default='')
-    user_alias_id = models.CharField(max_length=64, default='')
-    user_password_encrypt = models.CharField(max_length=256, default='')
