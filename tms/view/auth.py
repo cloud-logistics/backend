@@ -19,7 +19,7 @@ import uuid
 from tms.utils.redistools import RedisTool
 
 
-USER_ALIAS_ID_HASH = 'user_alias_id_hash'
+USER_ALIAS_ID_HASH = 'tms_user_alias_id_hash'
 log = get_logger(__name__)
 
 
@@ -282,12 +282,6 @@ def auth_user_logout(request):
     # except Exception, e:
     #     log.error(e)
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
-
-
-@csrf_exempt
-@api_view(['GET'])
-def test(request):
-    return JsonResponse(retcode("test", "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
 
 def get_connection_from_pool():

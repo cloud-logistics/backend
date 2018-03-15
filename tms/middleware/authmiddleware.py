@@ -11,8 +11,8 @@ import re
 from django.contrib.sessions.models import Session
 
 
-PERMISSION_GROUP_HASH = 'permissions_group_hash'
-PERMISSION_URL_HASH = 'permissions_url_hash'
+PERMISSION_GROUP_HASH = 'tms_permissions_group_hash'
+PERMISSION_URL_HASH = 'tms_permissions_url_hash'
 log = logger.get_logger(__name__)
 
 try:
