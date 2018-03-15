@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from util.geo import cal_position
 
 # Create your models here.
 
@@ -28,7 +29,6 @@ class TruckFlume(models.Model):
 
 # 智能硬件传感器信息
 class SensorData(models.Model):
-    id = models.IntegerField(primary_key=True)
     timestamp = models.IntegerField(default=0)  # 数据时间
     intimestamp = models.IntegerField(default=0)  # 记录入库时间
     deviceid = models.CharField(max_length=128, default='')
@@ -43,6 +43,12 @@ class SensorData(models.Model):
     aqua = models.CharField(max_length=20, default='0')  # 水色
     nutrient_salt_of_water = models.CharField(max_length=20, default='0')  # 水体营养盐
     anaerobion = models.CharField(max_length=20, default='0')  # 厌氧菌
+
+    def convert_longitude(self):
+        return str(cal_position(self.longitude))
+
+    def convert_latitude(self):
+        return str(cal_position(self.latitude))
 
 
 # 水产类型
@@ -70,7 +76,7 @@ class FishingHistory(models.Model):
     QR_id = models.CharField(max_length=128, default='', primary_key=True)
     fish_type = models.ForeignKey(FishType, related_name='fishing_history_fish_type_fk')
     fishery = models.ForeignKey(Fishery, related_name='fishing_history_fishery_fk')
-    weight = models.DecimalField()
+    weight = models.DecimalField(decimal_places=2, max_digits=5)
     unit = models.ForeignKey(Unit, related_name='fishing_history_unit_fk')
     flume = models.ForeignKey(TruckFlume, related_name='fishing_history_flume', null=True)
 
