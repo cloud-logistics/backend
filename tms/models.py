@@ -79,6 +79,7 @@ class FishingHistory(models.Model):
     weight = models.DecimalField(decimal_places=2, max_digits=5)
     unit = models.ForeignKey(Unit, related_name='fishing_history_unit_fk')
     flume = models.ForeignKey(TruckFlume, related_name='fishing_history_flume', null=True)
+    order_status = models.IntegerField(default=0)  # 订单状态, 0 创建订单  1 订单运输中  2 订单结束
 
 
 # 操作流水
