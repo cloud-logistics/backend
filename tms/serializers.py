@@ -49,3 +49,5 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         exclude = ('user_password', 'user_password_encrypt')
+
+
