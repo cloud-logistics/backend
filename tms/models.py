@@ -6,8 +6,6 @@ from util.geo import cal_position
 
 # Create your models here.
 import datetime
-from django.utils import timezone
-import pytz
 
 
 class AccessGroup(models.Model):
