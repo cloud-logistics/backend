@@ -111,6 +111,8 @@ class SiteInfo(models.Model):
     nation = models.ForeignKey(Nation, related_name='site_nation_fk', default=1)
     volume = models.IntegerField(default=0)
     telephone = models.CharField(max_length=20, default='')
+    price = models.IntegerField(default=0)
+    # owner = models.ForeignKey(Enterpriseuser, null=True)
 
 
 class BoxTypeInfo(models.Model):
@@ -170,6 +172,7 @@ class BoxInfo(models.Model):
     tid = models.CharField(max_length=48)
     ava_flag = models.CharField(max_length=1, default='Y')
     siteinfo = models.ForeignKey(SiteInfo, related_name='box_site_fk', null=True)
+    # box_group_info = models.ForeignKey(BoxGroupInfo)
 
 
 # 传感器数据
@@ -275,3 +278,34 @@ class MaintenanceStation(models.Model):
     longitude = models.CharField(max_length=20)
     latitude = models.CharField(max_length=20)
     contact = models.CharField(max_length=20)
+
+#
+# class BoxSize(models.Model):
+#     id = models.AutoField(primary_key=True)
+#     length = models.IntegerField(default=0)
+#     width = models.IntegerField(default=0)
+#     height = models.IntegerField(default=0)
+#
+#
+# class BoxGroupInfo(models.Model):
+#     id = models.CharField(max_length=32, primary_key=True)
+#     box_size = models.ForeignKey(BoxSize)
+#     rent_rate = models.FloatField(default=0)
+#     owner = models.ForeignKey(EnterpriseUser)
+#
+#
+# class RatingInfo(models.Model):
+#     id = models.CharField(max_length=32, primary_key=True)
+#     rating = models.FloatField(default=10.0)
+#     # owner = models.ForeignKey(EnterpriseUser)
+#     box_group_info = models.ForeignKey(BoxGroupInfo)
+#
+#
+# class RatingInfoDetail(models.Model):
+#     id = models.CharField(max_length=32, primary_key=True)
+#     rating_info = models.ForeignKey(RatingInfo)
+#     comment_receiver = models.ForeignKey(EnterpriseUser)
+#     comment = models.CharField(max_length=256, default='')
+
+
+
