@@ -107,7 +107,7 @@ class Fishery(models.Model):
 
 # 主订单表
 class FishingHistory(models.Model):
-    QR_id = models.CharField(max_length=128, default='', primary_key=True)
+    qr_id = models.CharField(max_length=128, default='', primary_key=True)
     fish_type = models.ForeignKey(FishType, related_name='fishing_history_fish_type_fk')
     fishery = models.ForeignKey(Fishery, related_name='fishing_history_fishery_fk')
     weight = models.DecimalField(decimal_places=2, max_digits=5)
