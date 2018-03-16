@@ -31,6 +31,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), update_box_bill_daily.s())
     sender.add_periodic_task(crontab(minute=5, hour=0), box_rent_fee_month_billing.s())
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), update_redis_auth_info.s())
+    sender.add_periodic_task(crontab(minute='*/5', hour='*'), update_tms_redis_auth_info.s())
     sender.add_periodic_task(crontab(minute=0, hour=2), dump_sensor_data.s())
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), cal_missing_alarm.s())
     sender.add_periodic_task(crontab(minute='*/2', hour='*'), update_site_box_stock.s())
@@ -617,3 +618,42 @@ def cancel_site_box_stock():
     except Exception, e:
         log.error(repr(e))
     log.info("update_site_box_stock: compute end")
+
+
+@app.task
+def update_tms_redis_auth_info():
+    from tms.models import AccessGroup, AccessUrlGroup, AuthUserGroup
+    from tms.serializers import AccessGroupSerializer, AuthUserGroupSerializer, AccessUrlGroupSerializer
+    from tms.utils import logger
+    from tms.utils.redistools import RedisTool
+    PERMISSION_GROUP_HASH = 'tms_permissions_group_hash'
+    PERMISSION_URL_HASH = 'tms_permissions_url_hash'
+    log = logger.get_logger(__name__)
+    log.info("tms_update_redis_auth_info begin")
+    try:
+        redis_pool = RedisTool()
+        conn = redis_pool.get_connection()
+        access_group_ret = AccessGroup.objects.all()
+        access_group_list = AccessGroupSerializer(access_group_ret, many=True).data
+        groupid_group_dic = {}
+        for item in access_group_list:
+            groupid_group_dic[item['access_group_id']] = item['group']
+        ret = AuthUserGroup.objects.all()
+        auth_user_group = AuthUserGroupSerializer(ret, many=True).data
+        for item in auth_user_group:
+            conn.hset(PERMISSION_GROUP_HASH, item['user_token'], groupid_group_dic[item['group']])
+        for item_access_group in access_group_list:
+            ret = AccessUrlGroup.objects.filter(access_group__group=item_access_group['group'])
+            access_url_list = []
+            access_url_group = AccessUrlGroupSerializer(ret, many=True).data
+            for item in access_url_group:
+                access_url_list.append(item['access_url_set'])
+            if access_url_list:
+                final_hash_value = ','.join(access_url_list)
+            else:
+                final_hash_value = ''
+            if final_hash_value:
+                conn.hset(PERMISSION_URL_HASH, item_access_group['group'], final_hash_value)
+    except Exception, e:
+        log.error(repr(e))
+    log.info("tms_update_redis_auth_info end")

@@ -3,10 +3,10 @@
 
 from tms.models import SensorData
 from rest_framework import serializers
-from models import AccessGroup
-from models import AuthUserGroup
-from models import AccessUrlGroup
-from models import User
+from tms.models import AccessGroup
+from tms.models import AuthUserGroup
+from tms.models import AccessUrlGroup
+from tms.models import User
 
 
 class SensorDataSerializer(serializers.ModelSerializer):

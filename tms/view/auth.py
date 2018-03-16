@@ -202,7 +202,7 @@ def auth_with_salt(request):
     except User.DoesNotExist, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0403", '用户不存在或用户密码不正确'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
-    ser_user = User(user)
+    ser_user = UserSerializer(user)
     ret = ser_user.data
     ret['group'] = user.group.group
     # request.session[user.user_token] = user.user_token
