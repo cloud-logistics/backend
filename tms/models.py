@@ -47,19 +47,19 @@ class SensorData(models.Model):
 
 # 水产类型
 class FishType(models.Model):
-    type_id = models.CharField(max_length=128, default='', primary_key=True)
+    type_id = models.IntegerField(primary_key=True)
     type_name = models.CharField(max_length=128, default='')
 
 
 # 单位
 class Unit(models.Model):
-    unit_id = models.CharField(max_length=128, default='', primary_key=True)
+    unit_id = models.IntegerField(primary_key=True)
     unit_name = models.CharField(max_length=128, default='')
 
 
 # 渔场
 class Fishery(models.Model):
-    fishery_id = models.CharField(max_length=128, default='', primary_key=True)
+    fishery_id = models.IntegerField(primary_key=True)
     fishery_name = models.CharField(max_length=128, default='')
     longitude = models.CharField(max_length=20, default='0')
     latitude = models.CharField(max_length=20, default='0')
@@ -70,17 +70,25 @@ class FishingHistory(models.Model):
     QR_id = models.CharField(max_length=128, default='', primary_key=True)
     fish_type = models.ForeignKey(FishType, related_name='fishing_history_fish_type_fk')
     fishery = models.ForeignKey(Fishery, related_name='fishing_history_fishery_fk')
-    weight = models.DecimalField()
+    weight = models.DecimalField(max_digits=12, decimal_places=4)
     unit = models.ForeignKey(Unit, related_name='fishing_history_unit_fk')
     flume = models.ForeignKey(TruckFlume, related_name='fishing_history_flume', null=True)
+    status = models.IntegerField(default=1)
 
 
 # 操作流水
 class OperateHistory(models.Model):
-    QR_id = models.CharField(max_length=128, default='')
-    timestamp = models.IntegerField
-    operate_type = models.IntegerField  # 操作类型: 1 捕捞 2 装车 3 商家收货
+    id = models.AutoField(primary_key=True)
+    qr_id = models.CharField(max_length=128, default='')
     user = models.ForeignKey(User, related_name='operate_history_user')
+    timestamp = models.IntegerField
+    op_type = models.IntegerField  # 操作类型: 1 捕捞 2 装车 3 商家收货
+
+
+
+
+
+
 
 
 

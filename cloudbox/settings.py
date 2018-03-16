@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     # 'sensor.apps.QuickstartConfig',
     'monservice.apps.MonserviceConfig',
     'rentservice.apps.RentserviceConfig',
+    'tms.apps.TmsConfig',
     'django_celery_beat',
     'django_celery_results',
     'rest_framework',
@@ -95,7 +96,7 @@ DATABASES = {
         'USER': 'postgres',
         'PASSWORD': '@CloudBox601',
         'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'PORT': '5433',
     }
 }
 
