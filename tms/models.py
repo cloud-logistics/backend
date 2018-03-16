@@ -37,6 +37,7 @@ class Role(models.Model):
 # 用户
 class User(models.Model):
     user_id = models.CharField(max_length=128, default='', primary_key=True)
+    user_name = models.CharField(max_length=128, default='')
     role = models.ForeignKey(Role, related_name='user_role_fk')
     user_password = models.CharField(max_length=32)
     register_time = models.DateTimeField(default=datetime.datetime.today())
@@ -121,8 +122,8 @@ class OperateHistory(models.Model):
     id = models.AutoField(primary_key=True)
     qr_id = models.CharField(max_length=128, default='')
     user = models.ForeignKey(User, related_name='operate_history_user')
-    timestamp = models.IntegerField
-    op_type = models.IntegerField  # 操作类型: 1 捕捞 2 装车 3 商家收货
+    timestamp = models.IntegerField(default=0)
+    op_type = models.IntegerField(default=1)  # 操作类型: 1 捕捞 2 装车 3 商家收货
 
 
 
