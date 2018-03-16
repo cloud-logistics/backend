@@ -13,7 +13,7 @@ log = logger.get_logger(__name__)
 
 
 # 接收传感器数据
-@api_view(['POST'])
+@api_view(['POST', 'PUT'])
 def receive_data(request):
     log.debug('tms receive data' + request.body)
 

@@ -6,7 +6,10 @@ from tms.view import auth
 
 urlpatterns = [
     url(r'^receive_data$', sensor.receive_data),                           # 传感器接收数据
-    url(r'^ongoing_order$', order.ongoing_order),                          # 在运订单列表
+    url(r'^get_order$', order.get_order),                                  # 获取订单列表
+    url(r'^order_detail$', order.order_detail),                            # 获取订单详情
+    url(r'^indicator_history$', order.indicator_history),                  # 获取指标曲线
+
     url(r'^auth/adminauth$', auth.admin_auth),  # admn login verify
     url(r'^auth/auth$', auth.auth),  # 新增用户
     url(r'^auth/groups/detail/(?P<access_group_id>[0-9a-zA-Z-]+)$', auth.group_detail),  # 用户群组
