@@ -37,6 +37,7 @@ class Role(models.Model):
 # 用户
 class User(models.Model):
     user_id = models.CharField(max_length=128, default='', primary_key=True)
+    user_name = models.CharField(max_length=128, default='')
     role = models.ForeignKey(Role, related_name='user_role_fk')
     user_password = models.CharField(max_length=32)
     register_time = models.DateTimeField(default=datetime.datetime.today())
