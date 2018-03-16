@@ -74,16 +74,16 @@ def load_up(request):
         user_id = request.GET.get('user_id')
 
         data = json.loads(request.body)
-        QR_id = data['qr_id']
+        qr_id = data['qr_id']
 
-        order = FishingHistory.objects.get(QR_id=QR_id)
+        order = FishingHistory.objects.get(qr_id=qr_id)
         flume_id = data['flume_id']
         order.flume = flume_id
         order.save()
 
         # 流水
         ts = str(time.time())[0:10]
-        op = OperateHistory(QR_id=QR_id, timestamp=ts, operate_type=2, user=user_id)
+        op = OperateHistory(qr_id=qr_id, timestamp=ts, operate_type=2, user=user_id)
         op.save()
 
     except Exception, e:
@@ -101,16 +101,16 @@ def load_up(request):
 def load_off(request, user_id):
     try:
         data = json.loads(request.body)
-        QR_id = data['qr_id']
+        qr_id = data['qr_id']
 
         # 结束
-        order = FishingHistory.objects.get(QR_id=QR_id)
+        order = FishingHistory.objects.get(qr_id=qr_id)
         order.status = 0
         order.save()
 
         # 流水
         ts = str(time.time())[0:10]
-        op = OperateHistory(QR_id=QR_id, timestamp=ts, operate_type=3, user=user_id)
+        op = OperateHistory(qr_id=qr_id, timestamp=ts, operate_type=3, user=user_id)
         op.save()
 
     except Exception, e:
