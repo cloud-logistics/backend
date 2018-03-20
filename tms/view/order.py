@@ -108,7 +108,6 @@ def order_detail(request):
 
 # 获取指标历史曲线
 @api_view(['GET'])
-<<<<<<< Updated upstream
 def indicator_history(request):
     try:
         qr_id = request.GET.get("qr_id")
