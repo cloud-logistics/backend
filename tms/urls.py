@@ -11,7 +11,6 @@ urlpatterns = [
     url(r'^indicator_history$', order.indicator_history),                  # 获取指标曲线
     url(r'^order_statistic$', order.order_statistic),                      # 获取订单数量统计
 
-    url(r'^auth/adminauth$', auth.admin_auth),  # admn login verify
     url(r'^auth/auth$', auth.auth),  # 新增用户
     url(r'^ongoing_order$', order.ongoing_order),                          # 在运订单列表
     url(r'^auth/groups/detail/(?P<access_group_id>[0-9a-zA-Z-]+)$', auth.group_detail),  # 用户群组
@@ -20,7 +19,6 @@ urlpatterns = [
     url(r'^auth/authsalt$', auth.auth_with_salt),  # user login verify
     url(r'^auth/pwdreset$', auth.change_password),  # 修改密码
     url(r'^auth/logout$', auth.auth_user_logout),  # user log out
-
     url(r'^fishing$', flow.fishing),  # 捕捞
     url(r'^loadup$', flow.load_up),  # 装车
     url(r'^loadoff/(?P<user_id>[0-9a-zA-Z-]+)$', flow.load_off),  # 装车
