@@ -89,8 +89,10 @@ WSGI_APPLICATION = 'cloudbox.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-
-        'NAME': 'tms',
+        'OPTIONS': {
+            'options': '-c search_path=iot'
+        },
+        'NAME': 'cloudbox',
         'USER': 'postgres',
         'PASSWORD': '@CloudBox601',
         'HOST': '127.0.0.1',
