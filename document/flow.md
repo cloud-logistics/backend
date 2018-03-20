@@ -112,7 +112,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/tms/fishing?user_id=123`
+`container/api/v1/cloudbox/tms/fishing`
 
 #### 方法： 
 
@@ -122,6 +122,7 @@
 
 ```
 {
+    "user_id": "1",
 	"qr_id" : "1234566",
     "fish_type_id": 1,
     "fishery_id": 1,
@@ -143,7 +144,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/tms/loadup?user_id=123`
+`container/api/v1/cloudbox/tms/loadup`
 
 #### 方法： 
 
@@ -153,8 +154,9 @@
 
 ```
 {
+    "user_id": "1",
 	"qr_id" : "1234566",
-    "flume_id": 1
+    "flume_id": "﻿flume01"
 }
 ```
  
@@ -163,7 +165,7 @@
 ```
 {
     "status": "OK",
-    "msg": "loadup report success."
+    "msg": "loadup success."
 }
 ```
 
@@ -172,7 +174,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/tms/loadoff?user_id=123`
+`container/api/v1/cloudbox/tms/loadoff`
 
 #### 方法： 
 
@@ -182,6 +184,7 @@
 
 ```
 {
+    "user_id": "1",
 	"qr_id" : "1234566"
 }
 ```
@@ -191,6 +194,6 @@
 ```
 {
     "status": "OK",
-    "msg": "loadup report success."
+    "msg": "loadoff success."
 }
 ```

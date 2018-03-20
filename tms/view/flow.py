@@ -40,22 +40,23 @@ def get_order(request):
 @api_view(['POST'])
 def fishing(request):
     try:
-        user_id = request.GET.get('user_id')
 
         data = json.loads(request.body)
-        QR_id = data['qr_id']
+
+        user_id = data['user_id']
+        qr_id = data['qr_id']
         fish_type = data['fish_type_id']
         fishery = data['fishery_id']
         weight = data['weight']
         unit = data['unit_id']
 
         # 订单
-        order = FishingHistory(QR_id=QR_id, fish_type_id=fish_type, fishery_id=fishery,  weight=weight, unit_id=unit)
+        order = FishingHistory(qr_id=qr_id, fish_type_id=fish_type, fishery_id=fishery,  weight=weight, unit_id=unit)
         order.save()
 
         # 流水
         ts = str(time.time())[0:10]
-        op = OperateHistory(QR_id=QR_id, timestamp=ts, operate_type=1, user_id=user_id)
+        op = OperateHistory(qr_id=qr_id, timestamp=ts, op_type=1, user_id=user_id, )
         op.save()
 
     except Exception, e:
@@ -72,19 +73,20 @@ def fishing(request):
 @api_view(['POST'])
 def load_up(request):
     try:
-        user_id = request.GET.get('user_id')
-
         data = json.loads(request.body)
+
+        user_id = data['user_id']
         qr_id = data['qr_id']
 
         order = FishingHistory.objects.get(qr_id=qr_id)
         flume_id = data['flume_id']
-        order.flume = flume_id
+        order.flume_id = flume_id
+        order.order_status = 1
         order.save()
 
         # 流水
         ts = str(time.time())[0:10]
-        op = OperateHistory(qr_id=qr_id, timestamp=ts, operate_type=2, user=user_id)
+        op = OperateHistory(qr_id=qr_id, timestamp=ts, op_type=2, user_id=user_id)
         op.save()
 
     except Exception, e:
@@ -99,19 +101,21 @@ def load_up(request):
 # 卸载
 @csrf_exempt
 @api_view(['POST'])
-def load_off(request, user_id):
+def load_off(request):
     try:
         data = json.loads(request.body)
+
+        user_id = data['user_id']
         qr_id = data['qr_id']
 
         # 结束
         order = FishingHistory.objects.get(qr_id=qr_id)
-        order.status = 0
+        order.order_status = 2
         order.save()
 
         # 流水
         ts = str(time.time())[0:10]
-        op = OperateHistory(qr_id=qr_id, timestamp=ts, operate_type=3, user=user_id)
+        op = OperateHistory(qr_id=qr_id, timestamp=ts, op_type=3, user_id=user_id)
         op.save()
 
     except Exception, e:
