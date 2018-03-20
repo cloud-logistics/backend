@@ -30,7 +30,8 @@ def get_order(request):
         response_msg = {'code': 'ERROR', 'message': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status':'OK', 'msg': 'save fishing success.', 'qr_id': order_id}
+        link = 'http://goodsrider.hnaresearch.com/order/'
+        response_msg = {'status':'OK', 'msg': 'get order id success.', 'qr_id': order_id, 'link': link + order_id}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
