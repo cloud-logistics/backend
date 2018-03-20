@@ -45,12 +45,20 @@ def get_order(request):
         ret_data = []
         for item in data:
             qr_id = item[0]
+            timestamp_data = OperateHistory.objects.values_list('timestamp').\
+                filter(qr_id=qr_id).filter(op_type=1)  # 获取捕捞时间
+            if len(timestamp_data) > 0:
+                fishing_timestamp = timestamp_data[0][0]
+            else:
+                fishing_timestamp = 'NA'
+
             weight = item[1]
             unit = item[2]
             type_name = item[3]
             fishery_name = item[4]
             ret_data.append({'qr_id': qr_id, 'weight': weight, 'unit': unit,
-                             'type_name': type_name, 'fishery_name': fishery_name})
+                             'type_name': type_name, 'fishery_name': fishery_name,
+                             'fishing_timestamp': fishing_timestamp})
         return JsonResponse(retcode(ret_data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
     except Exception, e:
         log.error(e.message)
