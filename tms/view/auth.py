@@ -105,29 +105,6 @@ def group_detail(request, access_group_id):
 
 @csrf_exempt
 @api_view(['POST'])
-def admin_auth(request):
-    data = JSONParser().parse(request)
-    try:
-        username = data['username']
-    except Exception:
-        return JsonResponse(retcode(errcode("9999", '注册姓名不能为空'), "9999", '注册姓名不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
-    try:
-        password = data['password']
-    except Exception:
-        return JsonResponse(retcode(errcode("9999", '注册密码不能为空'), "9999", '注册密码不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
-    try:
-        user = User.objects.get(user_name=username, user_password=password, group__group='admin')
-    except User.DoesNotExist, e:
-        log.error(repr(e))
-        return JsonResponse(retcode(errcode("0403", '用户不存在或用户密码不正确'), "0403", '用户不存在或用户密码不正确'), safe=True, status=status.HTTP_403_FORBIDDEN)
-    ser_user = UserSerializer(user)
-    ret = ser_user.data
-    ret['group'] = user.group.group
-    return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
-
-
-@csrf_exempt
-@api_view(['POST'])
 def admin_auth_with_salt(request):
     data = JSONParser().parse(request)
     try:
