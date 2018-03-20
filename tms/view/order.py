@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from django.http import JsonResponse
 from django.db.models import Max, Min
-from tms.models import FishingHistory, OperateHistory
+from tms.models import FishingHistory, OperateHistory, User, Role
 from tms.utils.retcode import *
 from util.db import query_list
 import time
@@ -17,25 +17,38 @@ log = logger.get_logger(__name__)
 def get_order(request):
     try:
         user_id = request.GET.get("user_id")
-        order_status = request.GET.get("order_status")  # 1 已经捕捞  2 已经装车  3 已经交付商家
-        data = FishingHistory.objects.raw('select fishinghistory.qr_id,weight,unit.unit_name,"user".user_name '
-                                          'as fishman_name,fishtype.type_name,fishery.fishery_name '
-                                          'from tms_fishinghistory fishinghistory '
-                                          'inner join tms_operatehistory operatehistory '
-                                          'on fishinghistory.qr_id = operatehistory.qr_id '
-                                          ' and operatehistory.op_type = ' + order_status +
-                                          ' inner join tms_unit unit on fishinghistory.unit_id = unit.unit_id '
-                                          'inner join tms_user "user" on operatehistory.user_id = "user".user_id '
-                                          'inner join tms_fishtype fishtype on fishtype.type_id = fishinghistory.fish_type_id '    
-                                          'inner join tms_fishery fishery on fishery.fishery_id = fishinghistory.fishery_id '
-                                          'and operatehistory.user_id = \'' + user_id + '\'')
+        order_status = str(request.GET.get("order_status"))  # 0 在运  1 已完成
+        role_name = User.objects.select_related('role').get(user_id=user_id).role.role_name
+
+        condition = ' 1=1 '
+        if role_name != 'admin':
+            condition = condition + ' and user_id = \'' + user_id + '\' '
+
+        if order_status == '0':
+            # 在运
+            sql = 'select qr_id from tms_operatehistory where ' + condition + \
+                  ' and qr_id not in (select qr_id from tms_operatehistory ' \
+                  'where op_type = 3 group by qr_id) group by qr_id'
+        else:
+            # 已完成
+            sql = 'select qr_id from tms_operatehistory where ' + condition + \
+                  ' and qr_id in (select qr_id from tms_operatehistory ' \
+                  'where op_type = 3 group by qr_id) group by qr_id'
+        qr_ids = query_list(sql)
+        qr_ids_str = []
+        for item in qr_ids:
+            qr_ids_str.append(item[0])
+        data = FishingHistory.objects.select_related('fish_type').\
+            select_related('fishery').select_related('unit').\
+            values_list('qr_id', 'weight', 'unit__unit_name', 'fish_type__type_name', 'fishery__fishery_name').\
+            filter(qr_id__in=qr_ids_str).order_by('qr_id')
         ret_data = []
         for item in data:
-            qr_id = item.qr_id
-            weight = item.weight
-            unit = item.unit_name
-            type_name = item.type_name
-            fishery_name = item.fishery_name
+            qr_id = item[0]
+            weight = item[1]
+            unit = item[2]
+            type_name = item[3]
+            fishery_name = item[4]
             ret_data.append({'qr_id': qr_id, 'weight': weight, 'unit': unit,
                              'type_name': type_name, 'fishery_name': fishery_name})
         return JsonResponse(retcode(ret_data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
@@ -103,7 +116,7 @@ def indicator_history(request):
         points = 20
         ret_list = []
 
-        if indicator_type in ('salinity', 'ph', 'dissolved_oxygen'):
+        if indicator_type in ('salinity', 'ph', 'dissolved_oxygen', 'temperature'):
             indicator = indicator_type
         else:
             indicator = 'salinity'
@@ -151,4 +164,19 @@ def indicator_history(request):
         return JsonResponse(retcode(err_msg, "9999", "Fail"), safe=True,
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+# 获取订单数量统计
+@api_view(['GET'])
+def order_statistic(request):
+    # 1 已经捕捞  2 已经装车  3 已经交付商家
+    pass
+
+
+# unicode转str
+def to_str(str_or_unicode):
+    if isinstance(str_or_unicode, unicode):
+        value = str_or_unicode.encode('utf-8')
+    else:
+        value = str_or_unicode
+    return value
 

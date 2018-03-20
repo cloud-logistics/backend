@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^get_order$', order.get_order),                                  # 获取订单列表
     url(r'^order_detail$', order.order_detail),                            # 获取订单详情
     url(r'^indicator_history$', order.indicator_history),                  # 获取指标曲线
+    url(r'^order_statistic$', order.order_statistic),                      # 获取订单数量统计
 
     url(r'^auth/adminauth$', auth.admin_auth),  # admn login verify
     url(r'^auth/auth$', auth.auth),  # 新增用户
