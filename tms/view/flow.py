@@ -80,13 +80,13 @@ def load_up(request):
 
         order = FishingHistory.objects.get(qr_id=qr_id)
         flume_id = data['flume_id']
-        order.flume = flume_id
+        order.flume_id = flume_id
         order.order_status = 1
         order.save()
 
         # 流水
         ts = str(time.time())[0:10]
-        op = OperateHistory(qr_id=qr_id, timestamp=ts, operate_type=2, user=user_id)
+        op = OperateHistory(qr_id=qr_id, timestamp=ts, op_type=2, user_id=user_id)
         op.save()
 
     except Exception, e:
@@ -115,7 +115,7 @@ def load_off(request):
 
         # 流水
         ts = str(time.time())[0:10]
-        op = OperateHistory(qr_id=qr_id, timestamp=ts, operate_type=3, user=user_id)
+        op = OperateHistory(qr_id=qr_id, timestamp=ts, op_type=3, user_id=user_id)
         op.save()
 
     except Exception, e:
