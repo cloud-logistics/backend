@@ -172,22 +172,3 @@ def order_statistic(request):
     pass
 
 
-# unicode转str
-def to_str(str_or_unicode):
-    if isinstance(str_or_unicode, unicode):
-        value = str_or_unicode.encode('utf-8')
-    else:
-        value = str_or_unicode
-    return value
-
-def ongoing_order(request):
-    user_id = request.GET.get("user_id")
-    data = FishingHistory.objects.raw('select fishinghistory."QR_id",weight,unit.unit_name,"user".user_name '
-                                      'as fishman_name '
-                                      'from iot.tms_fishinghistory fishinghistory '
-                                      'inner join iot.tms_operatehistory operatehistory '
-                                      'on fishinghistory."QR_id" = operatehistory."QR_id" '
-                                      'and fishinghistory.order_status = 1 and operatehistory.operate_type = 1 '
-                                      'inner join iot.tms_unit unit on fishinghistory.unit_id = unit.unit_id '
-                                      'inner join iot.tms_user "user" on operatehistory.user_id = "user".user_id '
-                                      'and operatehistory.user_id = \'' + user_id + '\'')
