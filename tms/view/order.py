@@ -7,6 +7,7 @@ from django.db.models import Max, Min
 from tms.models import FishingHistory, OperateHistory
 from tms.utils.retcode import *
 from util.db import query_list
+import time
 
 log = logger.get_logger(__name__)
 
@@ -98,22 +99,52 @@ def indicator_history(request):
     try:
         qr_id = request.GET.get("qr_id")
         indicator_type = request.GET.get('indicator_type')
+        # 默认显示20个点
+        points = 20
+        ret_list = []
 
         if indicator_type in ('salinity', 'ph', 'dissolved_oxygen'):
             indicator = indicator_type
         else:
             indicator = 'salinity'
 
-        min_time_data = OperateHistory.objects.annotate(Min('timestamp')).filter(qr_id=qr_id)
-        max_time_data = OperateHistory.objects.annotate(Max('timestamp')).filter(qr_id=qr_id)
+        # 获取订单起始时间和结束时间
+        min_time_data = OperateHistory.objects.filter(qr_id=qr_id).aggregate(Min('timestamp'))
+        max_time_data = OperateHistory.objects.filter(qr_id=qr_id).aggregate(Max('timestamp'))
+        start_time = min_time_data['timestamp__min']
+        end_time = max_time_data['timestamp__max']
 
-        start_time = min_time_data[0].timestamp
-        end_time = max_time_data[0].timestamp
+        # 获取订单对应的deviceid
+        deviceid_data = FishingHistory.objects.select_related('flume').values_list('flume__deviceid').filter(qr_id=qr_id)
+        if len(deviceid_data) > 0:
+            deviceid = deviceid_data[0][0]
+        else:
+            deviceid = ''
 
         data_list = query_list('SELECT * FROM fn_indicator_history(' + str(start_time) + ',' +
-                               str(end_time) + ',\'' + indicator + '\',\'' + id + '\') AS (value DECIMAL, hour INTEGER)')
+                               str(end_time) + ',' + str(points) + ',\'' +
+                               str(indicator) + '\',\'' + str(deviceid) + '\') AS (value DECIMAL, x INTEGER)')
+        # 根据查询到到数据，由list转为dict
+        time_map = {}
+        for item in data_list:
+            time_map[item[1]] = item[0]
 
-        return JsonResponse(retcode(data_list, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+        # 构造最终返回list
+        for i in range(points):
+            value_dict = {}
+            step = ((end_time - start_time) / points)
+
+            x1 = time.strftime('%Y-%m-%d %H:%M', time.localtime(i * step + start_time))
+            x2 = time.strftime('%Y-%m-%d %H:%M', time.localtime((i + 1) * step + start_time))
+            if i == points - 1:
+                x2 = time.strftime('%Y-%m-%d %H:%M', time.localtime(end_time))
+            value_dict['time'] = x1 + '~' + x2
+            if i in time_map.keys():
+                value_dict['value'] = time_map.get(i)
+            else:
+                value_dict['value'] = 'NA'
+            ret_list.append(value_dict)
+        return JsonResponse(retcode(ret_list, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
     except Exception, e:
         log.error(e.message)
         err_msg = 'server internal error, pls contact admin'

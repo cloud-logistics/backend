@@ -464,3 +464,62 @@ DECLARE
   RETURN v_final;
  END;
 $$ LANGUAGE 'plpgsql';
+
+
+
+/***
+根据给定指标名称，查询指定个数时间点（时间范围由参数中开始和结束时间确定）的指标趋势
+调用示例: select * from fn_indicator_history(1521104363,1521430200,20,'ph','dev1') AS (value DECIMAL, x INTEGER);
+ */
+CREATE OR REPLACE FUNCTION fn_indicator_history(start_time INTEGER, end_time INTEGER, points INTEGER, indicator TEXT, deviceid TEXT) RETURNS SETOF RECORD AS $$
+  DECLARE
+    v_start_time                         INTEGER;
+    v_end_time                           INTEGER;
+    v_indicator                          TEXT;
+    v_seconds_per_point                  NUMERIC;
+    v_record                             RECORD;
+    v_deviceid                           TEXT;
+    v_sql                                TEXT;
+    v_points                             INTEGER;
+    v_i                                  INTEGER;
+    v_step_end_time                      INTEGER;
+
+  BEGIN
+    v_start_time := $1;
+    v_end_time := $2;
+    v_points := $3;
+    v_indicator := $4;
+    v_deviceid := $5;
+
+    v_seconds_per_point := (v_end_time - v_start_time) / v_points;
+    v_i := 0;
+
+    v_sql = 'SELECT CAST(AVG(' || v_indicator || ') AS DECIMAL(20, 2)),x FROM(SELECT CASE';
+
+    FOR i IN 0..v_points-1 LOOP
+      IF i = v_points-1 THEN
+        v_step_end_time := v_end_time;
+      ELSE
+        v_step_end_time := v_start_time + v_seconds_per_point * (i+1);
+      END IF;
+      v_sql := v_sql || ' WHEN timestamp >= ' || v_start_time || ' + ' || v_seconds_per_point || ' * ' || i ||
+                          ' AND timestamp < ' || v_step_end_time || ' THEN ' || i || ' ';
+    END LOOP;
+
+    v_sql := v_sql || 'END AS x,CAST(' || v_indicator ||
+      ' AS NUMERIC) FROM tms_sensordata sensor_data WHERE timestamp >= ' || v_start_time ||' AND timestamp < ' || v_end_time ||
+      ' AND sensor_data.deviceid = ''' || v_deviceid || ''') A GROUP BY x ORDER BY x ASC';
+
+    RAISE NOTICE 'to print:%',v_sql;
+
+    FOR v_record IN EXECUTE v_sql LOOP
+      RETURN NEXT v_record;
+    END LOOP;
+
+    RETURN;
+
+  END;
+$$ LANGUAGE 'plpgsql';
+
+
+
