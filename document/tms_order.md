@@ -116,7 +116,7 @@ qr_id: 订单id
 ##### parameter:
 ```
 qr_id: 订单id
-indicator_type：salinity、ph、dissolved_oxygen
+indicator_type：salinity、ph、dissolved_oxygen、temperature
 ```
 
 #### BODY:
@@ -150,3 +150,43 @@ indicator_type：salinity、ph、dissolved_oxygen
     "data": "server internal error, pls contact admin"
 }
 ```
+
+### 4. 获取订单数量统计信息：
+
+#### URL：
+
+`container/api/v1/cloudbox/tms/order_statistic?user_id=4`
+
+#### 方法：
+
+`GET`
+##### parameter:
+```
+user_id: 用户id
+```
+
+#### BODY:
+
+`无`
+
+#### 返回：
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": {
+        "done_num": 1,
+        "ongoing_num": 1,
+        "notice_num": 0
+    }
+}
+```
+
+```
+{
+    "message": "Fail",
+    "code": "9999",
+    "data": "server internal error, pls contact admin"
+}
+```
+
