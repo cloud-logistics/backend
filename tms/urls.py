@@ -12,7 +12,6 @@ urlpatterns = [
     url(r'^order_statistic$', order.order_statistic),                      # 获取订单数量统计
 
     url(r'^auth/auth$', auth.auth),  # 新增用户
-    url(r'^ongoing_order$', order.ongoing_order),                          # 在运订单列表
     url(r'^auth/groups/detail/(?P<access_group_id>[0-9a-zA-Z-]+)$', auth.group_detail),  # 用户群组
     url(r'^auth/groups/list$', auth.list_group),  # 用户群组
     url(r'^auth/adminauthsalt$', auth.admin_auth_with_salt),  # 新增用户
