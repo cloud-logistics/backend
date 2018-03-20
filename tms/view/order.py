@@ -10,6 +10,7 @@ from util.db import query_list
 import time
 
 log = logger.get_logger(__name__)
+ERR_MSG = 'server internal error, pls contact admin'
 
 
 # 获取订单列表
@@ -62,8 +63,7 @@ def get_order(request):
         return JsonResponse(retcode(ret_data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
     except Exception, e:
         log.error(e.message)
-        err_msg = 'server internal error, pls contact admin'
-        return JsonResponse(retcode(err_msg, "9999", "Fail"), safe=True,
+        return JsonResponse(retcode(ERR_MSG, "9999", "Fail"), safe=True,
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -109,8 +109,7 @@ def order_detail(request):
         return JsonResponse(retcode(ret_data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
     except Exception, e:
         log.error(e.message)
-        err_msg = 'server internal error, pls contact admin'
-        return JsonResponse(retcode(err_msg, "9999", "Fail"), safe=True,
+        return JsonResponse(retcode(ERR_MSG, "9999", "Fail"), safe=True,
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -168,15 +167,44 @@ def indicator_history(request):
         return JsonResponse(retcode(ret_list, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
     except Exception, e:
         log.error(e.message)
-        err_msg = 'server internal error, pls contact admin'
-        return JsonResponse(retcode(err_msg, "9999", "Fail"), safe=True,
+        return JsonResponse(retcode(ERR_MSG, "9999", "Fail"), safe=True,
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # 获取订单数量统计
 @api_view(['GET'])
 def order_statistic(request):
-    # 1 已经捕捞  2 已经装车  3 已经交付商家
-    pass
+    try:
+        user_id = request.GET.get("user_id")
+        role_name = User.objects.select_related('role').get(user_id=user_id).role.role_name
+        condition = ' 1=1 '
+        if role_name != 'admin':
+            condition = condition + ' and user_id = \'' + user_id + '\' '
 
+        # 在运
+        sql_ongoing = 'select COUNT(DISTINCT(qr_id)) from tms_operatehistory where ' + condition + \
+                      ' and qr_id not in (select qr_id from tms_operatehistory ' \
+                      'where op_type = 3 group by qr_id) group by qr_id'
+        data_ongoing = query_list(sql_ongoing)
+
+        # 已完成
+        sql_done = 'select COUNT(DISTINCT(qr_id)) from tms_operatehistory where ' + condition + \
+                   ' and qr_id in (select qr_id from tms_operatehistory ' \
+                   'where op_type = 3 group by qr_id) group by qr_id'
+        data_done = query_list(sql_done)
+        ret_data = {}
+        ret_data['notice_num'] = 0
+        if len(data_ongoing) > 0:
+            ret_data['ongoing_num'] = data_ongoing[0][0]
+        else:
+            ret_data['ongoing_num'] = 0
+        if len(data_done) > 0:
+            ret_data['done_num'] = data_done[0][0]
+        else:
+            ret_data['done_num'] = 0
+        return JsonResponse(retcode(ret_data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+    except Exception, e:
+        log.error(e.message)
+        return JsonResponse(retcode(ERR_MSG, "9999", "Fail"), safe=True,
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
