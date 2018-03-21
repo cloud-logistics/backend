@@ -28,5 +28,7 @@ urlpatterns = [
     url(r'^flumelist$', flow.get_flume_list),  # 获取水箱列表
     url(r'^user/userslist/(?P<role_id>[0-9a-zA-Z-]+)$', user.list_users),  # user log out
     url(r'^user/userdetail/(?P<user_id>[0-9a-zA-Z-]+)$', user.user_detail),  # user log out
+    url(r'^user/adduser$', user.add_user),  # user log out
+    url(r'^user/rmuser$', user.del_user),  # user log out
 ]
 

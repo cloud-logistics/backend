@@ -46,12 +46,16 @@ def get_order(request):
         ret_data = []
         for item in data:
             qr_id = item[0]
-            timestamp_data = OperateHistory.objects.values_list('timestamp').\
-                filter(qr_id=qr_id).filter(op_type=1)  # 获取捕捞时间
-            if len(timestamp_data) > 0:
-                fishing_timestamp = timestamp_data[0][0]
-            else:
-                fishing_timestamp = 'NA'
+            timestamp_data = OperateHistory.objects.values_list('timestamp', 'op_type').\
+                filter(qr_id=qr_id).filter(op_type__in=['1', '2', '3']).\
+                order_by('op_type')  # 获取捕捞时间 / 装车时间 / 交货时间
+            obj_dic = {}
+            for obj in timestamp_data:
+                obj_dic[obj[1]] = obj[0]
+
+            fishing_timestamp = (str(obj_dic.get(1)) + '000', 'NA')[obj_dic.get(1) is None]
+            load_timestamp = (str(obj_dic.get(2)) + '000', 'NA')[obj_dic.get(2) is None]
+            delivery_timestamp = (str(obj_dic.get(3)) + '000', 'NA')[obj_dic.get(3) is None]
 
             weight = item[1]
             unit = item[2]
@@ -59,7 +63,9 @@ def get_order(request):
             fishery_name = item[4]
             ret_data.append({'qr_id': qr_id, 'weight': weight, 'unit': unit,
                              'type_name': type_name, 'fishery_name': fishery_name,
-                             'fishing_timestamp': fishing_timestamp})
+                             'fishing_timestamp': fishing_timestamp,
+                             'load_timestamp': load_timestamp,
+                             'delivery_timestamp': delivery_timestamp})
         return JsonResponse(retcode(ret_data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
     except Exception, e:
         log.error(e.message)
