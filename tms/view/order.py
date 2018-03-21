@@ -182,15 +182,17 @@ def order_statistic(request):
             condition = condition + ' and user_id = \'' + user_id + '\' '
 
         # 在运
-        sql_ongoing = 'select COUNT(DISTINCT(qr_id)) from tms_operatehistory where ' + condition + \
+        sql_ongoing = 'select count(1) FROM (select DISTINCT(qr_id) ' \
+                      ' from tms_operatehistory where ' + condition + \
                       ' and qr_id not in (select qr_id from tms_operatehistory ' \
-                      'where op_type = 3 group by qr_id) group by qr_id'
+                      'where op_type = 3 group by qr_id) group by qr_id) A'
         data_ongoing = query_list(sql_ongoing)
 
         # 已完成
-        sql_done = 'select COUNT(DISTINCT(qr_id)) from tms_operatehistory where ' + condition + \
+        sql_done = 'select count(1) FROM (select DISTINCT(qr_id) ' \
+                   ' from tms_operatehistory where ' + condition + \
                    ' and qr_id in (select qr_id from tms_operatehistory ' \
-                   'where op_type = 3 group by qr_id) group by qr_id'
+                   'where op_type = 3 group by qr_id) group by qr_id) A'
         data_done = query_list(sql_done)
         ret_data = {}
         ret_data['notice_num'] = 0
