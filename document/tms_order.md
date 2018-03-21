@@ -25,11 +25,14 @@ order_status:  0 在运  1 已完成
     "code": "0000",
     "data": [
         {
-            "fishery_name": "海口捕捞场",
-            "unit": "KG",
+            "delivery_timestamp": 1521535017,
+            "fishing_timestamp": 1521533853,
+            "load_timestamp": 1521534906,
+            "weight": "12.34",
+            "qr_id": "123",
+            "fishery_name": "海口渔场",
             "type_name": "南美白对虾",
-            "weight": "20.02",
-            "qr_id": "QR01"
+            "unit": "千克"
         }
     ]
 }
