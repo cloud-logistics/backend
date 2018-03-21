@@ -53,9 +53,9 @@ def get_order(request):
             for obj in timestamp_data:
                 obj_dic[obj[1]] = obj[0]
 
-            fishing_timestamp = (obj_dic.get(1), 'NA')[obj_dic.get(1) is None]
-            load_timestamp = (obj_dic.get(2), 'NA')[obj_dic.get(2) is None]
-            delivery_timestamp = (obj_dic.get(3), 'NA')[obj_dic.get(3) is None]
+            fishing_timestamp = (obj_dic.get(1) * 1000, 'NA')[obj_dic.get(1) is None]
+            load_timestamp = (obj_dic.get(2) * 1000, 'NA')[obj_dic.get(2) is None]
+            delivery_timestamp = (obj_dic.get(3) * 1000, 'NA')[obj_dic.get(3) is None]
 
             weight = item[1]
             unit = item[2]
