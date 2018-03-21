@@ -11,7 +11,7 @@ urlpatterns = [
     url(r'^indicator_history$', order.indicator_history),                  # 获取指标曲线
     url(r'^order_statistic$', order.order_statistic),                      # 获取订单数量统计
 
-    url(r'^auth/auth$', auth.auth),  # 新增用户
+    # url(r'^auth/auth$', auth.auth),  # 新增用户
     url(r'^auth/groups/detail/(?P<access_group_id>[0-9a-zA-Z-]+)$', auth.group_detail),  # 用户群组
     url(r'^auth/groups/list$', auth.list_group),  # 用户群组
     url(r'^auth/adminauthsalt$', auth.admin_auth_with_salt),  # 新增用户
@@ -28,6 +28,6 @@ urlpatterns = [
     url(r'^user/userslist/(?P<role_id>[0-9a-zA-Z-]+)$', user.list_users),  # user log out
     url(r'^user/userdetail/(?P<user_id>[0-9a-zA-Z-]+)$', user.user_detail),  # user log out
     url(r'^user/adduser$', user.add_user),  # user log out
-    url(r'^user/rmuser$', user.del_user),  # user log out
+    url(r'^user/rmuser/(?P<user_id>[0-9a-zA-Z-]+)/$', user.del_user),  # user log out
 ]
 
