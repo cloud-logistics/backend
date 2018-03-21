@@ -25,6 +25,7 @@ urlpatterns = [
     url(r'^fisherylist$', flow.get_fishery_list),  # 获取渔场列表
     url(r'^fishtypelist$', flow.get_fishtype_list),  # 获取虾类型列表
     url(r'^unitlist$', flow.get_unit_list),  # 获取单位列表
+    url(r'^flumelist$', flow.get_flume_list),  # 获取水箱列表
     url(r'^user/userslist/(?P<role_id>[0-9a-zA-Z-]+)$', user.list_users),  # user log out
     url(r'^user/userdetail/(?P<user_id>[0-9a-zA-Z-]+)$', user.user_detail),  # user log out
 ]

@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
-from tms.models import FishingHistory, Fishery, Unit, FishType, OperateHistory
+from tms.models import FishingHistory, Fishery, Unit, FishType, OperateHistory, TruckFlume
 import json
 import uuid
 import datetime
@@ -180,4 +180,24 @@ def get_unit_list(request):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'status': 'OK', 'msg': 'get unit list success.', 'data': res_unit_list}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def get_flume_list(request):
+    try:
+        user_id = request.GET.get('user_id')
+        flume_list = TruckFlume.objects.filter(user_id=user_id)
+
+        res_flume_list = []
+        for item in flume_list:
+            res_flume_list.append({'flume_id': item.flume_id})
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'code': 'ERROR', 'message': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'get flume list success.', 'data': res_flume_list}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
