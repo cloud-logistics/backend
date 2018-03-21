@@ -36,6 +36,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), cal_missing_alarm.s())
     sender.add_periodic_task(crontab(minute='*/2', hour='*'), update_site_box_stock.s())
     sender.add_periodic_task(crontab(minute='*/2', hour='*'), cancel_site_box_stock.s())
+    sender.add_periodic_task(crontab(minute='*/5', hour='*'), generate_tms_sensor_data.s())
 
 
 @app.task
@@ -657,3 +658,42 @@ def update_tms_redis_auth_info():
     except Exception, e:
         log.error(repr(e))
     log.info("tms_update_redis_auth_info end")
+
+
+# 自动生成tms传感器数据
+@app.task()
+def generate_tms_sensor_data():
+    from tms.models import TruckFlume, SensorData
+    from tms.utils import logger
+    import time
+    import random
+    log = logger.get_logger(__name__)
+    try:
+        log.info('generate_tms_sensor_data task start')
+        deviceids = TruckFlume.objects.distinct('deviceid')
+        cnt = 0
+        start_time = time.time()
+        for deviceid in deviceids:
+            s = SensorData(timestamp=time.time(),
+                           intimestamp=time.time(),
+                           deviceid=deviceid.deviceid,
+                           temperature=str(round(random.uniform(0, 15), 2)),
+                           longitude=str(round(random.uniform(74.696559, 134.018924), 6)),
+                           latitude=str(round(random.uniform(18.315171, 53.276964), 6)),
+                           salinity=str(round(random.uniform(0.1, 20), 2)),
+                           ph=str(round(random.uniform(0.1, 14), 2)),
+                           dissolved_oxygen=str(round(random.uniform(0.1, 10), 2)),  # 溶氧量
+                           chemical_oxygen_consumption=str(round(random.uniform(2, 3), 2)),  # 化学耗氧量
+                           transparency=str(round(random.uniform(0, 1), 2)),  # 透明度
+                           aqua=str(round(random.uniform(0, 1), 2)),  # 水色
+                           nutrient_salt_of_water=str(round(random.uniform(0, 1), 2)),  # 水体营养盐
+                           anaerobion=str(round(random.uniform(0, 1), 2)))  # 厌氧菌
+            s.save()
+            cnt += 1
+        end_time = time.time()
+        log.info('generate_tms_sensor_data task end,insert ' +
+                 str(cnt) + ' records,in' + str(end_time-start_time) + 'secs')
+    except Exception, e:
+        log.error(repr(e))
+
+
