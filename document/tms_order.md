@@ -193,3 +193,42 @@ user_id: 用户id
 }
 ```
 
+### 5. 获取在运虾盒指标当前值：
+
+#### URL：
+
+`container/api/v1/cloudbox/tms/current_status?qr_id=123`
+
+#### 方法：
+
+`GET`
+##### parameter:
+```
+qr_id: 订单id
+```
+
+#### BODY:
+
+`无`
+
+#### 返回：
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": {
+        "ph": "3.14",
+        "dissolved_oxygen": "9.93",
+        "temperature": "12.24",
+        "salinity": "7.45"
+    }
+}
+```
+
+```
+{
+    "message": "Fail",
+    "code": "9999",
+    "data": "server internal error, pls contact admin"
+}
+```

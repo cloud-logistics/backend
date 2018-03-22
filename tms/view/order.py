@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from django.http import JsonResponse
 from django.db.models import Max, Min
-from tms.models import FishingHistory, OperateHistory, User, Role
+from tms.models import FishingHistory, OperateHistory, User, SensorData
 from tms.utils.retcode import *
 from util.db import query_list
 import time
@@ -215,4 +215,38 @@ def order_statistic(request):
         log.error(e.message)
         return JsonResponse(retcode(ERR_MSG, "9999", "Fail"), safe=True,
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# 获取在运虾盒温度等指标当前值
+@api_view(['GET'])
+def current_status(request):
+    try:
+        qr_id = request.GET.get("qr_id")
+        # 获取订单对应的deviceid
+        deviceid_data = FishingHistory.objects.select_related('flume').values_list('flume__deviceid').filter(qr_id=qr_id)
+        if len(deviceid_data) > 0:
+            deviceid = deviceid_data[0][0]
+        else:
+            deviceid = ''
+        data = SensorData.objects.filter(deviceid=deviceid).order_by('-timestamp').first()
+        if data is not None:
+            temperature = data.temperature
+            ph = data.ph
+            salinity = data.salinity
+            dissolved_oxygen = data.dissolved_oxygen
+        else:
+            temperature = 'NA'
+            ph = 'NA'
+            salinity = 'NA'
+            dissolved_oxygen = 'NA'
+        ret_data = {'temperature': temperature,
+                    'ph': ph,
+                    'salinity': salinity,
+                    'dissolved_oxygen': dissolved_oxygen}
+        return JsonResponse(retcode(ret_data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+    except Exception, e:
+        log.error(e.message)
+        return JsonResponse(retcode(ERR_MSG, "9999", "Fail"), safe=True,
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 

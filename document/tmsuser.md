@@ -95,3 +95,67 @@ user_id用户id
 ```
 该方法需携带token，请求前确保用户已存在
 ```
+### 增加用户
+#### 方法
+`POST`
+
+#### URL
+
+`container/api/v1/cloudbox/tms/user/adduser`
+
+#### Parameter
+
+```
+{
+    "user_name": "fishman05",
+    "user_real_name":"spider",
+    "user_gender":"Male",
+    "user_phone":"18012341234",
+    "role":"2"
+}
+```
+
+#### Return
+
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": {
+        "user_id": "2a9467f0-2ceb-11e8-aafd-525400bbac8e"
+    }
+}
+```
+####说明
+```
+该方法需携带token，请求前确保用户已存在
+```
+### 删除用户
+#### 方法
+`DELETE`
+
+#### URL
+
+`container/api/v1/cloudbox/tms/user/rmuser/(?P<user_id>[0-9a-zA-Z-]+)/`
+
+#### Parameter
+
+```
+无
+```
+
+#### Return
+
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": {
+        "user_id": "2a9467f0-2ceb-11e8-aafd-525400bbac8e"
+    }
+}
+```
+####说明
+```
+该方法需携带token，请求前确保用户已存在
+```
