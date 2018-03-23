@@ -250,6 +250,30 @@ def current_status(request):
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# 获取在运虾盒温度等指标当前值
+# 获取在运/已完成虾盒gps轨迹
 @api_view(['GET'])
-def current_status(request):
+def history_path(request):
+    try:
+        qr_id = request.GET.get("qr_id")
+        ret_list = []
+
+        FishingHistory.objects.filter(qr_id=qr_id)
+
+        # 获取订单起始时间和结束时间
+        min_time_data = OperateHistory.objects.filter(qr_id=qr_id).aggregate(Min('timestamp'))
+        max_time_data = OperateHistory.objects.filter(qr_id=qr_id).aggregate(Max('timestamp'))
+        start_time = min_time_data['timestamp__min']
+        end_time = max_time_data['timestamp__max']
+
+        # 获取订单对应的deviceid
+        deviceid_data = FishingHistory.objects.select_related('flume').values_list('flume__deviceid').filter(qr_id=qr_id)
+        if len(deviceid_data) > 0:
+            deviceid = deviceid_data[0][0]
+        else:
+            deviceid = ''
+
+        return JsonResponse(retcode(ret_list, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+    except Exception, e:
+        log.error(e.message)
+        return JsonResponse(retcode(ERR_MSG, "9999", "Fail"), safe=True,
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
