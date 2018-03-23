@@ -201,3 +201,52 @@ def get_flume_list(request):
     else:
         response_msg = {'status': 'OK', 'msg': 'get flume list success.', 'data': res_flume_list}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def get_fishing_detail(request, qr_id):
+    try:
+        fishing = FishingHistory.objects.get(qr_id=qr_id)
+        fishery = Fishery.objects.get(fishery_id=fishing.fishery_id)
+        fish_type = FishType.objects.get(type_id=fishing.fish_type_id)
+        unit = Unit.objects.get(unit_id=fishing.unit_id)
+
+        res_fishing = {}
+
+        fishing_op = OperateHistory.objects.filter(qr_id=qr_id, op_type=1).order_by('timestamp')
+        if len(fishing_op) > 0:
+            res_fishing['fishing_timestamp'] = fishing_op[0].timestamp * 1000
+            res_fishing['fishing_man_id'] = fishing_op[0].user.user_id
+            res_fishing['fishing_man'] = fishing_op[0].user.user_name
+        else:
+            res_fishing['fishing_timestamp'] = 0
+
+        load_up = OperateHistory.objects.filter(qr_id=qr_id, op_type=2).order_by('timestamp')
+        if len(load_up) > 0:
+            res_fishing['load_timestamp'] = load_up[0].timestamp * 1000
+        else:
+            res_fishing['load_timestamp'] = 0
+
+        delivery = OperateHistory.objects.filter(qr_id=qr_id, op_type=2).order_by('timestamp')
+        if len(delivery) > 0:
+            res_fishing['delivery_timestamp'] = delivery[0].timestamp * 1000
+        else:
+            res_fishing['delivery_timestamp'] = 0
+
+        res_fishing['fishery_id'] = fishery.fishery_id
+        res_fishing['fishery_name'] = fishery.fishery_name
+        res_fishing['fish_type_id'] = fish_type.type_id
+        res_fishing['fish_type_name'] = fish_type.type_name
+        res_fishing['weight'] = fishing.weight
+        res_fishing['unit_id'] = unit.unit_id
+        res_fishing['unit_name'] = unit.unit_name
+
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'code': 'ERROR', 'message': e.message}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        response_msg = {'status': 'OK', 'msg': 'get fishing detail success.', 'data': res_fishing}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
