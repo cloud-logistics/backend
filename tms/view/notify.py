@@ -6,10 +6,10 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.settings import api_settings
-from rentservice.models import User
-from rentservice.models import NotifyMessage
-from rentservice.serializers import NotifyMessageSerializer
-from rentservice.utils.retcode import *
+from tms.models import User
+from tms.models import NotifyMessage
+from tms.serializers import NotifyMessageSerializer
+from tms.utils.retcode import *
 from rest_framework.parsers import JSONParser
 import datetime
 
