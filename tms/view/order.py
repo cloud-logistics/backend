@@ -250,3 +250,6 @@ def current_status(request):
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# 获取在运虾盒温度等指标当前值
+@api_view(['GET'])
+def current_status(request):
