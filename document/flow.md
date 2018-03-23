@@ -197,3 +197,34 @@
     "msg": "loadoff success."
 }
 ```
+
+
+### 7. 根据运输人员获取相应的水箱列表：
+
+#### URL： 
+
+`container/api/v1/cloudbox/tms/flumelist?user_id=2`
+
+#### 方法： 
+
+`GET`
+
+#### BODY:
+
+`无`
+
+#### 返回：
+```
+{
+    "status": "OK",
+    "msg": "get flume list success.",
+    "data": [
+        {
+            "flume_id": "flume02"
+        },
+        {
+            "flume_id": "flume01"
+        }
+    ]
+}
+```
