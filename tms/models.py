@@ -124,6 +124,15 @@ class OperateHistory(models.Model):
     op_type = models.IntegerField(default=1)  # 操作类型: 1 捕捞 2 装车 3 商家收货
 
 
+class NotifyMessage(models.Model):
+    notify_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, related_name='notify_user_fk', null=True)
+    notify_time = models.DateTimeField(default=datetime.datetime.now())
+    notify_title = models.CharField(max_length=50, default='')
+    notify_content = models.TextField()
+    read_flag = models.CharField(max_length=1, default='N')
+
+
 
 
 
