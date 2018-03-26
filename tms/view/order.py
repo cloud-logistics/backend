@@ -268,15 +268,15 @@ def history_path(request):
             return JsonResponse(retcode('qr_id not found', "9999", "Fail"), safe=True,
                                 status=status.HTTP_400_BAD_REQUEST)
 
+        min_time_data = OperateHistory.objects.filter(qr_id=qr_id).aggregate(Min('timestamp'))
+        start_time = min_time_data['timestamp__min']
         fishery_point = []
-        fishery_point.append({'timestamp': 0, 'longitude': fishery_longitude, 'latitude': fishery_latitude})
+        fishery_point.append({'timestamp': start_time, 'longitude': fishery_longitude, 'latitude': fishery_latitude})
 
         # 已经装车运输，水箱的gps信息可看作虾盒的pgs信息
         if order_status != '0':
             # 获取订单起始时间和结束时间
-            min_time_data = OperateHistory.objects.filter(qr_id=qr_id).aggregate(Min('timestamp'))
             max_time_data = OperateHistory.objects.filter(qr_id=qr_id).aggregate(Max('timestamp'))
-            start_time = min_time_data['timestamp__min']
             end_time = max_time_data['timestamp__max']
             # 获取订单对应的deviceid
             data = FishingHistory.objects.select_related('flume').select_related('fishery').\
@@ -287,7 +287,7 @@ def history_path(request):
             else:
                 deviceid = ''
             locations = SensorData.objects.filter(deviceid=deviceid,
-                                                  timestamp__gte=start_time, timestamp__lte=end_time)
+                                                  timestamp__gt=start_time, timestamp__lte=end_time)
             total_num = len(locations)
             if total_num > 0:
                 span_num = 20
@@ -301,3 +301,6 @@ def history_path(request):
     else:
         return JsonResponse(retcode(fishery_point + list(locations_ser.data), "0000", "Succ"),
                             safe=True, status=status.HTTP_200_OK)
+
+
+
