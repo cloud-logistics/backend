@@ -35,6 +35,25 @@ def get_order(request):
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
+def get_operation_by_type(op_type):
+    if op_type == 0:
+        op = '捕捞'
+    elif op_type == 1:
+        op = '装车'
+    elif op_type == 2:
+        op = '收货'
+    else:
+        op = '错误操作类型'
+    return op
+
+
+def get_operation_res_msg(s):
+    op_msg = get_operation_by_type(s)
+    err_msg = '该订单已' + op_msg + '，不能重复操作！'
+    response_msg = {'status': 'ERROR', 'msg': err_msg}
+    return response_msg
+
+
 # 捕捞
 @csrf_exempt
 @api_view(['POST'])
@@ -42,9 +61,14 @@ def fishing(request):
     try:
 
         data = json.loads(request.body)
+        qr_id = data['qr_id']
+        o = FishingHistory.objects.filter(qr_id=qr_id)
+        if len(o) > 0:
+            s = o[0].order_status
+            response_msg = get_operation_res_msg(s)
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
         user_id = data['user_id']
-        qr_id = data['qr_id']
         fish_type = data['fish_type_id']
         fishery = data['fishery_id']
         weight = data['weight']
@@ -56,12 +80,12 @@ def fishing(request):
 
         # 流水
         ts = str(time.time())[0:10]
-        op = OperateHistory(qr_id=qr_id, timestamp=ts, op_type=1, user_id=user_id, )
+        op = OperateHistory(qr_id=qr_id, timestamp=ts, op_type=1, user_id=user_id)
         op.save()
 
     except Exception, e:
         log.error(e.message)
-        response_msg = {'code': 'ERROR', 'message': e.message}
+        response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'status':'OK', 'msg': 'save fishing success.'}
@@ -77,8 +101,12 @@ def load_up(request):
 
         user_id = data['user_id']
         qr_id = data['qr_id']
-
         order = FishingHistory.objects.get(qr_id=qr_id)
+        s = order.order_status
+        if s >= 1:
+            response_msg = get_operation_res_msg(s)
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
         flume_id = data['flume_id']
         order.flume_id = flume_id
         order.order_status = 1
@@ -91,7 +119,7 @@ def load_up(request):
 
     except Exception, e:
         log.error(e.message)
-        response_msg = {'code': 'ERROR', 'message': e.message}
+        response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'status':'OK', 'msg': 'load up success'}
@@ -110,6 +138,11 @@ def load_off(request):
 
         # 结束
         order = FishingHistory.objects.get(qr_id=qr_id)
+        s = order.order_status
+        if s >= 2:
+            response_msg = get_operation_res_msg(s)
+            return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
+
         order.order_status = 2
         order.save()
 
@@ -120,7 +153,7 @@ def load_off(request):
 
     except Exception, e:
         log.error(e.message)
-        response_msg = {'code': 'ERROR', 'message': e.message}
+        response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'status':'OK', 'msg': 'load off success'}
@@ -139,7 +172,7 @@ def get_fishery_list(request):
 
     except Exception, e:
         log.error(e.message)
-        response_msg = {'code': 'ERROR', 'message': e.message}
+        response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'status':'OK', 'msg': 'get fishery list success.', 'data': res_fishery}
@@ -157,7 +190,7 @@ def get_fishtype_list(request):
 
     except Exception, e:
         log.error(e.message)
-        response_msg = {'code': 'ERROR', 'message': e.message}
+        response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'status': 'OK', 'msg': 'get fish type list success.', 'data': res_fishtype}
@@ -176,7 +209,7 @@ def get_unit_list(request):
 
     except Exception, e:
         log.error(e.message)
-        response_msg = {'code': 'ERROR', 'message': e.message}
+        response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'status': 'OK', 'msg': 'get unit list success.', 'data': res_unit_list}
@@ -196,7 +229,7 @@ def get_flume_list(request):
 
     except Exception, e:
         log.error(e.message)
-        response_msg = {'code': 'ERROR', 'message': e.message}
+        response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'status': 'OK', 'msg': 'get flume list success.', 'data': res_flume_list}
@@ -245,7 +278,7 @@ def get_fishing_detail(request, qr_id):
 
     except Exception, e:
         log.error(e.message)
-        response_msg = {'code': 'ERROR', 'message': e.message}
+        response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         response_msg = {'status': 'OK', 'msg': 'get fishing detail success.', 'data': res_fishing}
