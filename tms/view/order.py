@@ -2,10 +2,11 @@
 
 from rest_framework.decorators import api_view
 from rest_framework import status
+from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
 from django.db.models import Max, Min
-from tms.models import FishingHistory, OperateHistory, User, SensorData
-from tms.serializers import SensorPathDataSerializer
+from tms.models import FishingHistory, OperateHistory, User, SensorData, FishType
+from tms.serializers import SensorPathDataSerializer, FishTypeSerializer
 from tms.utils.retcode import *
 from util.db import query_list
 import time
@@ -301,6 +302,33 @@ def history_path(request):
     else:
         return JsonResponse(retcode(fishery_point + list(locations_ser.data), "0000", "Succ"),
                             safe=True, status=status.HTTP_200_OK)
+
+
+# 获取阈值列表
+@api_view(['GET'])
+def threshold_list(request):
+    fish_type_data = FishType.objects.all().order_by('type_name')
+    ret_data = FishTypeSerializer(fish_type_data, many=True)
+    return JsonResponse(retcode(ret_data.data, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
+# 添加阈值
+@api_view(['POST'])
+def add_threshold(request):
+    parameters = JSONParser().parse(request)
+    pass
+
+
+# 修改阈值
+@api_view(['PUT'])
+def alter_threshold(request):
+    pass
+
+
+# 删除阈值
+@api_view(['DELETE'])
+def del_threshold(request):
+    pass
 
 
 

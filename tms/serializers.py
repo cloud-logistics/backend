@@ -8,6 +8,7 @@ from tms.models import AuthUserGroup
 from tms.models import AccessUrlGroup
 from tms.models import User
 from tms.models import NotifyMessage
+from tms.models import FishType
 
 
 class SensorDataSerializer(serializers.ModelSerializer):
@@ -65,3 +66,9 @@ class SensorPathDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = SensorData
         fields = ('timestamp', 'longitude', 'latitude')
+
+
+class FishTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FishType
+        fields = '__all__'
