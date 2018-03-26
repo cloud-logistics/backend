@@ -232,3 +232,51 @@ qr_id: 订单id
     "data": "server internal error, pls contact admin"
 }
 ```
+
+
+### 6. 获取在运虾盒运行轨迹：
+
+#### URL：
+
+`container/api/v1/cloudbox/tms/history_path?qr_id=123`
+
+#### 方法：
+
+`GET`
+##### parameter:
+```
+qr_id: 订单id
+```
+
+#### BODY:
+
+`无`
+
+#### 返回：
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": [
+        {
+            "latitude": "20.01667",
+            "timestamp": 0,
+            "longitude": "110.35000"
+        },
+        ...
+        {
+            "timestamp": 1521699600,
+            "longitude": "128.452865",
+            "latitude": "27.465556"
+        }
+    ]
+}
+```
+
+```
+{
+    "message": "Fail",
+    "code": "9999",
+    "data": "server internal error, pls contact admin"
+}
+```

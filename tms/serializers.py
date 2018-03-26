@@ -7,6 +7,7 @@ from tms.models import AccessGroup
 from tms.models import AuthUserGroup
 from tms.models import AccessUrlGroup
 from tms.models import User
+from tms.models import NotifyMessage
 
 
 class SensorDataSerializer(serializers.ModelSerializer):
@@ -51,3 +52,16 @@ class UserSerializer(serializers.ModelSerializer):
         exclude = ('user_password', 'user_password_encrypt')
 
 
+class NotifyMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotifyMessage
+        fields = '__all__'
+
+
+class SensorPathDataSerializer(serializers.ModelSerializer):
+    longitude = serializers.ReadOnlyField(source='convert_longitude')
+    latitude = serializers.ReadOnlyField(source='convert_latitude')
+
+    class Meta:
+        model = SensorData
+        fields = ('timestamp', 'longitude', 'latitude')

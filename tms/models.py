@@ -112,7 +112,7 @@ class FishingHistory(models.Model):
     weight = models.DecimalField(decimal_places=2, max_digits=5)
     unit = models.ForeignKey(Unit, related_name='fishing_history_unit_fk')
     flume = models.ForeignKey(TruckFlume, related_name='fishing_history_flume', null=True)
-    order_status = models.IntegerField(default=0)
+    order_status = models.IntegerField(default=0)  # 订单状态, 0 已经捕捞 1 已经装车 2 商家已收货
 
 
 # 操作流水
@@ -122,6 +122,15 @@ class OperateHistory(models.Model):
     user = models.ForeignKey(User, related_name='operate_history_user')
     timestamp = models.IntegerField(default=0)
     op_type = models.IntegerField(default=1)  # 操作类型: 1 捕捞 2 装车 3 商家收货
+
+
+class NotifyMessage(models.Model):
+    notify_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, related_name='notify_user_fk', null=True)
+    notify_time = models.DateTimeField(default=datetime.datetime.now())
+    notify_title = models.CharField(max_length=50, default='')
+    notify_content = models.TextField()
+    read_flag = models.CharField(max_length=1, default='N')
 
 
 

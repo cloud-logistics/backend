@@ -697,3 +697,14 @@ def generate_tms_sensor_data():
         log.error(repr(e))
 
 
+@app.task()
+def send_tms_push_message(alias_list, push_message):
+    from tms.utils.jpush import push
+    from tms.utils import logger
+    log = logger.get_logger(__name__)
+    try:
+        push.push_alias(alias_list=alias_list, push_msg=push_message)
+    except Exception as e:
+        log.error(e)
+
+

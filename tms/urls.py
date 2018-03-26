@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls import url
 from tms.view import sensor, order, flow
-from tms.view import auth, user
+from tms.view import auth, user, notify
 
 urlpatterns = [
     url(r'^receive_data$', sensor.receive_data),                           # 传感器接收数据
@@ -11,6 +11,7 @@ urlpatterns = [
     url(r'^indicator_history$', order.indicator_history),                  # 获取指标曲线
     url(r'^order_statistic$', order.order_statistic),                      # 获取订单数量统计
     url(r'^current_status$', order.current_status),                        # 获取在运虾盒指标当前值
+    url(r'^history_path$', order.history_path),                            # 获取在运/已完成虾盒gps轨迹
 
     # url(r'^auth/auth$', auth.auth),  # 新增用户
     url(r'^auth/groups/detail/(?P<access_group_id>[0-9a-zA-Z-]+)$', auth.group_detail),  # 用户群组
@@ -32,5 +33,8 @@ urlpatterns = [
     url(r'^user/userdetail/(?P<user_id>[0-9a-zA-Z-]+)$', user.user_detail),  # user log out
     url(r'^user/adduser$', user.add_user),  # user log out
     url(r'^user/rmuser/(?P<user_id>[0-9a-zA-Z-]+)/$', user.del_user),  # user log out
+    url(r'^notify/list/(?P<user_id>[0-9a-zA-Z-]+)$', notify.get_notify_list_by_user),  # 获取用户所有通知
+    url(r'^notify/set', notify.set_notify_read_flag),  # 更新消息状态
+    url(r'^notify/delete/(?P<notify_id>[0-9]+)$', notify.delete_notify),  # 删除消息
 ]
 

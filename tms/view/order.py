@@ -5,9 +5,12 @@ from rest_framework import status
 from django.http import JsonResponse
 from django.db.models import Max, Min
 from tms.models import FishingHistory, OperateHistory, User, SensorData
+from tms.serializers import SensorPathDataSerializer
 from tms.utils.retcode import *
 from util.db import query_list
 import time
+from math import ceil
+import collections
 
 log = logger.get_logger(__name__)
 ERR_MSG = 'server internal error, pls contact admin'
@@ -248,5 +251,56 @@ def current_status(request):
         log.error(e.message)
         return JsonResponse(retcode(ERR_MSG, "9999", "Fail"), safe=True,
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# 获取在运/已完成虾盒gps轨迹
+@api_view(['GET'])
+def history_path(request):
+    try:
+        qr_id = request.GET.get("qr_id")
+        order_data = FishingHistory.objects.select_related('fishery').\
+            values_list('fishery__longitude', 'fishery__latitude', 'order_status').filter(qr_id=qr_id)
+        if len(order_data) > 0:
+            fishery_longitude = order_data[0][0]
+            fishery_latitude = order_data[0][1]
+            order_status = order_data[0][2]
+        else:
+            return JsonResponse(retcode('qr_id not found', "9999", "Fail"), safe=True,
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        min_time_data = OperateHistory.objects.filter(qr_id=qr_id).aggregate(Min('timestamp'))
+        start_time = min_time_data['timestamp__min']
+        fishery_point = []
+        fishery_point.append({'timestamp': start_time, 'longitude': fishery_longitude, 'latitude': fishery_latitude})
+
+        # 已经装车运输，水箱的gps信息可看作虾盒的pgs信息
+        if order_status != '0':
+            # 获取订单起始时间和结束时间
+            max_time_data = OperateHistory.objects.filter(qr_id=qr_id).aggregate(Max('timestamp'))
+            end_time = max_time_data['timestamp__max']
+            # 获取订单对应的deviceid
+            data = FishingHistory.objects.select_related('flume').select_related('fishery').\
+                values_list('flume__deviceid', 'fishery__longitude', 'fishery__latitude', 'order_status').\
+                filter(qr_id=qr_id)
+            if len(data) > 0:
+                deviceid = data[0][0]
+            else:
+                deviceid = ''
+            locations = SensorData.objects.filter(deviceid=deviceid,
+                                                  timestamp__gt=start_time, timestamp__lte=end_time)
+            total_num = len(locations)
+            if total_num > 0:
+                span_num = 20
+                step = int(ceil(total_num / float(span_num)))
+                locations = locations[::step]
+            locations_ser = SensorPathDataSerializer(locations, many=True)
+    except Exception, e:
+        log.error(repr(e))
+        return JsonResponse(retcode(ERR_MSG, "9999", "Fail"), safe=True,
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return JsonResponse(retcode(fishery_point + list(locations_ser.data), "0000", "Succ"),
+                            safe=True, status=status.HTTP_200_OK)
+
 
 
