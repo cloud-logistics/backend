@@ -58,3 +58,10 @@ class NotifyMessageSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class SensorPathDataSerializer(serializers.ModelSerializer):
+    longitude = serializers.ReadOnlyField(source='convert_longitude')
+    latitude = serializers.ReadOnlyField(source='convert_latitude')
+
+    class Meta:
+        model = SensorData
+        fields = ('timestamp', 'longitude', 'latitude')
