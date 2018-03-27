@@ -660,11 +660,14 @@ def update_tms_redis_auth_info():
     log.info("tms_update_redis_auth_info end")
 
 
+
+
 # 自动生成tms传感器数据
 @app.task()
 def generate_tms_sensor_data():
     from tms.models import TruckFlume, SensorData
     from tms.utils import logger
+    from tms.view.alarm import judge_alam
     import time
     import random
     log = logger.get_logger(__name__)
@@ -673,6 +676,7 @@ def generate_tms_sensor_data():
         deviceids = TruckFlume.objects.distinct('deviceid')
         cnt = 0
         start_time = time.time()
+        seners = []
         for deviceid in deviceids:
             s = SensorData(timestamp=time.time(),
                            intimestamp=time.time(),
@@ -689,10 +693,14 @@ def generate_tms_sensor_data():
                            nutrient_salt_of_water=str(round(random.uniform(0, 1), 2)),  # 水体营养盐
                            anaerobion=str(round(random.uniform(0, 1), 2)))  # 厌氧菌
             s.save()
+            seners.append(s)
             cnt += 1
         end_time = time.time()
         log.info('generate_tms_sensor_data task end,insert ' +
                  str(cnt) + ' records,in' + str(end_time-start_time) + 'secs')
+
+        judge_alam(seners)
+
     except Exception, e:
         log.error(repr(e))
 

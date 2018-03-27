@@ -11,11 +11,10 @@ from rest_framework.decorators import api_view
 from tms.models import FishingHistory, Fishery, Unit, FishType, OperateHistory, TruckFlume
 import json
 import uuid
-import datetime
 from util import logger
 import time
 
-log = logger.get_logger('monservice.site.py')
+log = logger.get_logger(__name__)
 
 
 # 获取二维码ID

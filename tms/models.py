@@ -127,9 +127,11 @@ class OperateHistory(models.Model):
 class NotifyMessage(models.Model):
     notify_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, related_name='notify_user_fk', null=True)
-    notify_time = models.DateTimeField(default=datetime.datetime.now())
-    notify_title = models.CharField(max_length=50, default='')
-    notify_content = models.TextField()
+    time = models.DateTimeField(default=datetime.datetime.now())
+    title = models.CharField(max_length=50, default='')
+    content = models.TextField()
+    deviceid = models.CharField(max_length=128, default='')
+    qr_id = models.CharField(max_length=128, default='')
     read_flag = models.CharField(max_length=1, default='N')
 
 
