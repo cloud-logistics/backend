@@ -23,7 +23,7 @@ tz = pytz.timezone(settings.TIME_ZONE)
 # 查询告警消息列表
 @csrf_exempt
 @api_view(['GET'])
-def get_alarm_list_by_user(request, user_id):
+def get_notify_list_by_user(request, user_id):
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
     paginator = pagination_class()
 
