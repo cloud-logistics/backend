@@ -88,6 +88,14 @@ class SensorData(models.Model):
 class FishType(models.Model):
     type_id = models.IntegerField(primary_key=True)
     type_name = models.CharField(max_length=128, default='')
+    salinity_min = models.DecimalField(decimal_places=2, max_digits=10, default=0.1)
+    salinity_max = models.DecimalField(decimal_places=2, max_digits=10, default=20)
+    ph_min = models.DecimalField(decimal_places=2, max_digits=10, default=0.1)
+    ph_max = models.DecimalField(decimal_places=2, max_digits=10, default=14)
+    dissolved_oxygen_min = models.DecimalField(decimal_places=2, max_digits=10, default=0.1)
+    dissolved_oxygen_max = models.DecimalField(decimal_places=2, max_digits=10, default=10)
+    temperature_min = models.DecimalField(decimal_places=2, max_digits=10, default=0)
+    temperature_max = models.DecimalField(decimal_places=2, max_digits=10, default=15)
 
 
 # 单位
