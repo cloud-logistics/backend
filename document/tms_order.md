@@ -280,3 +280,179 @@ qr_id: 订单id
     "data": "server internal error, pls contact admin"
 }
 ```
+
+
+
+
+### 7. 获取阈值列表：
+
+#### URL：
+
+`container/api/v1/cloudbox/tms/threshold_list`
+
+#### 方法：
+
+`GET`
+
+#### BODY:
+
+`无`
+
+#### 返回：
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": [
+        {
+            "type_id": 3,
+            "type_name": "test",
+            "salinity_min": "0.10",
+            "salinity_max": "2.00",
+            "ph_min": "3.00",
+            "ph_max": "7.00",
+            "dissolved_oxygen_min": "2.00",
+            "dissolved_oxygen_max": "4.00",
+            "temperature_min": "8.00",
+            "temperature_max": "10.00"
+        },
+        ...
+        {
+            "type_id": 2,
+            "type_name": "基围虾",
+            "salinity_min": "2.00",
+            "salinity_max": "10.00",
+            "ph_min": "2.00",
+            "ph_max": "4.00",
+            "dissolved_oxygen_min": "0.10",
+            "dissolved_oxygen_max": "10.00",
+            "temperature_min": "2.00",
+            "temperature_max": "30.00"
+        }
+    ]
+}
+```
+
+
+
+### 8. 添加阈值：
+
+#### URL：
+
+`container/api/v1/cloudbox/tms/threshold`
+
+#### 方法：
+
+`POST`
+
+#### BODY:
+
+```
+{
+	"type_name": "test",
+	"salinity_min": 0.1,
+	"salinity_max": 2,
+	"ph_min": 3,
+	"ph_max": 7,
+	"dissolved_oxygen_min": 2,
+	"dissolved_oxygen_max": 4,
+	"temperature_min": 8,
+	"temperature_max": 10
+}
+```
+
+#### 返回：
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": "save fish type threshold successfully"
+}
+```
+
+```
+{
+    "message": "Fail",
+    "code": "9999",
+    "data": "type_name [test] already exists"
+}
+```
+
+
+
+### 9. 修改阈值：
+
+#### URL：
+
+`container/api/v1/cloudbox/tms/threshold/<type_id>`
+
+#### 方法：
+
+`PUT`
+
+#### BODY:
+
+```
+{	
+	"salinity_min": 0.1,
+	"salinity_max": 2,
+	"ph_min": 3,
+	"ph_max": 7,
+	"dissolved_oxygen_min": 2,
+	"dissolved_oxygen_max": 4,
+	"temperature_min": 8,
+	"temperature_max": 10
+}
+```
+
+#### 返回：
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": "modify fish type threshold successfully"
+}
+```
+
+```
+{
+    "message": "Fail",
+    "code": "9999",
+    "data": "server internal error, pls contact admin"
+}
+```
+
+
+
+### 10. 删除阈值：
+
+#### URL：
+
+`container/api/v1/cloudbox/tms/threshold/<type_id>/`
+
+#### 方法：
+
+`DELETE`
+
+#### BODY:
+
+```
+无
+```
+
+#### 返回：
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": "delete fish type threshold successfully"
+}
+```
+
+```
+{
+    "message": "Fail",
+    "code": "9999",
+    "data": "Fish Type is being used, can't be deleted"
+}
+```
