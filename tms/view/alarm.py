@@ -16,7 +16,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 import json
 
-USER_ALIAS_ID_HASH = 'user_alias_id_hash'
+USER_ALIAS_ID_HASH = 'tms_user_alias_id_hash'
 
 log = logger.get_logger(__name__)
 tz = pytz.timezone(settings.TIME_ZONE)
@@ -40,24 +40,24 @@ def judge_alarm(sensors):
             fish_type = FishType.objects.get(type_id=type_id)
             msg = ''
             if s['temperature'] > fish_type.temperature_max:
-                msg = '当前温度：' + str(s['temperature']) + '，超过最高温度阈值：' + str(fish_type.temperature_max) + ';'
+                msg = u'当前温度：' + str(s['temperature']) + u'，超过最高温度阈值：' + str(fish_type.temperature_max) + u';'
             elif s['temperature'] < fish_type.temperature_min:
-                msg = '当前温度：' + str(s['temperature']) + '，低于最低温度阈值：' + str(fish_type.temperature_min) + ';'
+                msg = u'当前温度：' + str(s['temperature']) + u'，低于最低温度阈值：' + str(fish_type.temperature_min) + u';'
 
             if s['salinity'] > fish_type.salinity_max:
-                msg += '当前盐度：' + str(s['salinity']) + '，超过最高盐度阈值：' + str(fish_type.salinity_max)+ ';'
+                msg += u'当前盐度：' + str(s['salinity']) + u'，超过最高盐度阈值：' + str(fish_type.salinity_max)+ u';'
             elif s['salinity'] < fish_type.salinity_min:
-                msg += '当前盐度：' + str(s['salinity']) + '，低于最低盐度阈值：' + str(fish_type.salinity_min) + ';'
+                msg += u'当前盐度：' + str(s['salinity']) + u'，低于最低盐度阈值：' + str(fish_type.salinity_min) + u';'
 
             if s['ph'] > fish_type.ph_max:
-                msg += '当前PH值：' + str(s['ph']) + '，超过最高PH阈值：' + str(fish_type.ph_max) + ';'
+                msg += u'当前PH值：' + str(s['ph']) + u'，超过最高PH阈值：' + str(fish_type.ph_max) + u';'
             elif s['ph'] < fish_type.ph_min:
-                msg += '当前PH值：' + str(s.ph) + '，低于最低PH阈值：' + str(fish_type.ph_min)+ ';'
+                msg += u'当前PH值：' + str(s.ph) + u'，低于最低PH阈值：' + str(fish_type.ph_min)+ u';'
 
             if s['dissolved_oxygen'] > fish_type.dissolved_oxygen_max:
-                msg += '当前水溶氧：' + str(s['dissolved_oxygen']) + '，超过最高水溶氧阈值：' + str(fish_type.dissolved_oxygen_max) + ';'
+                msg += u'当前水溶氧：' + str(s['dissolved_oxygen']) + u'，超过最高水溶氧阈值：' + str(fish_type.dissolved_oxygen_max) + u';'
             elif s['dissolved_oxygen'] < fish_type.dissolved_oxygen_min:
-                msg += '当前水溶氧：' + str(s['dissolved_oxygen']) + '，低于最低水溶氧阈值：' + str(fish_type.dissolved_oxygen_min) + ';'
+                msg += u'当前水溶氧：' + str(s['dissolved_oxygen']) + u'，低于最低水溶氧阈值：' + str(fish_type.dissolved_oxygen_min) + u';'
 
             notify_alarm(msg, user_id)
             save_alarm(msg, user_id, s['deviceid'], fishing[0].qr_id)
@@ -72,7 +72,12 @@ def notify_alarm(message, user_id):
         alias = []
         alias.append(conn.hget(USER_ALIAS_ID_HASH, user_id))
         celery.send_push_message.delay(alias, message)
-        log.debug(message)
+        log.info(u'send alarm message.')
+        if len(alias) > 0:
+            log.info(u'alias: ' + alias[0])
+            log.info(u'msg: ' + message)
+    else:
+        log.error('notify_alarm can not find user alias.')
 
 
 def save_alarm(content, user_id, deviceid, qr_id):
