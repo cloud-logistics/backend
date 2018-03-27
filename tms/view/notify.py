@@ -50,7 +50,7 @@ def set_notify_read_flag(request):
         response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': 'save fishing success.'}
+        response_msg = {'status': 'OK', 'msg': 'update notify success.'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 
@@ -66,7 +66,7 @@ def delete_notify(request, notify_id):
         response_msg = {'status': 'ERROR', 'msg': e.message}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        response_msg = {'status': 'OK', 'msg': 'Delete message success.'}
+        response_msg = {'status': 'OK', 'msg': 'Delete notify success.'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
 

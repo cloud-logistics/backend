@@ -667,7 +667,7 @@ def update_tms_redis_auth_info():
 def generate_tms_sensor_data():
     from tms.models import TruckFlume, SensorData
     from tms.utils import logger
-    from tms.view.alarm import judge_alam
+    from tms.view.alarm import judge_alarm
     import time
     import random
     log = logger.get_logger(__name__)
@@ -699,7 +699,7 @@ def generate_tms_sensor_data():
         log.info('generate_tms_sensor_data task end,insert ' +
                  str(cnt) + ' records,in' + str(end_time-start_time) + 'secs')
 
-        judge_alam(seners)
+        judge_alarm(seners)
 
     except Exception, e:
         log.error(repr(e))
