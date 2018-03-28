@@ -348,7 +348,7 @@ def add_threshold(request):
 
 
 # 修改阈值
-@api_view(['PUT'])
+@api_view(['POST'])
 def alter_threshold(request, type_id):
     try:
         data = request.body
@@ -404,7 +404,7 @@ def del_threshold(request, type_id):
 def parameter_is_valid(data, parameter_name):
     try:
         parameters = json.loads(data)
-        return parameter_name in parameters and '' != str(parameters[parameter_name])
+        return parameter_name in parameters and '' != to_str(parameters[parameter_name])
     except Exception, e:
         log.error(repr(e))
         return False

@@ -388,7 +388,7 @@ qr_id: 订单id
 
 #### 方法：
 
-`PUT`
+`POST`
 
 #### BODY:
 
