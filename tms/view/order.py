@@ -2,16 +2,14 @@
 
 from rest_framework.decorators import api_view
 from rest_framework import status
-from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
 from django.db.models import Max, Min
-from tms.models import FishingHistory, OperateHistory, User, SensorData, FishType
+from tms.models import FishingHistory, OperateHistory, User, SensorData, FishType, NotifyMessage
 from tms.serializers import SensorPathDataSerializer, FishTypeSerializer
 from tms.utils.retcode import *
 from util.db import query_list
 import time
 from math import ceil
-import collections
 
 log = logger.get_logger(__name__)
 ERR_MSG = 'server internal error, pls contact admin'
@@ -205,7 +203,8 @@ def order_statistic(request):
                    'where op_type = 3 group by qr_id) group by qr_id) A'
         data_done = query_list(sql_done)
         ret_data = {}
-        ret_data['notice_num'] = 0
+        ret_data['notice_num'] = NotifyMessage.objects.filter(user_id=user_id, read_flag='N').count()
+
         if len(data_ongoing) > 0:
             ret_data['ongoing_num'] = data_ongoing[0][0]
         else:
