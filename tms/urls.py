@@ -37,6 +37,7 @@ urlpatterns = [
     url(r'^user/userdetail/(?P<user_id>[0-9a-zA-Z-]+)$', user.user_detail),  # user log out
     url(r'^user/adduser$', user.add_user),  # user log out
     url(r'^user/rmuser/(?P<user_id>[0-9a-zA-Z-]+)/$', user.del_user),  # user log out
+    url(r'^user/update$', user.update_user),  # user log out
     url(r'^notify/list/(?P<user_id>[0-9a-zA-Z-]+)$', notify.get_notify_list_by_user),  # 获取用户所有通知
     url(r'^notify/set', notify.set_notify_read_flag),  # 更新消息状态
     url(r'^notify/delete/(?P<notify_id>[0-9]+)$', notify.delete_notify),  # 删除消息

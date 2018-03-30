@@ -159,3 +159,38 @@ user_id用户id
 ```
 该方法需携带token，请求前确保用户已存在
 ```
+### 修改用户
+#### 方法
+`POST`
+
+#### URL
+
+`container/api/v1/cloudbox/tms/user/update`
+
+#### Parameter
+
+```
+{
+    "user_id": "01a56814-2da2-11e8-aafd-525400bbac8e",
+    "user_gender":"女",
+    "user_nickname":"jane",
+    "user_phone":12345678,
+    "user_email":"123@hnair.com"
+}
+```
+
+#### Return
+
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": {
+        "user_id": "01a56814-2da2-11e8-aafd-525400bbac8e"
+    }
+}
+```
+####说明
+```
+该方法需携带token，请求前确保用户已存在
+```
