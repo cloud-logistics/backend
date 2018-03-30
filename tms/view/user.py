@@ -137,6 +137,51 @@ def del_user(request, user_id):
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
 
+@csrf_exempt
+@api_view(['POST'])
+def update_user(request):
+    ret = {}
+    data = JSONParser().parse(request)
+    try:
+        user_gender = data['user_gender']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '修改用户性别不能为空'), "9999", '修改用户性别不能为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user_nickname = data['user_nickname']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '修改用户性别不能为空'), "9999", '修改用户性别不能为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user_phone = data['user_phone']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '用户号码不能为空'), "9999", '用户号码不能为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user_id = data['user_id']
+    except Exception:
+        return JsonResponse(retcode(errcode("9999", '修改用户id不能为空'), "9999", '修改用户id不能为空'), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user_email = data['user_email']
+    except Exception, e:
+        log.error(repr(e))
+        user_email = ''
+    try:
+        user = User.objects.get(user_id=user_id)
+        user.user_phone = user_phone
+        user.user_gender = user_gender
+        user.user_nickname = user_nickname
+        user.user_email = user_email
+        user.save()
+    except User.DoesNotExist, e:
+        log.error(repr(e))
+        return JsonResponse(retcode(ret, "9999", '请求修改的用户信息不存在'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    ret={}
+    ret['user_id'] = user.user_id
+    return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
 def update_redis_token(user_token, group):
     try:
         conn = get_connection_from_pool()

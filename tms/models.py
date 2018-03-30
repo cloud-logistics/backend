@@ -86,7 +86,7 @@ class SensorData(models.Model):
 
 # 水产类型
 class FishType(models.Model):
-    type_id = models.IntegerField(primary_key=True)
+    type_id = models.AutoField(primary_key=True)
     type_name = models.CharField(max_length=128, default='')
     salinity_min = models.DecimalField(decimal_places=2, max_digits=10, default=0.1)
     salinity_max = models.DecimalField(decimal_places=2, max_digits=10, default=20)

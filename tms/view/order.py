@@ -2,16 +2,14 @@
 
 from rest_framework.decorators import api_view
 from rest_framework import status
-from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
 from django.db.models import Max, Min
-from tms.models import FishingHistory, OperateHistory, User, SensorData, FishType
+from tms.models import FishingHistory, OperateHistory, User, SensorData, FishType, NotifyMessage
 from tms.serializers import SensorPathDataSerializer, FishTypeSerializer
 from tms.utils.retcode import *
 from util.db import query_list
 import time
 from math import ceil
-import collections
 
 log = logger.get_logger(__name__)
 ERR_MSG = 'server internal error, pls contact admin'
@@ -205,7 +203,8 @@ def order_statistic(request):
                    'where op_type = 3 group by qr_id) group by qr_id) A'
         data_done = query_list(sql_done)
         ret_data = {}
-        ret_data['notice_num'] = 0
+        ret_data['notice_num'] = NotifyMessage.objects.filter(user_id=user_id, read_flag='N').count()
+
         if len(data_ongoing) > 0:
             ret_data['ongoing_num'] = data_ongoing[0][0]
         else:
@@ -315,20 +314,106 @@ def threshold_list(request):
 # 添加阈值
 @api_view(['POST'])
 def add_threshold(request):
-    parameters = JSONParser().parse(request)
-    pass
+    try:
+        data = request.body
+        parameters = json.loads(data)
+        required_parameters = ['type_name',
+                               'salinity_min', 'salinity_max',
+                               'ph_min', 'ph_max',
+                               'dissolved_oxygen_min', 'dissolved_oxygen_max',
+                               'temperature_min', 'temperature_max']
+        for key in required_parameters:
+            if not parameter_is_valid(data, key):
+                return JsonResponse(retcode(key + ' is required', "9999", "Fail"), safe=True,
+                                    status=status.HTTP_400_BAD_REQUEST)
+        exists_data = FishType.objects.filter(type_name=parameters['type_name'])
+        if len(exists_data) > 0:
+            return JsonResponse(
+                retcode('type_name [' + parameters['type_name'] + '] already exists', "9999", "Fail"), safe=True,
+                status=status.HTTP_400_BAD_REQUEST)
+        d = FishType(type_name=parameters['type_name'],
+                     salinity_min=parameters['salinity_min'], salinity_max=parameters['salinity_max'],
+                     ph_min=parameters['ph_min'], ph_max=parameters['ph_max'],
+                     dissolved_oxygen_min=parameters['dissolved_oxygen_min'],
+                     dissolved_oxygen_max=parameters['dissolved_oxygen_max'],
+                     temperature_min=parameters['temperature_min'], temperature_max=parameters['temperature_max'])
+        d.save()
+        return JsonResponse(retcode('save fish type threshold successfully', "0000", "Succ"),
+                            safe=True, status=status.HTTP_200_OK)
+    except Exception, e:
+        log.error(repr(e))
+        return JsonResponse(retcode(ERR_MSG, "9999", "Fail"),
+                            safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # 修改阈值
-@api_view(['PUT'])
-def alter_threshold(request):
-    pass
+@api_view(['POST'])
+def alter_threshold(request, type_id):
+    try:
+        data = request.body
+        parameters = json.loads(data)
+        required_parameters = ['salinity_min', 'salinity_max',
+                               'ph_min', 'ph_max',
+                               'dissolved_oxygen_min', 'dissolved_oxygen_max',
+                               'temperature_min', 'temperature_max']
+        for key in required_parameters:
+            if not parameter_is_valid(data, key):
+                return JsonResponse(retcode(key + ' is required', "9999", "Fail"), safe=True,
+                                    status=status.HTTP_400_BAD_REQUEST)
+        fish_type = FishType.objects.get(type_id=type_id)
+        fish_type.salinity_min = parameters['salinity_min']
+        fish_type.salinity_max = parameters['salinity_max']
+        fish_type.ph_min = parameters['ph_min']
+        fish_type.ph_max = parameters['ph_max']
+        fish_type.dissolved_oxygen_min = parameters['dissolved_oxygen_min']
+        fish_type.dissolved_oxygen_max = parameters['dissolved_oxygen_max']
+        fish_type.temperature_min = parameters['temperature_min']
+        fish_type.temperature_max = parameters['temperature_max']
+        fish_type.save()
+        return JsonResponse(retcode('modify fish type threshold successfully', "0000", "Succ"),
+                            safe=True, status=status.HTTP_200_OK)
+    except FishType.DoesNotExist:
+        return JsonResponse(retcode('Fish Type dose not exists', "9999", "Fail"),
+                            safe=True, status=status.HTTP_400_BAD_REQUEST)
+    except Exception, e:
+        log.error(repr(e))
+        return JsonResponse(retcode(ERR_MSG, "9999", "Fail"),
+                            safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # 删除阈值
 @api_view(['DELETE'])
-def del_threshold(request):
-    pass
+def del_threshold(request, type_id):
+    try:
+        data = FishingHistory.objects.select_related('fish_type').filter(fish_type__type_id=type_id)
+        if len(data) > 0:
+            return JsonResponse(retcode('Fish Type is being used, can\'t be deleted', "9999", "Fail"),
+                                safe=True, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            FishType.objects.get(type_id=type_id).delete()
+            return JsonResponse(retcode('delete fish type threshold successfully', "0000", "Succ"),
+                                safe=True, status=status.HTTP_200_OK)
+    except Exception, e:
+        log.error(repr(e))
+        return JsonResponse(retcode(ERR_MSG, "9999", "Fail"),
+                            safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# 判断参数是否存在，是否合法
+def parameter_is_valid(data, parameter_name):
+    try:
+        parameters = json.loads(data)
+        return parameter_name in parameters and '' != to_str(parameters[parameter_name])
+    except Exception, e:
+        log.error(repr(e))
+        return False
+
+
+# 将unicode转换utf-8编码
+def to_str(unicode_or_str):
+    if isinstance(unicode_or_str, unicode):
+        value = unicode_or_str.encode('UTF-8')
+    else:
+        value = unicode_or_str
+    return value
 
