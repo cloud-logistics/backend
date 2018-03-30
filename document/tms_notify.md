@@ -1,6 +1,6 @@
-## 消息通知API
+## 告警消息通知API
 
-### 1. 获取通知列表
+### 1. 获取告警通知列表
 
 #### 方法：
  
@@ -18,33 +18,53 @@
 
 ```
 {
-    "status": "OK",
-    "msg": "get fishery list success.",
-    "data": [
-        {
-            "latitude": "18.20000",
-            "fishery_name": "三亚渔场",
-            "longitude": "109.50000",
-            "fishery_id": 2
+    "message": "Succ",
+    "code": "0000",
+    "data": {
+        "count": 3,
+        "limit": 10,
+        "results": [
+            {
+                "notify_id": 13,
+                "time": "2018-03-27T15:06:43.289910+08:00",
+                "title": "云箱告警",
+                "content": "当前温度：30.0，超过最高温度阈值：15.00;",
+                "deviceid": "dev1",
+                "qr_id": "123456789",
+                "read_flag": "N",
+                "user": "2"
+            },
+            {
+                "notify_id": 12,
+                "time": "2018-03-27T15:02:10.062420+08:00",
+                "title": "云箱告警",
+                "content": "当前温度：30.0，超过最高温度阈值：15.00;",
+                "deviceid": "dev1",
+                "qr_id": "123456789",
+                "read_flag": "N",
+                "user": "2"
+            },
+            {
+                "notify_id": 11,
+                "time": "2018-03-27T14:35:40.348732+08:00",
+                "title": "云箱告警",
+                "content": "当前温度：30.0，超过最高温度阈值：15.00;",
+                "deviceid": "dev1",
+                "qr_id": "123456789",
+                "read_flag": "N",
+                "user": "2"
+            }
+        ],
+        "links": {
+            "previous": null,
+            "next": "http://106.2.20.185:8000/container/api/v1/cloudbox/tms/notify/list/2?limit=10&offset=10"
         },
-        {
-            "latitude": "20.01667",
-            "fishery_name": "海口渔场",
-            "longitude": "110.35000",
-            "fishery_id": 1
-        }
-    ]
+        "offset": 0
+    }
 }
 
-
 ```
 
-```
-{
-    "status": "ERROR",
-    "msg": "error msg"
-}
-```
 
 ### 2. 修改通知消息已读标志：
 
