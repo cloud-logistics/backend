@@ -106,7 +106,7 @@ class Unit(models.Model):
 
 # 渔场
 class Fishery(models.Model):
-    fishery_id = models.IntegerField(primary_key=True)
+    fishery_id = models.AutoField(primary_key=True)
     fishery_name = models.CharField(max_length=128, default='')
     longitude = models.CharField(max_length=20, default='0')
     latitude = models.CharField(max_length=20, default='0')

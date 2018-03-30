@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls import url
 from tms.view import sensor, order, flow
-from tms.view import auth, user, notify, alarm
+from tms.view import auth, user, notify, alarm, fishery
 
 urlpatterns = [
     url(r'^receive_data$', sensor.receive_data),                           # 传感器接收数据
@@ -40,6 +40,9 @@ urlpatterns = [
     url(r'^notify/list/(?P<user_id>[0-9a-zA-Z-]+)$', notify.get_notify_list_by_user),  # 获取用户所有通知
     url(r'^notify/set', notify.set_notify_read_flag),  # 更新消息状态
     url(r'^notify/delete/(?P<notify_id>[0-9]+)$', notify.delete_notify),  # 删除消息
-    url(r'^alarm$', alarm.create_alarm),        # 创建告警
+    url(r'^alarm$', alarm.create_alarm),                                        # 创建告警
+    url(r'^fishery$', fishery.create_fishery),                                  # 增加渔场
+    url(r'^fishery/(?P<fishery_id>[0-9a-zA-Z-]+)$', fishery.update_fishery),        # 修改渔场
+    url(r'^fishery/(?P<fishery_id>[0-9a-zA-Z-]+)$', fishery.delete_fishery),        # 删除渔场
 ]
 
