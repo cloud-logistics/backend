@@ -76,7 +76,7 @@ def update_fishery(request, fishery_id):
 # 删除渔场
 @csrf_exempt
 @api_view(['DELETE'])
-def update_fishery(request, fishery_id):
+def delete_fishery(request, fishery_id):
     try:
 
         Fishery.objects.get(fishery_id=fishery_id).delete()
