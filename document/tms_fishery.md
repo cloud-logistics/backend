@@ -68,7 +68,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/tms/fishery/{fishery_id}`
+`container/api/v1/cloudbox/tms/fishery/{fishery_id}/`
 
 #### 方法： 
 

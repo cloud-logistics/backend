@@ -44,6 +44,6 @@ urlpatterns = [
     url(r'^alarm$', alarm.create_alarm),                                        # 创建告警
     url(r'^fishery$', fishery.create_fishery),                                  # 增加渔场
     url(r'^fishery/(?P<fishery_id>[0-9a-zA-Z-]+)$', fishery.update_fishery),        # 修改渔场
-    url(r'^fishery/(?P<fishery_id>[0-9a-zA-Z-]+)$', fishery.delete_fishery),        # 删除渔场
+    url(r'^fishery/(?P<fishery_id>[0-9a-zA-Z-]+)', fishery.delete_fishery),        # 删除渔场
 ]
 

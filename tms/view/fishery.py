@@ -22,7 +22,7 @@ log = logger.get_logger(__name__)
 def create_fishery(request):
     try:
         data = json.loads(request.body)
-        fishery_name = data['name']
+        fishery_name = data['fishery_name']
         longitude = data['longitude']
         latitude = data['latitude']
 
@@ -49,7 +49,7 @@ def create_fishery(request):
 def update_fishery(request, fishery_id):
     try:
         data = json.loads(request.body)
-        fishery_name = data['name']
+        fishery_name = data['fishery_name']
         longitude = data['longitude']
         latitude = data['latitude']
 
