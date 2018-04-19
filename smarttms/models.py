@@ -73,15 +73,6 @@ class BoxOrder(models.Model):
     user = models.ForeignKey(EnterpriseUser, related_name='box_order_user_fk')
 
 
-class BoxOrderDetail(models.Model):
-    order_detail_id = models.CharField(max_length=48, primary_key=True)
-    order_detail_start_time = models.DateTimeField(default=datetime.datetime.now())
-    order_detail_end_time = models.DateTimeField(default='')
-    box_order = models.ForeignKey(BoxOrder, null=True, related_name='box_order_id_fk')
-    box = models.ForeignKey(BoxInfo, null=True, related_name='box_id_fk')
-    state = models.IntegerField(default=0)
-
-
 class BoxTypeInfo(models.Model):
     id = models.IntegerField(primary_key=True)
     box_type_name = models.CharField(max_length=128, default='')
@@ -118,12 +109,18 @@ class SiteInfo(models.Model):
 class BoxInfo(models.Model):
     deviceid = models.CharField(max_length=48, primary_key=True)
     type = models.ForeignKey(BoxTypeInfo, related_name='box_info_box_type_fk')
-    # date_of_production = models.CharField(max_length=128)
-    # carrier = models.IntegerField(default=0)
-    # tid = models.CharField(max_length=48, default='')
     ava_flag = models.CharField(max_length=1, default='Y')
     siteinfo = models.ForeignKey(SiteInfo, related_name='box_site_fk', null=True)
     recycle_flag = models.IntegerField(default=0)
+
+
+class BoxOrderDetail(models.Model):
+    order_detail_id = models.CharField(max_length=48, primary_key=True)
+    order_detail_start_time = models.DateTimeField(default=datetime.datetime.now())
+    order_detail_end_time = models.DateTimeField(default='')
+    box_order = models.ForeignKey(BoxOrder, null=True, related_name='box_order_id_fk')
+    box = models.ForeignKey(BoxInfo, null=True, related_name='box_id_fk')
+    state = models.IntegerField(default=0)
 
 
 class ShopInfo(models.Model):

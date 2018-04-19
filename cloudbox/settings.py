@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'monservice.apps.MonserviceConfig',
     'rentservice.apps.RentserviceConfig',
     'tms.apps.TmsConfig',
+    'smarttms.apps.SmarttmsConfig',
     'django_celery_beat',
     'django_celery_results',
     'rest_framework',
