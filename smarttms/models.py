@@ -56,6 +56,7 @@ class EnterpriseUser(models.Model):
     enterprise = models.ForeignKey(EnterpriseInfo, related_name='enterprise_user_enterprise_info_fk', null=True)
     user_token = models.CharField(max_length=64, default='')
     role = models.CharField(max_length=16, default='user')
+    role_type = models.IntegerField(default=0) #
     group = models.ForeignKey(AccessGroup, null=True)
     user_real_name = models.CharField(max_length=48, default='')
     user_gender = models.CharField(max_length=8, default='')
