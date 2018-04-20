@@ -3,11 +3,11 @@
 
 
 from rest_framework import serializers
-from models import AccessGroup
-from models import AuthUserGroup
-from models import AccessUrlGroup
-from models import EnterpriseInfo
-from models import EnterpriseUser
+from smarttms.models import AccessGroup
+from smarttms.models import AuthUserGroup
+from smarttms.models import AccessUrlGroup
+from smarttms.models import EnterpriseInfo
+from smarttms.models import EnterpriseUser
 from smarttms.models import BoxTypeInfo
 from smarttms.models import SiteInfo
 from smarttms.models import BoxInfo
