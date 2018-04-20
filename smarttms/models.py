@@ -176,3 +176,12 @@ class OrderItem(models.Model):
     goods_unit = models.ForeignKey(GoodsUnit, null=True)
     num = models.IntegerField(default=0)
     order_detail = models.ForeignKey(GoodsOrderDetail)
+
+
+class NotifyMessage(models.Model):
+    notify_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(EnterpriseUser, related_name='notify_enterprise_fk', null=True)
+    notify_time = models.DateTimeField(default=datetime.datetime.now())
+    notify_title = models.CharField(max_length=50, default='')
+    notify_content = models.TextField()
+    read_flag = models.CharField(max_length=1, default='N')
