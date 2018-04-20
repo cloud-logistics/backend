@@ -660,6 +660,43 @@ def update_tms_redis_auth_info():
     log.info("tms_update_redis_auth_info end")
 
 
+@app.task
+def update_smarttms_redis_auth_info():
+    from smarttms.models import AccessGroup, AccessUrlGroup, AuthUserGroup
+    from smarttms.serializers import AccessGroupSerializer, AuthUserGroupSerializer, AccessUrlGroupSerializer
+    from smarttms.utils import logger
+    from smarttms.utils.redistools import RedisTool
+    PERMISSION_GROUP_HASH = 'smarttms_permissions_group_hash'
+    PERMISSION_URL_HASH = 'smarttms_permissions_url_hash'
+    log = logger.get_logger(__name__)
+    log.info("smarttms_update_redis_auth_info begin")
+    try:
+        redis_pool = RedisTool()
+        conn = redis_pool.get_connection()
+        access_group_ret = AccessGroup.objects.all()
+        access_group_list = AccessGroupSerializer(access_group_ret, many=True).data
+        groupid_group_dic = {}
+        for item in access_group_list:
+            groupid_group_dic[item['access_group_id']] = item['group']
+        ret = AuthUserGroup.objects.all()
+        auth_user_group = AuthUserGroupSerializer(ret, many=True).data
+        for item in auth_user_group:
+            conn.hset(PERMISSION_GROUP_HASH, item['user_token'], groupid_group_dic[item['group']])
+        for item_access_group in access_group_list:
+            ret = AccessUrlGroup.objects.filter(access_group__group=item_access_group['group'])
+            access_url_list = []
+            access_url_group = AccessUrlGroupSerializer(ret, many=True).data
+            for item in access_url_group:
+                access_url_list.append(item['access_url_set'])
+            if access_url_list:
+                final_hash_value = ','.join(access_url_list)
+            else:
+                final_hash_value = ''
+            if final_hash_value:
+                conn.hset(PERMISSION_URL_HASH, item_access_group['group'], final_hash_value)
+    except Exception, e:
+        log.error(repr(e))
+    log.info("smarttms_update_redis_auth_info end")
 
 
 # 自动生成tms传感器数据

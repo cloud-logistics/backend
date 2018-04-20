@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
-from smarttms.models import EnterpriseUser, AuthUserGroup, AccessGroup
+from smarttms.models import EnterpriseUser, AccessGroup
 from smarttms.utils.retcode import retcode, errcode
 from smarttms.utils.logger import get_logger
 from rest_framework.settings import api_settings
