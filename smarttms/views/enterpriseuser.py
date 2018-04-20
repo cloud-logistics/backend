@@ -6,13 +6,13 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
-from rentservice.models import EnterpriseInfo, EnterpriseUser, AccessGroup, AuthUserGroup
-from rentservice.utils.retcode import retcode, errcode
-from rentservice.utils import logger
-from rentservice.utils.redistools import RedisTool
+from smarttms.models import EnterpriseInfo, EnterpriseUser, AccessGroup, AuthUserGroup
+from smarttms.utils.retcode import retcode, errcode
+from smarttms.utils import logger
+from smarttms.utils.redistools import RedisTool
 from django.db import transaction
 from rest_framework.settings import api_settings
-from rentservice.serializers import EnterpriseUserSerializer
+from smarttms.serializers import EnterpriseUserSerializer
 import uuid
 import datetime
 import pytz
@@ -327,6 +327,10 @@ def add_enterprise_user(request):
     except Exception:
         return JsonResponse(retcode({}, "9999", '企业用户角色不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
+        role_type = data['role_type']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", '企业用户角色类型不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
         group = data['group']
     except Exception:
         return JsonResponse(retcode({}, "9999", '企业用户所属群组不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
@@ -356,10 +360,11 @@ def add_enterprise_user(request):
                                               status='', avatar_url='', user_phone=user_phone,
                                               user_email='', register_time=datetime.datetime.now(tz=tz),
                                               enterprise=enterprise, user_token=uuid.uuid4().hex, role=role,
+                                              role_type=role_type,
                                               group=group_obj, user_real_name=user_real_name, user_gender=user_gender,
                                               user_alias_id=uuid.uuid1().hex, user_password_encrypt=md5_pwd)
                     new_user.save()
-                    auth_user_group = AuthUserGroup(user_token=new_user.user_token, group=group_obj)
+                    auth_user_group = AuthUserGroup(auth_id=uuid.uuid1(), user_token=new_user.user_token, group=group_obj)
                     auth_user_group.save()
                 ret['user_id'] = new_user.user_id
                 update_redis_token(new_user.user_token, group)
