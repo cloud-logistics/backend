@@ -24,5 +24,6 @@ urlpatterns = [
     url(r'^container/api/v1/cloudbox/', include('rentservice.urls')),
     url(r'^container/api/v1/cloudbox/admin/', include(admin.site.urls)),
     url(r'^container/api/v1/cloudbox/tms/', include('tms.urls')),
+    url(r'^container/api/v1/cloudbox/smarttms/', include('smarttms.urls')),
 
 ]
