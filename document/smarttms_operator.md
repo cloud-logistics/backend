@@ -16,6 +16,8 @@
 
 ```
 {
+    "message": "Succ",
+    "code": "0000",
     "data": [
         {
             "box_type_name": "冷藏箱",
@@ -62,6 +64,8 @@
 
 ```
 {
+    "message": "Succ",
+    "code": "0000",
     "data": {
         "used_box": [],
         "unused_box": [
@@ -77,5 +81,44 @@
             }
         ]
     }
-}```
+}
 
+```
+
+
+### 3. 云箱类型名称查询
+
+#### URL：
+
+`container/api/v1/cloudbox/smarttms/operator/box_detail?deviceid=test`
+
+#### 方法： 
+
+`GET`
+
+#### 参数
+`deviceid: 云箱id `
+
+#### BODY:
+ `无`
+#### 返回：
+
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": {
+        "box_type_name": "冷冻箱"
+    }
+}
+
+```
+
+```
+{
+    "message": "Fail",
+    "code": "9999",
+    "data": "deviceid not found"
+}
+
+```
