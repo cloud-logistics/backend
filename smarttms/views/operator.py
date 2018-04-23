@@ -70,11 +70,19 @@ def box_status(request):
                                    '(select box_id from smarttms_boxorderdetail where state=0 group by box_id) USED '
                                    'on TOTAL.deviceid=USED.box_id) A '
                                    'group by box_type_name,id,used_flag order by used_flag desc')
-    ret_data = []
+    used_box = []
+    unused_box = []
     for item in data:
         num = item.num
         box_type_name = item.box_type_name
+        id = item.id
         used_flag = item.used_flag
-        ret_data.append({'num': num})
+        # 使用中类型的箱子
+        if used_flag == 1:
+            used_box.append({'box_type_name': box_type_name, 'num': num, 'id': id})
+        # 库存
+        else:
+            unused_box.append({'box_type_name': box_type_name, 'num': num, 'id': id})
 
-    return JsonResponse({'data': ret_data}, status=status.HTTP_200_OK, safe=True)
+    return JsonResponse({'data': {'used_box': used_box, 'unused_box': unused_box}},
+                        status=status.HTTP_200_OK, safe=True)
