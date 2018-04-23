@@ -65,6 +65,23 @@ class EnterpriseUser(models.Model):
     user_password_encrypt = models.CharField(max_length=256, default='')
 
 
+class UserAppointment(models.Model):
+    appointment_id = models.CharField(max_length=48, primary_key=True)
+    user_id = models.ForeignKey(EnterpriseUser, related_name='user_appointment_fk')
+    appointment_days = models.IntegerField()
+    site = models.ForeignKey(SiteInfo, related_name='user_appointment_site_fk')
+    status_code = models.IntegerField(default=0)   # 0 已预约 1 已接订单 2 已交箱 3 使用中 4 待归还 5 已归还
+    create_time = models.DateTimeField(default=datetime.datetime.today())
+    cancel_time = models.DateTimeField(default=datetime.datetime.now(), null=True)
+
+
+class AppointmentDetail(models.Model):
+    detail_id = models.CharField(max_length=48, primary_key=True)
+    appointment_id = models.ForeignKey(UserAppointment, related_name='appointment_detail_id_fk')
+    box_type = models.ForeignKey(BoxTypeInfo, related_name='appointment_detail_box_type_fk')
+    box_num = models.IntegerField(default=0)
+
+
 class BoxOrder(models.Model):
     box_order_id = models.CharField(max_length=48, primary_key=True)
     order_start_time = models.DateTimeField(default=datetime.datetime.now())
@@ -72,6 +89,15 @@ class BoxOrder(models.Model):
     state = models.IntegerField(default=0)
     ack_flag = models.IntegerField(default=0)
     user = models.ForeignKey(EnterpriseUser, related_name='box_order_user_fk')
+
+
+class BoxOrderDetail(models.Model):
+    order_detail_id = models.CharField(max_length=48, primary_key=True)
+    order_detail_start_time = models.DateTimeField(default=datetime.datetime.now())
+    order_detail_end_time = models.DateTimeField(default='')
+    box_order = models.ForeignKey(BoxOrder, null=True, related_name='box_order_id_fk')
+    box = models.ForeignKey(BoxInfo, null=True, related_name='box_id_fk')
+    state = models.IntegerField(default=0)    # 0 已出仓库
 
 
 class BoxTypeInfo(models.Model):
@@ -113,15 +139,6 @@ class BoxInfo(models.Model):
     ava_flag = models.CharField(max_length=1, default='Y')
     siteinfo = models.ForeignKey(SiteInfo, related_name='box_site_fk', null=True)
     recycle_flag = models.IntegerField(default=0)
-
-
-class BoxOrderDetail(models.Model):
-    order_detail_id = models.CharField(max_length=48, primary_key=True)
-    order_detail_start_time = models.DateTimeField(default=datetime.datetime.now())
-    order_detail_end_time = models.DateTimeField(default='')
-    box_order = models.ForeignKey(BoxOrder, null=True, related_name='box_order_id_fk')
-    box = models.ForeignKey(BoxInfo, null=True, related_name='box_id_fk')
-    state = models.IntegerField(default=0)
 
 
 class ShopInfo(models.Model):
@@ -185,3 +202,4 @@ class NotifyMessage(models.Model):
     notify_title = models.CharField(max_length=50, default='')
     notify_content = models.TextField()
     read_flag = models.CharField(max_length=1, default='N')
+
