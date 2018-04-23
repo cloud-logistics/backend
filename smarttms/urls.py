@@ -30,6 +30,7 @@ urlpatterns = [
     url(r'^operator/home_page$', operator.home_page),                  # 运营方首页数据
     url(r'^operator/box_status$', operator.box_status),                # 运营方云箱状态
     url(r'^operator/box_detail$', operator.box_detail),                # 获取箱子类型
+    url(r'^operator/box_rent$', operator.box_rent),                    # 扫码用箱
 
 ]
 

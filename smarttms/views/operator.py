@@ -44,13 +44,13 @@ def home_page(request):
         temperature_threshold_min = float((item.temperature_threshold_min, 0)[item.temperature_threshold_min is None])
         temperature_threshold_max = float((item.temperature_threshold_max, 0)[item.temperature_threshold_max is None])
         box_type_name = item.box_type_name
-        status_code = 0
+        status_des = '正常'
         if temperature < temperature_threshold_min:
-            status_code = -1
+            status_des = '温度过低'
         if temperature > temperature_threshold_max:
-            status_code = 1
+            status_des = '温度过高'
         ret_list.append({'deviceid': deviceid, 'type_id': type_id, 'box_type_name': box_type_name,
-                         'temperature': temperature, 'status_code': status_code,
+                         'temperature': temperature, 'status': status_des,
                          'temperature_threshold_min': temperature_threshold_min,
                          'temperature_threshold_max': temperature_threshold_max,
                          'longitude': geo.cal_position(longitude),
@@ -95,11 +95,13 @@ def box_status(request):
 def box_detail(request):
     try:
         deviceid = request.GET.get("deviceid")
-        data = BoxInfo.objects.select_related('type').values_list('type__box_type_name').filter(deviceid=deviceid)
+        data = BoxInfo.objects.select_related('type').values_list('type__box_type_name', 'type__id').\
+            filter(deviceid=deviceid)
         if len(data) > 0:
             box_type_name = data[0][0]
-            return JsonResponse(retcode({'box_type_name': box_type_name}, "0000", "Succ"),
-                                safe=True, status=status.HTTP_200_OK)
+            type_id = data[0][1]
+            return JsonResponse(retcode({'box_type_name': box_type_name, 'type_id': type_id},
+                                        "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
         else:
             return JsonResponse(retcode('deviceid not found', "9999", "Fail"),
                                 safe=True, status=status.HTTP_400_BAD_REQUEST)
@@ -109,3 +111,9 @@ def box_detail(request):
                             safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# 扫码用箱
+@api_view(['POST'])
+def box_rent(request):
+    data = request.body
+    parameters = json.loads(data)
+    pass
