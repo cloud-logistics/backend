@@ -8,10 +8,12 @@ from django.http import JsonResponse
 from util import logger
 from smarttms.models import BoxInfo
 from smarttms.models import BoxTypeInfo
-from tms.models import SensorData
+from smarttms.utils.retcode import *
 from util import geo
 
+
 log = logger.get_logger(__name__)
+ERR_MSG = 'server internal error, pls contact admin'
 
 
 # 运营方首页数据
@@ -53,7 +55,7 @@ def home_page(request):
                          'temperature_threshold_max': temperature_threshold_max,
                          'longitude': geo.cal_position(longitude),
                          'latitude': geo.cal_position(latitude)})
-    return JsonResponse({'data': ret_list}, status=status.HTTP_200_OK, safe=True)
+    return JsonResponse(retcode(ret_list, "0000", "Succ"), status=status.HTTP_200_OK, safe=True)
 
 
 # 运营方云箱状态
@@ -84,5 +86,26 @@ def box_status(request):
         else:
             unused_box.append({'box_type_name': box_type_name, 'num': num, 'id': id})
 
-    return JsonResponse({'data': {'used_box': used_box, 'unused_box': unused_box}},
+    return JsonResponse(retcode({'used_box': used_box, 'unused_box': unused_box}, "0000", "Succ"),
                         status=status.HTTP_200_OK, safe=True)
+
+
+# 获取箱子类型
+@api_view(['GET'])
+def box_detail(request):
+    try:
+        deviceid = request.GET.get("deviceid")
+        data = BoxInfo.objects.select_related('type').values_list('type__box_type_name').filter(deviceid=deviceid)
+        if len(data) > 0:
+            box_type_name = data[0][0]
+            return JsonResponse(retcode({'box_type_name': box_type_name}, "0000", "Succ"),
+                                safe=True, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse(retcode('deviceid not found', "9999", "Fail"),
+                                safe=True, status=status.HTTP_400_BAD_REQUEST)
+    except Exception, e:
+        log.error(e.message)
+        return JsonResponse(retcode(ERR_MSG, "9999", "Fail"),
+                            safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
