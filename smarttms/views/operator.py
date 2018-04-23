@@ -36,11 +36,11 @@ def home_page(request):
     for item in data:
         deviceid = item.deviceid
         type_id = item.type_id
-        temperature = float(item.temperature)
-        longitude = item.longitude
-        latitude = item.latitude
-        temperature_threshold_min = float(item.temperature_threshold_min)
-        temperature_threshold_max = float(item.temperature_threshold_max)
+        temperature = float((item.temperature, 0)[item.temperature is None])
+        longitude = (item.longitude, '0')[item.longitude is None]
+        latitude = (item.latitude, '0')[item.latitude is None]
+        temperature_threshold_min = float((item.temperature_threshold_min, 0)[item.temperature_threshold_min is None])
+        temperature_threshold_max = float((item.temperature_threshold_max, 0)[item.temperature_threshold_max is None])
         box_type_name = item.box_type_name
         status_code = 0
         if temperature < temperature_threshold_min:
