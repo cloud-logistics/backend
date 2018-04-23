@@ -65,39 +65,16 @@ class EnterpriseUser(models.Model):
     user_password_encrypt = models.CharField(max_length=256, default='')
 
 
-class UserAppointment(models.Model):
-    appointment_id = models.CharField(max_length=48, primary_key=True)
-    user_id = models.ForeignKey(EnterpriseUser, related_name='user_appointment_fk')
-    appointment_days = models.IntegerField()
-    site = models.ForeignKey(SiteInfo, related_name='user_appointment_site_fk')
-    status_code = models.IntegerField(default=0)   # 0 已预约 1 已接订单 2 已交箱 3 使用中 4 待归还 5 已归还
-    create_time = models.DateTimeField(default=datetime.datetime.today())
-    cancel_time = models.DateTimeField(default=datetime.datetime.now(), null=True)
-
-
-class AppointmentDetail(models.Model):
-    detail_id = models.CharField(max_length=48, primary_key=True)
-    appointment_id = models.ForeignKey(UserAppointment, related_name='appointment_detail_id_fk')
-    box_type = models.ForeignKey(BoxTypeInfo, related_name='appointment_detail_box_type_fk')
-    box_num = models.IntegerField(default=0)
-
-
-class BoxOrder(models.Model):
-    box_order_id = models.CharField(max_length=48, primary_key=True)
-    order_start_time = models.DateTimeField(default=datetime.datetime.now())
-    order_end_time = models.DateTimeField(default=datetime.datetime.now())
-    state = models.IntegerField(default=0)
-    ack_flag = models.IntegerField(default=0)
-    user = models.ForeignKey(EnterpriseUser, related_name='box_order_user_fk')
-
-
-class BoxOrderDetail(models.Model):
-    order_detail_id = models.CharField(max_length=48, primary_key=True)
-    order_detail_start_time = models.DateTimeField(default=datetime.datetime.now())
-    order_detail_end_time = models.DateTimeField(default='')
-    box_order = models.ForeignKey(BoxOrder, null=True, related_name='box_order_id_fk')
-    box = models.ForeignKey(BoxInfo, null=True, related_name='box_id_fk')
-    state = models.IntegerField(default=0)    # 0 已出仓库
+class SiteInfo(models.Model):
+    id = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=128, default='')
+    location = models.TextField(default='')
+    latitude = models.CharField(max_length=16, default='0.0')
+    longitude = models.CharField(max_length=16, default='0.0')
+    site_code = models.CharField(max_length=48, default='')
+    volume = models.IntegerField(default=0)
+    telephone = models.CharField(max_length=20, default='')
+    price = models.IntegerField(default=0)
 
 
 class BoxTypeInfo(models.Model):
@@ -121,18 +98,6 @@ class BoxTypeInfo(models.Model):
     height = models.FloatField()
 
 
-class SiteInfo(models.Model):
-    id = models.IntegerField(primary_key=True)
-    name = models.CharField(max_length=128, default='')
-    location = models.TextField(default='')
-    latitude = models.CharField(max_length=16, default='0.0')
-    longitude = models.CharField(max_length=16, default='0.0')
-    site_code = models.CharField(max_length=48, default='')
-    volume = models.IntegerField(default=0)
-    telephone = models.CharField(max_length=20, default='')
-    price = models.IntegerField(default=0)
-
-
 class BoxInfo(models.Model):
     deviceid = models.CharField(max_length=48, primary_key=True)
     type = models.ForeignKey(BoxTypeInfo, related_name='box_info_box_type_fk')
@@ -149,6 +114,41 @@ class ShopInfo(models.Model):
     longitude = models.CharField(max_length=16, default='0.0')
     site_code = models.CharField(max_length=48, default='')
     telephone = models.CharField(max_length=20, default='')
+
+
+class UserAppointment(models.Model):
+    appointment_id = models.CharField(max_length=48, primary_key=True)
+    user = models.ForeignKey(EnterpriseUser, related_name='user_appointment_fk')
+    appointment_days = models.IntegerField()
+    site = models.ForeignKey(SiteInfo, related_name='user_appointment_site_fk')
+    status_code = models.IntegerField(default=0)   # 0 已预约 1 已接订单 2 已交箱 3 使用中 4 待归还 5 已归还
+    create_time = models.DateTimeField(default=datetime.datetime.today())
+    cancel_time = models.DateTimeField(default=datetime.datetime.now(), null=True)
+
+
+class AppointmentDetail(models.Model):
+    detail_id = models.CharField(max_length=48, primary_key=True)
+    appointment = models.ForeignKey(UserAppointment, related_name='appointment_detail_id_fk')
+    box_type = models.ForeignKey(BoxTypeInfo, related_name='appointment_detail_box_type_fk')
+    box_num = models.IntegerField(default=0)
+
+
+class BoxOrder(models.Model):
+    box_order_id = models.CharField(max_length=48, primary_key=True)
+    appointment = models.ForeignKey(UserAppointment, related_name='box_order_appointment_fk', default=None)
+    order_start_time = models.DateTimeField(default=datetime.datetime.now())
+    order_end_time = models.DateTimeField(default=datetime.datetime.now())
+    state = models.IntegerField(default=0)
+    ack_flag = models.IntegerField(default=0)
+
+
+class BoxOrderDetail(models.Model):
+    order_detail_id = models.CharField(max_length=48, primary_key=True)
+    order_detail_start_time = models.DateTimeField(default=datetime.datetime.now())
+    order_detail_end_time = models.DateTimeField(default='')
+    box_order = models.ForeignKey(BoxOrder, null=True, related_name='box_order_id_fk')
+    box = models.ForeignKey(BoxInfo, null=True, related_name='box_id_fk')
+    state = models.IntegerField(default=0)    # 0 已出仓库
 
 
 class GoodsType(models.Model):
