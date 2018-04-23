@@ -61,6 +61,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'rentservice.middleware.authmiddleware.AuthMiddleware',
     'monservice.middleware.authmiddleware.AuthMiddleware',
+    'smarttms.middleware.authmiddleware.AuthMiddleware',
 ]
 
 ROOT_URLCONF = 'cloudbox.urls'
