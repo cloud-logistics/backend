@@ -178,13 +178,14 @@ class GoodsOrder(models.Model):
     ack_flag = models.IntegerField(default=0)
     shop = models.ForeignKey(ShopInfo, null=True, related_name='goods_order_shop')
     user = models.ForeignKey(EnterpriseUser, related_name='goods_order_user')
+    driver_take_status = models.IntegerField(default=0)
 
 
 class GoodsOrderDetail(models.Model):
     id = models.CharField(max_length=48, primary_key=True)
     order = models.ForeignKey(GoodsOrder, related_name='goods_order_detail_fk')
     box = models.ForeignKey(BoxInfo, related_name='goods_order_detail_box')
-    ack_flag = models.IntegerField(default=0)
+    driver_take_status = models.IntegerField(default=0)
 
 
 class OrderItem(models.Model):
