@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
-from django.db.models import Max, Min
+from rest_framework import status
 import json
 from util import logger
 from smarttms.models import ShopInfo, GoodsList, SensorData, BoxInfo, GoodsOrder, GoodsOrderDetail, OrderItem
@@ -35,14 +35,14 @@ def get_box_list(request):
             box_sensor_data = SensorData.objects.filter(deviceid=item.box.deviceid).order_by('-timestamp')
             if len(box_sensor_data) > 0:
                 latest_data = box_sensor_data[0]
-            status = '正常'
+            box_status = '正常'
             if latest_data.temperature < temperature_threshold_min:
-                status = '温度过低'
+                box_status = '温度过低'
             elif latest_data.temperature > temperature_threshold_max:
-                status = '温度过高'
+                box_status = '温度过高'
 
             box_item =  {"deviceid": item.box.deviceid, "latitude": latest_data.latitude, "longitude": latest_data.longitude,
-                         "type_name": item.box.type.type_name, "status": status}
+                         "type_name": item.box.type.type_name, "status": box_status}
 
             if item.order.state == 0:
                 resp_unused_boxes.append(box_item)
@@ -90,7 +90,7 @@ def get_goods_list(request):
         res_goods = []
         for item in goods_list:
             res_goods.append(
-                {'goods_id': item.id, 'goods_name': item.type.name, 'ava_number': item.num, 'goods_unit': item.unit.name}
+                {'goods_id': item.id, 'goods_name': item.name, 'ava_number': item.num, 'goods_unit': item.unit.name}
             )
 
     except Exception, e:
@@ -112,6 +112,7 @@ def get_box_detail(request):
         if 'deviceid' in request.GET:
             deviceid = request.GET.get('deviceid')
 
+        box_status = u'正常'
         order_details = GoodsOrderDetail.objects.filter(deviceid=deviceid, order__user__user_id=user_id)
         if len(order_details) > 0:
             detail = order_details[0]
@@ -122,15 +123,14 @@ def get_box_detail(request):
                 latest_data = box_sensor_data[0]
             temperature_threshold_min = detail.box.type.temperature_threshold_min
             temperature_threshold_max = detail.box.type.temperature_threshold_max
-            status = '正常'
             if latest_data.temperature < temperature_threshold_min:
-                status = '温度过低'
+                box_status = u'温度过低'
             elif latest_data.temperature > temperature_threshold_max:
-                status = '温度过高'
+                box_status = u'温度过高'
 
             use_time = (datetime.datetime.now() - detail.order.order_start_time).seconds
             box_detail = {'deviceid': deviceid, 'latitude': latest_data.latitude, 'longitude': latest_data.longitude,
-                          'use_time': use_time, 'status': status, 'shop_tel': detail.order.shop.telephone}
+                          'use_time': use_time, 'status': box_status, 'shop_tel': detail.order.shop.telephone}
 
     except Exception, e:
         log.error(e.message)
@@ -179,6 +179,7 @@ def create_goodsorder(request):
         response_msg = {'status':'OK', 'msg': 'Add goods order success.'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
 
+
 # 获取运单列表
 @csrf_exempt
 @api_view(['GET'])
@@ -196,9 +197,9 @@ def get_order_list(request):
                 goods_items.append({'goods_id': item.goods.id, 'goods_name': item.goods.name,
                                     'goods_unit': item.unit.name, 'number': item.num})
 
-            status = '正常'
+            box_status = '正常'
             resp_orders.append({'order_id': go.id, 'order_time': go.order_start_time, 'shop_id': go.shop.id,
-                                'shop_name': go.shop.name, 'status': status, 'goods': resp_orders})
+                                'shop_name': go.shop.name, 'status': box_status, 'goods': resp_orders})
     except Exception, e:
         log.error(e.message)
         response_msg = {'msg': e.message, 'status': 'ERROR'}
