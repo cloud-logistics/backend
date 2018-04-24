@@ -168,13 +168,14 @@ class GoodsList(models.Model):
 class GoodsOrder(models.Model):
     id = models.CharField(max_length=48, primary_key=True)
     order_start_time = models.DateTimeField(default=datetime.datetime.now())
-    order_end_time = models.DateTimeField(default=datetime.datetime.now())
+    order_end_time = models.DateTimeField(null=True)
     state = models.IntegerField(default=0)
     site = models.ForeignKey(SiteInfo, related_name='goods_order_site')
     ack_flag = models.IntegerField(default=0)
     shop = models.ForeignKey(ShopInfo, null=True, related_name='goods_order_shop')
     user = models.ForeignKey(EnterpriseUser, related_name='goods_order_user')
     driver_take_status = models.IntegerField(default=0)
+    receiver_take_status = models.IntegerField(default=0)
 
 
 class GoodsOrderDetail(models.Model):
@@ -182,6 +183,9 @@ class GoodsOrderDetail(models.Model):
     order = models.ForeignKey(GoodsOrder, related_name='goods_order_detail_fk')
     box = models.ForeignKey(BoxInfo, related_name='goods_order_detail_box')
     driver_take_status = models.IntegerField(default=0)
+    receiver_take_status = models.IntegerField(default=0)
+    recycle_status = models.IntegerField(default=0)
+    operator_take_status = models.IntegerField(default=0)
 
 
 class OrderItem(models.Model):

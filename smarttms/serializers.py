@@ -12,6 +12,7 @@ from smarttms.models import BoxTypeInfo
 from smarttms.models import SiteInfo
 from smarttms.models import BoxInfo
 from smarttms.models import NotifyMessage
+from smarttms.models import GoodsOrder, GoodsOrderDetail, ShopInfo
 
 
 class BoxTypeInfoSerializer(serializers.ModelSerializer):
@@ -87,4 +88,29 @@ class BoxInfoResSerializer(serializers.ModelSerializer):
 class NotifyMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotifyMessage
+        fields = '__all__'
+
+
+class ShopInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShopInfo
+        fields = '__all__'
+
+
+class GoodsOrderSerializer(serializers.ModelSerializer):
+    site = SiteInfoSerializer()
+    shop = ShopInfoSerializer()
+    user = EnterpriseUserSerializer()
+
+    class Meta:
+        model = GoodsOrder
+        fields = '__all__'
+
+
+class GoodsOrderDetailSerializer(serializers.ModelSerializer):
+    order = GoodsOrderSerializer()
+    box = BoxInfoSerializer()
+
+    class Meta:
+        model = GoodsOrderDetail
         fields = '__all__'
