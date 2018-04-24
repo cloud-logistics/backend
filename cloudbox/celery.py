@@ -37,7 +37,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(crontab(minute='*/5', hour='*'), cal_missing_alarm.s())
     sender.add_periodic_task(crontab(minute='*/2', hour='*'), update_site_box_stock.s())
     sender.add_periodic_task(crontab(minute='*/2', hour='*'), cancel_site_box_stock.s())
-    sender.add_periodic_task(crontab(minute='*/5', hour='*'), generate_tms_sensor_data.s())
+    # sender.add_periodic_task(crontab(minute='*/5', hour='*'), generate_tms_sensor_data.s())
 
 
 @app.task
