@@ -121,3 +121,55 @@
 }
 
 ```
+
+### 4. 扫码用箱
+#### URL：
+
+`container/api/v1/cloudbox/smarttms/operator/box_rent`
+
+#### 方法： 
+
+`POST`
+
+#### BODY:
+```
+{
+	"appointment_id": "appointment_id1",
+	"data": [{
+		"box_type_id": 1,
+		"deviceid_list": ["8647970359646630"]
+	}, {
+		"box_type_id": 2,
+		"deviceid_list": ["test"]
+	}]
+}
+```
+#### 返回：
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": {
+        "box_order_id": "0208af59-4797-11e8-accf-6a000286eb10"
+    }
+}
+```
+
+```
+{
+    "message": "Fail",
+    "code": "9999",
+    "data": "deviceid:8647970359646630 is being used"
+}
+```
+
+```
+{
+    "message": "Fail",
+    "code": "9999",
+    "data": "box number error"
+}
+
+```
+
+

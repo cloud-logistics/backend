@@ -5,15 +5,20 @@
 from rest_framework.decorators import api_view
 from rest_framework import status
 from django.http import JsonResponse
-from util import logger
-from smarttms.models import BoxInfo
-from smarttms.models import BoxTypeInfo
+from smarttms.models import BoxInfo, BoxTypeInfo, BoxOrder, BoxOrderDetail, UserAppointment, AppointmentDetail
 from smarttms.utils.retcode import *
 from util import geo
+from django.db import transaction
+import uuid
+import datetime
+import pytz
+from django.conf import settings
 
 
 log = logger.get_logger(__name__)
 ERR_MSG = 'server internal error, pls contact admin'
+tz = pytz.timezone(settings.TIME_ZONE)
+
 
 
 # 运营方首页数据
@@ -116,4 +121,89 @@ def box_detail(request):
 def box_rent(request):
     data = request.body
     parameters = json.loads(data)
-    pass
+    try:
+        with transaction.atomic():
+            box_order_id = str(uuid.uuid1())
+            appointment_id = parameters['appointment_id']
+            appointment = AppointmentDetail.objects.select_related('appointment').\
+                filter(appointment__appointment_id=appointment_id)
+            if not len(appointment) > 0:
+                return JsonResponse(retcode('appointment_id dose not exits', "9999", "Fail"),
+                                    safe=True, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                appointment_days = appointment[0].appointment.appointment_days
+
+            # 记录预约的箱子类型及个数对应关系
+            appointment_box_info = {}
+            for appointment_detail in appointment:
+                appointment_box_info[appointment_detail.box_type_id] = appointment_detail.box_num
+
+            # 取当前时间为箱单开始时间
+            order_start_time = datetime.datetime.now(tz=tz)
+            # 加上预约天数为箱单结束时间
+            delta = datetime.timedelta(days=appointment_days)
+            order_end_time = order_start_time + delta
+            box_order = BoxOrder(box_order_id=box_order_id,
+                                 appointment_id=appointment_id,
+                                 order_start_time=order_start_time,
+                                 order_end_time=order_end_time,
+                                 state=0,
+                                 ack_flag=0)
+
+            box_type_list = parameters['data']
+            box_order_detail_list = []
+            for box_type in box_type_list:
+                box_type_id = box_type['box_type_id']
+                deviceid_list = box_type['deviceid_list']
+
+                # 计算请求参数中每种类型的箱子有多少个
+                box_num = 0
+                for deviceid in deviceid_list:
+                    # 判断每个id是否存在
+                    if not if_box_exits(deviceid):
+                        return JsonResponse(retcode("deviceid:" + deviceid + " dose not exit", "9999", "Fail"),
+                                            safe=True, status=status.HTTP_400_BAD_REQUEST)
+                    if if_box_using(deviceid):
+                        return JsonResponse(retcode("deviceid:" + deviceid + " is being used", "9999", "Fail"),
+                                            safe=True, status=status.HTTP_400_BAD_REQUEST)
+
+                    box_num = box_num + 1
+                    box_order_detail = BoxOrderDetail(order_detail_id=str(uuid.uuid1()),
+                                                      order_detail_start_time=order_start_time,
+                                                      order_detail_end_time=order_end_time,
+                                                      box_order_id=box_order_id,
+                                                      box_id=deviceid,
+                                                      state=0)
+                    box_order_detail_list.append(box_order_detail)
+                if appointment_box_info[box_type_id] != box_num:
+                    return JsonResponse(retcode("box number error", "9999", "Fail"),
+                                        safe=True, status=status.HTTP_400_BAD_REQUEST)
+
+            box_order.save()
+            for detail in box_order_detail_list:
+                detail.save()
+    except Exception, e:
+        log.error(repr(e))
+        return JsonResponse(retcode(ERR_MSG, "9999", "Fail"),
+                            safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return JsonResponse(retcode({"box_order_id": box_order_id}, "0000", "Succ"),
+                        safe=True, status=status.HTTP_201_CREATED)
+
+
+# 判断云箱id是否存在
+def if_box_exits(deviceid):
+    try:
+        box = BoxInfo.objects.get(deviceid=deviceid)
+        if box is not None:
+            return True
+    except BoxInfo.DoesNotExist, e:
+        log.error(e.message)
+        return False
+
+
+# 判断云箱是否正在被使用
+def if_box_using(deviceid):
+    data = BoxOrderDetail.objects.filter(box__deviceid=deviceid, state=0)
+    return len(data) > 0
+
+
