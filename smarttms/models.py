@@ -6,6 +6,7 @@ from django.db import models
 # Create your models here.
 import datetime
 import pytz
+from util.geo import cal_position
 
 
 timezone = pytz.timezone('Asia/Shanghai')
@@ -151,11 +152,6 @@ class BoxOrderDetail(models.Model):
     state = models.IntegerField(default=0)    # 0 已出仓库
 
 
-class GoodsType(models.Model):
-    id = models.IntegerField(primary_key=True)
-    name = models.CharField(max_length=128, default='')
-
-
 class GoodsUnit(models.Model):
     id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=128, default='')
@@ -163,7 +159,7 @@ class GoodsUnit(models.Model):
 
 class GoodsList(models.Model):
     id = models.CharField(max_length=48, primary_key=True)
-    type = models.ForeignKey(GoodsType, related_name='goods_type_fk')
+    name = models.CharField(max_length=128, default='')
     unit = models.ForeignKey(GoodsUnit, related_name='goods_unit_fk')
     num = models.IntegerField(default=0)
     flag = models.IntegerField(default=0)
@@ -190,7 +186,7 @@ class GoodsOrderDetail(models.Model):
 
 class OrderItem(models.Model):
     id = models.CharField(max_length=48, primary_key=True)
-    goods_type = models.ForeignKey(GoodsType, null=True)
+    goods = models.ForeignKey(GoodsList, null=True)
     goods_unit = models.ForeignKey(GoodsUnit, null=True)
     num = models.IntegerField(default=0)
     order_detail = models.ForeignKey(GoodsOrderDetail)
@@ -204,3 +200,26 @@ class NotifyMessage(models.Model):
     notify_content = models.TextField()
     read_flag = models.CharField(max_length=1, default='N')
 
+
+# 智能硬件传感器信息
+class SensorData(models.Model):
+    timestamp = models.IntegerField(default=0)  # 数据时间
+    intimestamp = models.IntegerField(default=0)  # 记录入库时间
+    deviceid = models.CharField(max_length=128, default='')
+    temperature = models.CharField(max_length=10, default='0')
+    longitude = models.CharField(max_length=20, default='0')
+    latitude = models.CharField(max_length=20, default='0')
+    salinity = models.CharField(max_length=20, default='0')
+    ph = models.CharField(max_length=20, default='0')
+    dissolved_oxygen = models.CharField(max_length=20, default='0')  # 溶氧量
+    chemical_oxygen_consumption = models.CharField(max_length=20, default='0')  # 化学耗氧量
+    transparency = models.CharField(max_length=20, default='0')  # 透明度
+    aqua = models.CharField(max_length=20, default='0')  # 水色
+    nutrient_salt_of_water = models.CharField(max_length=20, default='0')  # 水体营养盐
+    anaerobion = models.CharField(max_length=20, default='0')  # 厌氧菌
+
+    def convert_longitude(self):
+        return str(cal_position(self.longitude))
+
+    def convert_latitude(self):
+        return str(cal_position(self.latitude))
