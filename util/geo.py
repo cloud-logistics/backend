@@ -45,7 +45,7 @@ def cal_position(value):
         minute = value[len(hour):len(value)]
         return float(hour + '.' + minute)
     else:
-        return value
+        return float(value)
 
 
 # 根据地点名称获取经纬度
