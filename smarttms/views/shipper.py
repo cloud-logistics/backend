@@ -12,6 +12,7 @@ from smarttms.models import ShopInfo, GoodsList, SensorData, BoxInfo, GoodsOrder
 from rest_framework.settings import api_settings
 import uuid
 import datetime
+from util.geo import cal_position
 
 
 log = logger.get_logger(__name__)
@@ -36,13 +37,13 @@ def get_box_list(request):
             if len(box_sensor_data) > 0:
                 latest_data = box_sensor_data[0]
             box_status = '正常'
-            if latest_data.temperature < temperature_threshold_min:
+            if float(latest_data.temperature) < temperature_threshold_min:
                 box_status = '温度过低'
-            elif latest_data.temperature > temperature_threshold_max:
+            elif float(latest_data.temperature) > temperature_threshold_max:
                 box_status = '温度过高'
 
-            box_item =  {"deviceid": item.box.deviceid, "latitude": latest_data.latitude, "longitude": latest_data.longitude,
-                         "type_name": item.box.type.type_name, "status": box_status}
+            box_item =  {"deviceid": item.box.deviceid, "latitude": str(cal_position(latest_data.latitude)), "longitude": str(cal_position(latest_data.longitude)),
+                         "type_name": item.box.type.box_type_name, "status": box_status}
 
             if item.order.state == 0:
                 resp_unused_boxes.append(box_item)
@@ -113,7 +114,7 @@ def get_box_detail(request):
             deviceid = request.GET.get('deviceid')
 
         box_status = u'正常'
-        order_details = GoodsOrderDetail.objects.filter(deviceid=deviceid, order__user__user_id=user_id)
+        order_details = GoodsOrderDetail.objects.filter(box__deviceid=deviceid, order__user__user_id=user_id)
         if len(order_details) > 0:
             detail = order_details[0]
             deviceid = detail.box.deviceid
@@ -123,13 +124,13 @@ def get_box_detail(request):
                 latest_data = box_sensor_data[0]
             temperature_threshold_min = detail.box.type.temperature_threshold_min
             temperature_threshold_max = detail.box.type.temperature_threshold_max
-            if latest_data.temperature < temperature_threshold_min:
+            if float(latest_data.temperature) < temperature_threshold_min:
                 box_status = u'温度过低'
-            elif latest_data.temperature > temperature_threshold_max:
+            elif float(latest_data.temperature) > temperature_threshold_max:
                 box_status = u'温度过高'
 
-            use_time = (datetime.datetime.now() - detail.order.order_start_time).seconds
-            box_detail = {'deviceid': deviceid, 'latitude': latest_data.latitude, 'longitude': latest_data.longitude,
+            use_time = (datetime.datetime.now() - detail.order.order_start_time.replace(tzinfo=None)).seconds
+            box_detail = {'deviceid': deviceid, "latitude": str(cal_position(latest_data.latitude)), "longitude": str(cal_position(latest_data.longitude)),
                           'use_time': use_time, 'status': box_status, 'shop_tel': detail.order.shop.telephone}
 
     except Exception, e:
@@ -152,15 +153,16 @@ def create_goodsorder(request):
         site_id = data['site_id']
 
         goods_order_id = str(uuid.uuid1())
-        go = GoodsOrder(id=goods_order_id, order_start_time=datetime.datetime.now(), state=0, site_id=site_id, shop_id=shop_id, user_user_id=user_id)
+        go = GoodsOrder(id=goods_order_id, order_start_time=datetime.datetime.now(), state=0, site_id=site_id, shop_id=shop_id, user_id=user_id)
         go.save()
 
         box_list = data['boxes']
         for box in box_list:
             deviceid = box['deviceid']
             detail_id = str(uuid.uuid1())
+            boxinfo = BoxInfo.objects.get(deviceid=deviceid)
 
-            gd = GoodsOrderDetail(order_detail_id=detail_id, order=go, box_deviceid=deviceid)
+            gd = GoodsOrderDetail(id=detail_id, order=go, box=boxinfo)
             gd.save()
 
             goods_list = box['goods']
@@ -168,7 +170,8 @@ def create_goodsorder(request):
                 goods_id = goods['goods_id']
                 goods_num = goods['goods_num']
                 item_id = str(uuid.uuid1())
-                item = OrderItem(id=item_id, goods_id=goods_id, goods_unit=goods.unit, num=goods_num, order_detail=gd)
+                gs = GoodsList.objects.get(id=goods_id)
+                item = OrderItem(id=item_id, goods_id=goods_id, goods_unit=gs.unit, num=goods_num, order_detail=gd)
                 item.save()
 
     except Exception, e:
@@ -195,11 +198,11 @@ def get_order_list(request):
             goods_items = []
             for item in item_list:
                 goods_items.append({'goods_id': item.goods.id, 'goods_name': item.goods.name,
-                                    'goods_unit': item.unit.name, 'number': item.num})
+                                    'goods_unit': item.goods_unit.name, 'number': item.num})
 
             box_status = '正常'
             resp_orders.append({'order_id': go.id, 'order_time': go.order_start_time, 'shop_id': go.shop.id,
-                                'shop_name': go.shop.name, 'status': box_status, 'goods': resp_orders})
+                                'shop_name': go.shop.name, 'status': box_status, 'goods': goods_items})
     except Exception, e:
         log.error(e.message)
         response_msg = {'msg': e.message, 'status': 'ERROR'}
@@ -229,7 +232,8 @@ def update_goods_order(request, order_id):
         for box in box_list:
             deviceid = box['deviceid']
             detail_id = str(uuid.uuid1())
-            gd = GoodsOrderDetail(order_detail_id=detail_id, order=go, box_deviceid=deviceid)
+            boxinfo = BoxInfo.objects.get(deviceid=deviceid)
+            gd = GoodsOrderDetail(id=detail_id, order=go, box=boxinfo)
             gd.save()
 
             goods_list = box['goods']
@@ -237,7 +241,8 @@ def update_goods_order(request, order_id):
                 goods_id = goods['goods_id']
                 goods_num = goods['goods_num']
                 item_id = str(uuid.uuid1())
-                item = OrderItem(id=item_id, goods_id=goods_id, goods_unit=goods.unit, num=goods_num, order_detail=gd)
+                gs = GoodsList.objects.get(id=goods_id)
+                item = OrderItem(id=item_id, goods_id=goods_id, goods_unit=gs.unit, num=goods_num, order_detail=gd)
                 item.save()
 
     except Exception, e:
