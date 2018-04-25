@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from django.conf.urls import url
-from smarttms.views import operator, auth, enterprise, enterpriseuser
+from smarttms.views import operator, auth, enterprise, enterpriseuser, shipper, sensor, driver
 
 urlpatterns = [
     url(r'^auth/authsalt$', auth.auth_with_salt),  # user login verify
@@ -31,6 +31,19 @@ urlpatterns = [
     url(r'^operator/box_status$', operator.box_status),                # 运营方云箱状态
     url(r'^operator/box_detail$', operator.box_detail),                # 获取箱子类型
     url(r'^operator/box_rent$', operator.box_rent),                    # 扫码用箱
+    url(r'^driver/query/(?P<deviceid>[0-9a-zA-Z-]+)/$', driver.order_info),  # 司机扫描查询接口
+    url(r'^driver/ack/order/$', driver.ack_order),                       # 司机确认提货
 
+    url(r'^receive_data$', sensor.receive_data),                           # 传感器接收数据
+
+    # 发货方接口
+    url(r'^shipper/boxlist$', shipper.get_box_list),        # 发货方首页云箱列表
+    url(r'^shipper/shoplist$', shipper.get_shop_list),      # 门店列表
+    url(r'^shipper/goodslist$', shipper.get_goods_list),    # 货物列表
+    url(r'^shipper/boxdetail$', shipper.get_box_detail),    # 云箱详情
+    url(r'^shipper/goodsorder$', shipper.create_goodsorder),  # 创建运单
+    url(r'^shipper/orderlist$', shipper.get_order_list),       # 获取运单列表
+    url(r'^shipper/goodsorder/(?P<order_id>[0-9a-zA-Z-]+)$', shipper.update_goods_order),  # 修改运单
+    url(r'^shipper/goodsorder/(?P<order_id>[0-9a-zA-Z-]+)', shipper.delete_goods_order),  # 删除运单
 ]
 
