@@ -343,7 +343,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/smarttms/shipper/goodsorder/{order_id}`
+`container/api/v1/cloudbox/smarttms/shipper/goodsorder/{order_id}/`
 
 #### BODY:
 
@@ -370,7 +370,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/smarttms/shipper/allorder?user_id=`
+`container/api/v1/cloudbox/smarttms/shipper/allgoodsorder?user_id=`
 
 #### BODY:
 
@@ -393,12 +393,12 @@
             "driver_tel": "18099992222",
             "goods": [
                 {
-                    "goods_id": 1,
+                    "goods_id": "1",
                     "goods_name": "",
                     "number": 123
                 },
                 {
-                    "goods_id": 1,
+                    "goods_id": "2",
                     "goods_name": "",
                     "number": 123
                 }
@@ -413,7 +413,7 @@
             "driver_tel": "18099992222",
             "goods": [
                 {
-                    "goods_id": 2,
+                    "goods_id": "3",
                     "goods_name": "",
                     "number": 123
                 }
@@ -433,7 +433,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/smarttms/shipper/orders_by_day?user_id=&day=`
+`container/api/v1/cloudbox/smarttms/shipper/orders_by_day?user_id=&begin_time=&end_time=`
 
 #### BODY:
 
@@ -495,7 +495,7 @@
 
 #### URL：
 
-`container/api/v1/cloudbox/smarttms/shipper/order_detail?user_id=&order_id=`
+`container/api/v1/cloudbox/smarttms/shipper/goodsorder/{order_id}`
 
 #### BODY:
 
@@ -522,7 +522,6 @@
                     "deviceid": "",
                     "box_type": "",
                     "temperature": 12.0,
-                    "humidity": 10.0,
                     "goods": [
                         {
                             "goods_id": "",
@@ -540,7 +539,6 @@
                     "deviceid": "",
                     "box_type": "",
                     "temperature": 12.0,
-                    "humidity": 10.0,
                     "goods": [
                         {
                             "goods_id": "",

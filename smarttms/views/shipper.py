@@ -73,6 +73,8 @@ def get_shop_list(request):
         for item in shop_list:
             res_shops.append(
                 {'shop_id': item.id, 'shop_name': item.name, 'shop_location': item.location})
+
+
     except Exception, e:
         log.error(e.message)
         response_msg = {'msg': e.message, 'status': 'ERROR'}
@@ -212,6 +214,109 @@ def get_order_list(request):
         return JsonResponse(resp, safe=True, status=status.HTTP_200_OK)
 
 
+
+# 获取运单列表
+@csrf_exempt
+@api_view(['GET'])
+def get_transporting_goods_orders(request):
+    try:
+        if 'user_id' in request.GET:
+            user_id = request.GET.get('user_id')
+
+        goods_orders = GoodsOrder.objects.filter(user__user_id=user_id, driver_take_status=1, receiver_take_status=0)
+        resp_orders = []
+        for go in goods_orders:
+            item_list = OrderItem.objects.filter(order_detail__order=go)
+            goods_items = []
+            for item in item_list:
+                goods_items.append({'goods_id': item.goods.id, 'goods_name': item.goods.name,
+                                    'goods_unit': item.goods_unit.name, 'number': item.num})
+
+            box_status = '正常'
+            resp_orders.append({'order_id': go.id, 'order_time': go.order_start_time, 'shop_id': go.shop.id,
+                                'shop_name': go.shop.name, 'status': box_status, 'driver_name': go.driver.user_name,
+                                'driver_tel': go.driver.user_phone, 'goods': goods_items})
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        resp = {'status': 'OK', 'msg': 'Get transporting order list success.', 'data': resp_orders}
+        return JsonResponse(resp, safe=True, status=status.HTTP_200_OK)
+
+
+
+# 获取运单列表
+@csrf_exempt
+@api_view(['GET'])
+def get_orders_by_day(request):
+    try:
+        if 'user_id' in request.GET:
+            user_id = request.GET.get('user_id')
+
+        if 'begin_time' in request.GET and 'end_time' in request.GET:
+            begin_timestamp = request.GET.get('begin_time')
+            end_timestamp = request.GET.get('end_time')
+            begin_time = datetime.datetime.fromtimestamp(begin_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+            end_time = datetime.datetime.fromtimestamp(end_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
+        goods_orders = GoodsOrder.objects.filter(user__user_id=user_id, order_start_time__gte=begin_time, order_start_time__lte=end_time)
+        resp_orders = []
+        for go in goods_orders:
+            item_list = OrderItem.objects.filter(order_detail__order=go)
+            goods_items = []
+            for item in item_list:
+                goods_items.append({'goods_id': item.goods.id, 'goods_name': item.goods.name,
+                                    'goods_unit': item.goods_unit.name, 'number': item.num})
+            box_status = '正常'
+            resp_orders.append({'order_id': go.id, 'order_time': go.order_start_time, 'shop_id': go.shop.id,
+                                'shop_name': go.shop.name, 'status': box_status, 'driver_name': go.driver.user_name,
+                                'driver_tel': go.driver.user_phone, 'goods': goods_items})
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        resp = {'status': 'OK', 'msg': 'Get transporting order list success.', 'data': resp_orders}
+        return JsonResponse(resp, safe=True, status=status.HTTP_200_OK)
+
+
+# 获取运单详情
+@csrf_exempt
+@api_view(['GET'])
+def get_goods_order(request, order_id):
+    try:
+        goods_order = GoodsOrder.objects.get(id=order_id)
+        box_list = []
+        gds = GoodsOrderDetail.objects.filter(order=goods_order)
+        for detail in gds:
+
+            goods_items = []
+            items = OrderItem.objects.filter(order_detail=detail)
+            for item in items:
+                goods_items.append({'goods_id': item.id, 'goods_name': item.goods.name, 'goods_num': item.num})
+
+            sds = SensorData.objects.filter(deviceid=detail.box.deviceid).order_by('-timestamp')
+            if len(sds) > 0:
+                box_sensor = sds[0]
+                box = {'deviceid': detail.box.deviceid, 'box_type': detail.box.type.box_type_name,
+                       'temperature': box_sensor.temperature, 'goods': goods_items}
+
+            box_list.append(box)
+
+        resp_order = {'order_id': goods_order.id, 'order_time': goods_order.order_start_time, 'shop_id': goods_order.shop.id,
+                      'shop_name': goods_order.shop.name, 'shop_tel': goods_order.shop.telephone, 'status': u'正常',
+                      'driver_name': goods_order.driver.user_name, 'driver_tel': goods_order.driver.user_phone, 'boxes': box_list}
+
+    except Exception, e:
+        log.error(e.message)
+        response_msg = {'msg': e.message, 'status': 'ERROR'}
+        return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        resp = {'status': 'OK', 'msg': 'Get transporting order list success.', 'data': resp_order}
+        return JsonResponse(resp, safe=True, status=status.HTTP_200_OK)
+
+
 # 修改运单
 @csrf_exempt
 @api_view(['PUT'])
@@ -267,4 +372,21 @@ def delete_goods_order(request, order_id):
     else:
         response_msg = {'status':'OK', 'msg': 'Delete goods order success.'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_200_OK)
+
+
+def get_box_status(box):
+    try:
+        box_sensor_data = SensorData.objects.filter(deviceid=box.deviceid).order_by('-timestamp')
+        if len(box_sensor_data) > 0:
+            latest_data = box_sensor_data[0]
+        temperature_threshold_min = box.type.temperature_threshold_min
+        temperature_threshold_max = box.type.temperature_threshold_max
+        box_status = u'正常'
+        if float(latest_data.temperature) < temperature_threshold_min:
+            box_status = u'温度过低'
+        elif float(latest_data.temperature) > temperature_threshold_max:
+            box_status = u'温度过高'
+        return box_status
+    except Exception, e:
+        log.error(e.message)
 

@@ -45,5 +45,8 @@ urlpatterns = [
     url(r'^shipper/orderlist$', shipper.get_order_list),       # 获取运单列表
     url(r'^shipper/goodsorder/(?P<order_id>[0-9a-zA-Z-]+)$', shipper.update_goods_order),  # 修改运单
     url(r'^shipper/goodsorder/(?P<order_id>[0-9a-zA-Z-]+)', shipper.delete_goods_order),  # 删除运单
+    url(r'^shipper/allgoodsorder', shipper.get_transporting_goods_orders),   # 获取所有运单列表
+    url(r'^shipper/orders_by_day$', shipper.get_orders_by_day),   # 按天查询所有运单列表
+    url(r'^shipper/goodsorder/(?P<order_id>[0-9a-zA-Z-]+)$', shipper.get_goods_order),  # 获取运单详情
 ]
 

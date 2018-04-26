@@ -176,6 +176,7 @@ class GoodsOrder(models.Model):
     user = models.ForeignKey(EnterpriseUser, related_name='goods_order_user')
     driver_take_status = models.IntegerField(default=0)
     receiver_take_status = models.IntegerField(default=0)
+    driver = models.ForeignKey(EnterpriseUser, related_name='goods_order_driver')
 
 
 class GoodsOrderDetail(models.Model):

@@ -92,6 +92,12 @@ def get_box_info_list(request):
         query_set = query_set.all()
     page = paginator.paginate_queryset(query_set, request)
     ret_ser = BoxInfoListSerializer(page, many=True)
+
+    offset = request.GET.get('offset')
+    if offset is None:
+        ret_full = BoxInfoListSerializer(query_set, many=True)
+        return JsonResponse({'data': {'results': ret_full.data}, 'status': 'OK', 'msg': 'Get box list success.'}, safe=True, status=status.HTTP_200_OK)
+
     return paginator.get_paginated_response(ret_ser.data)
 
 
