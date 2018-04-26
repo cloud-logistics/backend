@@ -246,3 +246,42 @@
     "data": "box_order_id dose not exist"
 }
 ```
+
+### 7. 预约单列表
+#### URL：
+
+`container/api/v1/cloudbox/smarttms/operator/appointment_list`
+
+#### 方法： 
+
+`GET`
+
+#### BODY:
+```
+无
+```
+#### 返回：
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": [
+        {
+            "user_name": "driver1",
+            "site_name": "西安仓库",
+            "create_time": "2018-04-19T16:00:00.210Z",
+            "data": [
+                {
+                    "box_num": 2,
+                    "box_type_name": "冷冻箱"
+                },
+                {
+                    "box_num": 1,
+                    "box_type_name": "冷藏箱"
+                }
+            ],
+            "appointment_id": "appointment_id1"
+        }
+    ]
+}
+```
