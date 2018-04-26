@@ -236,6 +236,28 @@ def box_order_history(request):
                         safe=True, status=status.HTTP_200_OK)
 
 
+# 确认收箱
+@api_view(['POST'])
+def order_confirm(request):
+    data = request.body
+    if not parameter_is_valid(data, 'box_order_id'):
+        return JsonResponse(retcode('box_order_id is required', "9999", "Fail"), safe=True,
+                            status=status.HTTP_400_BAD_REQUEST)
+    parameters = json.loads(data)
+    box_order_id = parameters['box_order_id']
+
+    try:
+        box_order = BoxOrder.objects.get(box_order_id=box_order_id, ack_flag=0)
+        box_order.ack_flag = 1
+        box_order.save()
+        return JsonResponse(retcode({"box_order_id": box_order_id}, "0000", "Succ"),
+                            safe=True, status=status.HTTP_200_OK)
+    except BoxOrder.DoesNotExist, e:
+        log.error(e.message)
+        return JsonResponse(retcode('box_order_id dose not exist', "9999", "Fail"),
+                            safe=True, status=status.HTTP_400_BAD_REQUEST)
+
+
 # 判断云箱id是否存在
 def if_box_exits(deviceid):
     try:
@@ -252,4 +274,22 @@ def if_box_using(deviceid):
     data = BoxOrderDetail.objects.filter(box__deviceid=deviceid, state=0)
     return len(data) > 0
 
+
+# 判断参数是否存在，是否合法
+def parameter_is_valid(data, parameter_name):
+    try:
+        parameters = json.loads(data)
+        return parameter_name in parameters and '' != to_str(parameters[parameter_name])
+    except Exception, e:
+        log.error(repr(e))
+        return False
+
+
+# 将unicode转换utf-8编码
+def to_str(unicode_or_str):
+    if isinstance(unicode_or_str, unicode):
+        value = unicode_or_str.encode('UTF-8')
+    else:
+        value = unicode_or_str
+    return value
 

@@ -172,4 +172,77 @@
 
 ```
 
+### 5. 箱单记录
+#### URL：
 
+`container/api/v1/cloudbox/smarttms/operator/box_order_history`
+
+#### 方法： 
+
+`GET`
+
+#### BODY:
+```
+无
+```
+#### 返回：
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": [
+        {
+            "box_order_id": "bd01fa40-48ef-11e8-81af-c4b301c41e63",
+            "order_start_time": "2018-04-26T01:18:34.086Z",
+            "data": [
+                {
+                    "box_num": 2,
+                    "box_type_name": "冷冻箱"
+                }
+            ]
+        },
+        {
+            "box_order_id": "b88c9814-48ef-11e8-9c47-c4b301c41e63",
+            "order_start_time": "2018-04-26T01:18:26.614Z",
+            "data": [
+                {
+                    "box_num": 1,
+                    "box_type_name": "冷藏箱"
+                }
+            ]
+        }
+    ]
+}
+```
+
+### 6. 确认收箱
+#### URL：
+
+`container/api/v1/cloudbox/smarttms/operator/order_confirm`
+
+#### 方法： 
+
+`POST`
+
+#### BODY:
+```
+{"box_order_id": "bd01fa40-48ef-11e8-81af-c4b301c41e63"}
+```
+#### 返回：
+```
+{
+    "message": "Succ",
+    "code": "0000",
+    "data": {
+        "box_order_id": "bd01fa40-48ef-11e8-81af-c4b301c41e63"
+    }
+}
+```
+
+```
+{
+    "message": "Fail",
+    "code": "9999",
+    "data": "box_order_id dose not exist"
+}
+```
