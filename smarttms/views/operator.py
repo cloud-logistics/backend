@@ -20,7 +20,6 @@ ERR_MSG = 'server internal error, pls contact admin'
 tz = pytz.timezone(settings.TIME_ZONE)
 
 
-
 # 运营方首页数据
 @api_view(['GET'])
 def home_page(request):
@@ -182,6 +181,11 @@ def box_rent(request):
             box_order.save()
             for detail in box_order_detail_list:
                 detail.save()
+
+            # 预约单状态修改为已经接单
+            user_appointment = UserAppointment.objects.get(appointment_id=appointment_id)
+            user_appointment.status_code = 1
+            user_appointment.save()
     except Exception, e:
         log.error(repr(e))
         return JsonResponse(retcode(ERR_MSG, "9999", "Fail"),
@@ -236,6 +240,75 @@ def box_order_history(request):
                         safe=True, status=status.HTTP_200_OK)
 
 
+# 获取预约单列表
+@api_view(['GET'])
+def appointment_list(request):
+    data = UserAppointment.objects.raw('select sum(box_num) as box_num, '
+                                       'box_type_name,userappointment.appointment_id,userappointment.create_time, '
+                                       'enterpriseuser.user_name,siteinfo.name '
+                                       'from smarttms_userappointment userappointment '
+                                       'inner join smarttms_appointmentdetail appointmentdetail '
+                                       'on userappointment.appointment_id=appointmentdetail.appointment_id '
+                                       'inner join smarttms_siteinfo siteinfo '
+                                       'on userappointment.site_id = siteinfo.id '
+                                       'inner join smarttms_enterpriseuser enterpriseuser '
+                                       'on userappointment.user_id = enterpriseuser.user_id '
+                                       'inner join smarttms_boxtypeinfo boxtypeinfo '
+                                       'on appointmentdetail.box_type_id = boxtypeinfo.id '
+                                       'where userappointment.status_code = 0 '
+                                       'group by box_type_name,'
+                                       'userappointment.appointment_id,userappointment.create_time, '
+                                       'enterpriseuser.user_name,siteinfo.name order by create_time DESC')
+
+    date_list = []
+    item_list = []
+    last_appointment_id = ''
+    last_create_time = ''
+    last_user_name = ''
+    last_site_name = ''
+    for i in range(len(list(data))):
+        box_num = data[i].box_num
+        box_type_name = data[i].box_type_name
+        appointment_id = data[i].appointment_id
+        create_time = data[i].create_time
+        user_name = data[i].user_name
+        site_name = data[i].name
+
+        item = {'box_num': box_num,
+                'box_type_name': box_type_name}
+
+        if i == 0:
+            item_list.append(item)
+            last_appointment_id = appointment_id
+            last_create_time = create_time
+            last_user_name = user_name
+            last_site_name = site_name
+        else:
+            if appointment_id == last_appointment_id:
+                item_list.append(item)
+            else:
+                date_list.append(
+                    {'appointment_id': last_appointment_id, 'data': item_list,
+                     'create_time': last_create_time,
+                     'user_name': last_user_name,
+                     'site_name': last_site_name})
+                item_list = []
+                item_list.append(item)
+                last_appointment_id = appointment_id
+                last_create_time = create_time
+                last_user_name = user_name
+                last_site_name = site_name
+        if i == len(list(data)) - 1:
+            date_list.append(
+                {'appointment_id': last_appointment_id, 'data': item_list,
+                 'create_time': last_create_time,
+                 'user_name': last_user_name,
+                 'site_name': last_site_name})
+
+    return JsonResponse(retcode(date_list, "0000", "Succ"),
+                        safe=True, status=status.HTTP_200_OK)
+
+
 # 确认收箱
 @api_view(['POST'])
 def order_confirm(request):
@@ -250,6 +323,12 @@ def order_confirm(request):
         box_order = BoxOrder.objects.get(box_order_id=box_order_id, ack_flag=0)
         box_order.ack_flag = 1
         box_order.save()
+
+        # 预约单状态修改为已交箱
+        user_appointment = UserAppointment.objects.get(appointment_id=box_order.appointment_id)
+        user_appointment.status_code = 2
+        user_appointment.save()
+
         return JsonResponse(retcode({"box_order_id": box_order_id}, "0000", "Succ"),
                             safe=True, status=status.HTTP_200_OK)
     except BoxOrder.DoesNotExist, e:

@@ -32,6 +32,7 @@ urlpatterns = [
     url(r'^operator/box_detail$', operator.box_detail),                # 获取箱子类型
     url(r'^operator/box_rent$', operator.box_rent),                    # 扫码用箱
     url(r'^operator/box_order_history$', operator.box_order_history),  # 箱单记录
+    url(r'^operator/appointment_list$', operator.appointment_list),    # 预约单列表
     url(r'^operator/order_confirm$', operator.order_confirm),          # 确认收箱
 
     url(r'^driver/query/(?P<deviceid>[0-9a-zA-Z-]+)/$', driver.order_info),  # 司机扫描查询接口
