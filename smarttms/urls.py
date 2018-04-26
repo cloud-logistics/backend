@@ -31,8 +31,10 @@ urlpatterns = [
     url(r'^operator/box_status$', operator.box_status),                # 运营方云箱状态
     url(r'^operator/box_detail$', operator.box_detail),                # 获取箱子类型
     url(r'^operator/box_rent$', operator.box_rent),                    # 扫码用箱
+    # 司机接口
     url(r'^driver/query/(?P<deviceid>[0-9a-zA-Z-]+)/$', driver.order_info),  # 司机扫描查询接口
     url(r'^driver/ack/order/$', driver.ack_order),                       # 司机确认提货
+    url(r'^driver/orders/(?P<shop_id>[0-9]+)/$', driver.order_list),                       # 司机确认提货
 
     url(r'^receive_data$', sensor.receive_data),                           # 传感器接收数据
 
