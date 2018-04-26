@@ -190,6 +190,52 @@ def box_rent(request):
                         safe=True, status=status.HTTP_201_CREATED)
 
 
+# 箱单记录
+@api_view(['GET'])
+def box_order_history(request):
+    data = BoxOrder.objects.raw('select count(1) as box_num,boxorder.box_order_id,order_start_time,'
+                                'boxtypeinfo.id,boxtypeinfo.box_type_name '
+                                'from smarttms_boxorder boxorder inner join smarttms_boxorderdetail detail '
+                                'on boxorder.box_order_id = detail.box_order_id '
+                                'inner join smarttms_boxinfo boxinfo '
+                                'on boxinfo.deviceid = detail.box_id '
+                                'inner join smarttms_boxtypeinfo boxtypeinfo ' 
+                                'on boxtypeinfo.id = boxinfo.type_id '
+                                'group by boxorder.box_order_id,order_start_time,'
+                                'boxtypeinfo.id,boxtypeinfo.box_type_name order by order_start_time DESC ')
+
+    date_list = []
+    item_list = []
+    last_box_order_id = ''
+    last_order_start_time = ''
+    for i in range(len(list(data))):
+        box_num = data[i].box_num
+        box_order_id = data[i].box_order_id
+        order_start_time = data[i].order_start_time
+        box_type_name = data[i].box_type_name
+        item = {'box_num': box_num,
+                'box_type_name': box_type_name}
+
+        if i == 0:
+            item_list.append(item)
+            last_box_order_id = box_order_id
+            last_order_start_time = order_start_time
+        else:
+            if box_order_id == last_box_order_id:
+                item_list.append(item)
+            else:
+                date_list.append({'box_order_id': last_box_order_id, 'data': item_list, 'order_start_time': last_order_start_time})
+                item_list = []
+                item_list.append(item)
+                last_box_order_id = box_order_id
+                last_order_start_time = order_start_time
+        if i == len(list(data)) - 1:
+            date_list.append({'box_order_id': last_box_order_id, 'data': item_list, 'order_start_time': last_order_start_time})
+
+    return JsonResponse(retcode(date_list, "0000", "Succ"),
+                        safe=True, status=status.HTTP_200_OK)
+
+
 # 判断云箱id是否存在
 def if_box_exits(deviceid):
     try:
