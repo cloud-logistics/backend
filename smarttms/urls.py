@@ -42,8 +42,7 @@ urlpatterns = [
     url(r'^driver/query/(?P<deviceid>[0-9a-zA-Z-]+)/$', driver.order_info),  # 司机扫描查询接口
     url(r'^driver/ack/order/$', driver.ack_order),                       # 司机确认提货
     url(r'^driver/orders/(?P<shop_id>[0-9]+)/$', driver.order_list),                       # 司机确认提货
-
-
+    url(r'^driver/orderdetail/(?P<order_id>[0-9a-zA-Z-]+)/$', driver.order_detail),   #运单详情查询
     url(r'^receive_data$', sensor.receive_data),                           # 传感器接收数据
 
     # 发货方接口

@@ -10,8 +10,8 @@ from django.http import JsonResponse
 from util import logger
 from smarttms.utils.retcode import retcode, errcode
 from smarttms.utils.logger import get_logger
-from smarttms.models import GoodsOrderDetail, GoodsOrder
-from smarttms.serializers import GoodsOrderSerializer, SiteInfoSerializer, ShopInfoSerializer
+from smarttms.models import GoodsOrderDetail, GoodsOrder, OrderItem
+from smarttms.serializers import GoodsOrderSerializer, SiteInfoSerializer, ShopInfoSerializer, OrderItemSerializer
 
 
 log = get_logger(__name__)
@@ -92,4 +92,36 @@ def order_list(request, shop_id):
         order_detail['shop'] = ShopInfoSerializer(item.shop).data
         order_detail['detail'] = detail_stat
         order_list_ret.append(order_detail)
+    return JsonResponse(retcode(order_list_ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def order_detail(request, order_id):
+    try:
+        goods_order = GoodsOrder.objects.get(id=order_id, driver_take_status=1, receiver_take_status=0)
+    except GoodsOrder.DoesNotExist, e:
+        log.error(repr(e))
+        return JsonResponse(retcode(errcode("0400", '运单不存在'), "0400", '运单不存在'), safe=True,
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    order_list_ret = []
+    goods_detail_list = GoodsOrderDetail.objects.filter(order=goods_order, driver_take_status=1, receiver_take_status=0)
+    detail_stat = {}
+    for detail in goods_detail_list:
+        detail_stat['box_id'] = detail.box.deviceid
+        detail_stat['box_type'] = detail.box.type.id
+        order_detail = {}
+        order_detail['goods_order_id'] = goods_order.id
+        order_detail['shop'] = ShopInfoSerializer(goods_order.shop).data
+        order_detail['detail'] = detail_stat
+        order_item_list = OrderItem.objects.filter(order_detail=detail)
+        item_list = []
+        for item in order_item_list:
+            item_dic = {}
+            item_dic['food_name'] = item.goods.name
+            item_dic['food_unit'] = item.goods_unit.name
+            item_dic['food_num'] = item.num
+            item_list.append(item_dic)
+        order_detail['order_items'] = item_list
+    order_list_ret.append(order_detail)
     return JsonResponse(retcode(order_list_ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
