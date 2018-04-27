@@ -214,9 +214,9 @@ def get_order_list(request):
                 goods_items.append({'goods_id': item.goods.id, 'goods_name': item.goods.name,
                                     'goods_unit': item.goods_unit.name, 'number': item.num})
 
-            box_status = '正常'
+            box_status = u'正常'
             resp_orders.append({'order_id': go.id, 'order_time': go.order_start_time, 'shop_id': go.shop.id,
-                                'shop_name': go.shop.name, 'status': box_status, 'goods': goods_items})
+                                'shop_name': go.shop.name, 'shop_tel': go.shop.telephone, 'status': box_status, 'goods': goods_items})
 
         pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
         paginator = pagination_class()
@@ -247,10 +247,10 @@ def get_transporting_goods_orders(request):
                 goods_items.append({'goods_id': item.goods.id, 'goods_name': item.goods.name,
                                     'goods_unit': item.goods_unit.name, 'number': item.num})
 
-            box_status = '正常'
+            box_status = u'正常'
             resp_orders.append({'order_id': go.id, 'order_time': go.order_start_time, 'shop_id': go.shop.id,
-                                'shop_name': go.shop.name, 'status': box_status, 'driver_name': go.driver.user_name,
-                                'driver_tel': go.driver.user_phone, 'goods': goods_items})
+                                'shop_name': go.shop.name, 'shop_tel': go.shop.telephone, 'status': box_status,
+                                'driver_name': go.driver.user_name, 'driver_tel': go.driver.user_phone, 'goods': goods_items})
         pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
         paginator = pagination_class()
         page = paginator.paginate_queryset(resp_orders, request)
@@ -284,9 +284,9 @@ def get_orders_by_day(request):
             for item in item_list:
                 goods_items.append({'goods_id': item.goods.id, 'goods_name': item.goods.name,
                                     'goods_unit': item.goods_unit.name, 'number': item.num})
-            box_status = '正常'
+            box_status = u'正常'
             resp_orders.append({'order_id': go.id, 'order_time': go.order_start_time, 'shop_id': go.shop.id,
-                                'shop_name': go.shop.name, 'status': box_status, 'driver_name': go.driver.user_name,
+                                'shop_name': go.shop.name, 'shop_tel': go.shop.telephone, 'status': box_status, 'driver_name': go.driver.user_name,
                                 'driver_tel': go.driver.user_phone, 'goods': goods_items})
 
         pagination_class = api_settings.DEFAULT_PAGINATION_CLASS

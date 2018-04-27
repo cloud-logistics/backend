@@ -124,17 +124,35 @@
 
 ```
 {
-    "status": "OK",
-    "msg": "Get shop list success.",
-    "data": [
-        {
-            "shop_id": 1,
-            "shop_location": "印象城",
-            "shop_name": "河马鲜生"
-        }
-    ]
+    "message": "Get shop list success.",
+    "code": "OK",
+    "data": {
+        "count": 3,
+        "limit": 10,
+        "results": [
+            {
+                "shop_id": 1,
+                "shop_location": "印象城",
+                "shop_name": "河马鲜生"
+            },
+            {
+                "shop_id": 2,
+                "shop_location": "万达",
+                "shop_name": "海底捞"
+            },
+            {
+                "shop_id": 3,
+                "shop_location": "高新",
+                "shop_name": "大排档"
+            }
+        ],
+        "links": {
+            "previous": null,
+            "next": null
+        },
+        "offset": 0
+    }
 }
-
 ```
 
 
@@ -249,31 +267,41 @@
 
 ```
 {
-    "status": "OK",
-    "msg": "Get order list success.",
-    "data": [
-        {
-            "status": "正常",
-            "goods": [
-                {
-                    "number": 25,
-                    "goods_name": "秋刀鱼",
-                    "goods_id": "2",
-                    "goods_unit": "件"
-                },
-                {
-                    "number": 10,
-                    "goods_name": "麻辣小龙虾",
-                    "goods_id": "1",
-                    "goods_unit": "件"
-                }
-            ],
-            "order_time": "2018-04-25T02:10:25.677Z",
-            "order_id": "d1496ed0-482d-11e8-aafd-525400bbac8e",
-            "shop_name": "河马鲜生",
-            "shop_id": 1
-        }
-    ]
+    "message": "Get order list success.",
+    "code": "OK",
+    "data": {
+        "count": 1,
+        "limit": 10,
+        "results": [
+            {
+                "status": "正常",
+                "shop_tel": "1234",
+                "goods": [
+                    {
+                        "number": 10,
+                        "goods_name": "麻辣小龙虾",
+                        "goods_id": "1",
+                        "goods_unit": "件"
+                    },
+                    {
+                        "number": 25,
+                        "goods_name": "秋刀鱼",
+                        "goods_id": "2",
+                        "goods_unit": "件"
+                    }
+                ],
+                "order_time": "2018-04-25T02:10:25.677980Z",
+                "order_id": "d1496ed0-482d-11e8-aafd-525400bbac8e",
+                "shop_name": "河马鲜生",
+                "shop_id": 1
+            }
+        ],
+        "links": {
+            "previous": null,
+            "next": null
+        },
+        "offset": 0
+    }
 }
 ```
 
@@ -383,48 +411,44 @@
 
 ```
 {
-    "status": "OK",
-    "msg": "Get all order list success.",
-    "data": [
-        {
-            "order_id": "",
-            "order_time": "",
-            "shop_id": 123,
-            "shop_name": "",
-            "status": "",
-            "driver_name": "",
-            "driver_tel": "18099992222",
-            "goods": [
-                {
-                    "goods_id": "1",
-                    "goods_name": "",
-                    "number": 123
-                },
-                {
-                    "goods_id": "2",
-                    "goods_name": "",
-                    "number": 123
-                }
-            ]
+    "message": "Get transporting order list success.",
+    "code": "OK",
+    "data": {
+        "count": 1,
+        "limit": 10,
+        "results": [
+            {
+                "status": "正常",
+                "driver_name": "driver1",
+                "shop_tel": "1234",
+                "shop_id": 1,
+                "driver_tel": "123456",
+                "order_time": "2018-04-25T02:10:25.677980Z",
+                "goods": [
+                    {
+                        "number": 10,
+                        "goods_name": "麻辣小龙虾",
+                        "goods_id": "1",
+                        "goods_unit": "件"
+                    },
+                    {
+                        "number": 25,
+                        "goods_name": "秋刀鱼",
+                        "goods_id": "2",
+                        "goods_unit": "件"
+                    }
+                ],
+                "order_id": "d1496ed0-482d-11e8-aafd-525400bbac8e",
+                "shop_name": "河马鲜生"
+            }
+        ],
+        "links": {
+            "previous": null,
+            "next": null
         },
-        {
-            "order_id": "",
-            "shop_id": 123,
-            "shop_name": "",
-            "status": "",
-            "driver_name": "",
-            "driver_tel": "18099992222",
-            "goods": [
-                {
-                    "goods_id": "3",
-                    "goods_name": "",
-                    "number": 123
-                }
-            ]
-        }
-    ]
+        "offset": 0
+    }
 }
-
 ```
 
 
