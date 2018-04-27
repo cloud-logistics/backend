@@ -13,6 +13,7 @@ from rest_framework.settings import api_settings
 import uuid
 import datetime
 from util.geo import cal_position
+from django.db import transaction
 
 
 log = logger.get_logger(__name__)
@@ -74,14 +75,16 @@ def get_shop_list(request):
             res_shops.append(
                 {'shop_id': item.id, 'shop_name': item.name, 'shop_location': item.location})
 
+        pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+        paginator = pagination_class()
+        page = paginator.paginate_queryset(res_shops, request)
 
     except Exception, e:
         log.error(e.message)
         response_msg = {'msg': e.message, 'status': 'ERROR'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        resp = {'status': 'OK', 'msg': 'Get shop list success.', 'data': res_shops}
-        return JsonResponse(resp, safe=True, status=status.HTTP_200_OK)
+        return paginator.get_paginated_response(page, 'OK', 'Get shop list success.')
 
 
 # 查询货物列表
@@ -96,13 +99,16 @@ def get_goods_list(request):
                 {'goods_id': item.id, 'goods_name': item.name, 'ava_number': item.num, 'goods_unit': item.unit.name}
             )
 
+        pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+        paginator = pagination_class()
+        page = paginator.paginate_queryset(res_goods, request)
+
     except Exception, e:
         log.error(e.message)
         response_msg = {'msg': e.message, 'status': 'ERROR'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        resp = {'status': 'OK', 'msg': 'Get goods list success.', 'data': res_goods}
-        return JsonResponse(resp, safe=True, status=status.HTTP_200_OK)
+        return paginator.get_paginated_response(page, 'OK', 'Get goods list success.')
 
 
 # 查询云箱详情
@@ -154,27 +160,33 @@ def create_goodsorder(request):
         user_id = data['user_id']
         site_id = data['site_id']
 
-        goods_order_id = str(uuid.uuid1())
-        go = GoodsOrder(id=goods_order_id, order_start_time=datetime.datetime.now(), state=0, site_id=site_id, shop_id=shop_id, user_id=user_id)
-        go.save()
+        with transaction.atomic():
+            goods_order_id = str(uuid.uuid1())
+            go = GoodsOrder(id=goods_order_id, order_start_time=datetime.datetime.now(), state=0, site_id=site_id, shop_id=shop_id, user_id=user_id)
+            go.save()
 
-        box_list = data['boxes']
-        for box in box_list:
-            deviceid = box['deviceid']
-            detail_id = str(uuid.uuid1())
-            boxinfo = BoxInfo.objects.get(deviceid=deviceid)
+            box_list = data['boxes']
+            for box in box_list:
+                deviceid = box['deviceid']
+                detail_id = str(uuid.uuid1())
+                boxinfo = BoxInfo.objects.get(deviceid=deviceid)
 
-            gd = GoodsOrderDetail(id=detail_id, order=go, box=boxinfo)
-            gd.save()
+                used_box = GoodsOrderDetail.objects.filter(box=boxinfo)
+                if len(used_box) > 0:
+                    response_msg = {'status': 'ERROR', 'msg': u'该箱已使用！'}
+                    return JsonResponse(response_msg, safe=True, status=status.HTTP_400_BAD_REQUEST)
 
-            goods_list = box['goods']
-            for goods in goods_list:
-                goods_id = goods['goods_id']
-                goods_num = goods['goods_num']
-                item_id = str(uuid.uuid1())
-                gs = GoodsList.objects.get(id=goods_id)
-                item = OrderItem(id=item_id, goods_id=goods_id, goods_unit=gs.unit, num=goods_num, order_detail=gd)
-                item.save()
+                gd = GoodsOrderDetail(id=detail_id, order=go, box=boxinfo)
+                gd.save()
+
+                goods_list = box['goods']
+                for goods in goods_list:
+                    goods_id = goods['goods_id']
+                    goods_num = goods['goods_num']
+                    item_id = str(uuid.uuid1())
+                    gs = GoodsList.objects.get(id=goods_id)
+                    item = OrderItem(id=item_id, goods_id=goods_id, goods_unit=gs.unit, num=goods_num, order_detail=gd)
+                    item.save()
 
     except Exception, e:
         log.error(e.message)
@@ -205,14 +217,17 @@ def get_order_list(request):
             box_status = '正常'
             resp_orders.append({'order_id': go.id, 'order_time': go.order_start_time, 'shop_id': go.shop.id,
                                 'shop_name': go.shop.name, 'status': box_status, 'goods': goods_items})
+
+        pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+        paginator = pagination_class()
+        page = paginator.paginate_queryset(resp_orders, request)
+
     except Exception, e:
         log.error(e.message)
         response_msg = {'msg': e.message, 'status': 'ERROR'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        resp = {'status': 'OK', 'msg': 'Get order list success.', 'data': resp_orders}
-        return JsonResponse(resp, safe=True, status=status.HTTP_200_OK)
-
+        return paginator.get_paginated_response(page, 'OK', 'Get order list success.')
 
 
 # 获取运单列表
@@ -236,17 +251,18 @@ def get_transporting_goods_orders(request):
             resp_orders.append({'order_id': go.id, 'order_time': go.order_start_time, 'shop_id': go.shop.id,
                                 'shop_name': go.shop.name, 'status': box_status, 'driver_name': go.driver.user_name,
                                 'driver_tel': go.driver.user_phone, 'goods': goods_items})
+        pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+        paginator = pagination_class()
+        page = paginator.paginate_queryset(resp_orders, request)
+
     except Exception, e:
         log.error(e.message)
         response_msg = {'msg': e.message, 'status': 'ERROR'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        resp = {'status': 'OK', 'msg': 'Get transporting order list success.', 'data': resp_orders}
-        return JsonResponse(resp, safe=True, status=status.HTTP_200_OK)
+        return paginator.get_paginated_response(page, 'OK', 'Get transporting order list success.')
 
 
-
-# 获取运单列表
 @csrf_exempt
 @api_view(['GET'])
 def get_orders_by_day(request):
@@ -272,13 +288,17 @@ def get_orders_by_day(request):
             resp_orders.append({'order_id': go.id, 'order_time': go.order_start_time, 'shop_id': go.shop.id,
                                 'shop_name': go.shop.name, 'status': box_status, 'driver_name': go.driver.user_name,
                                 'driver_tel': go.driver.user_phone, 'goods': goods_items})
+
+        pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+        paginator = pagination_class()
+        page = paginator.paginate_queryset(resp_orders, request)
+
     except Exception, e:
         log.error(e.message)
         response_msg = {'msg': e.message, 'status': 'ERROR'}
         return JsonResponse(response_msg, safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        resp = {'status': 'OK', 'msg': 'Get transporting order list success.', 'data': resp_orders}
-        return JsonResponse(resp, safe=True, status=status.HTTP_200_OK)
+        return paginator.get_paginated_response(page, 'OK', 'Get order list success.')
 
 
 # 获取运单详情

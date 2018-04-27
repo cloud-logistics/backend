@@ -156,28 +156,31 @@
 
 ```
 {
-    "status": "OK",
-    "msg": "Get goods list success.",
-    "data": [
-        {
-            "ava_number": 100,
-            "goods_name": "麻辣小龙虾",
-            "goods_id": "1",
-            "goods_unit": "件"
+    "message": "Get goods list success.",
+    "code": "OK",
+    "data": {
+        "count": 3,
+        "limit": 2,
+        "results": [
+            {
+                "ava_number": 100,
+                "goods_name": "麻辣小龙虾",
+                "goods_id": "1",
+                "goods_unit": "件"
+            },
+            {
+                "ava_number": 500,
+                "goods_name": "秋刀鱼",
+                "goods_id": "2",
+                "goods_unit": "件"
+            }
+        ],
+        "links": {
+            "previous": null,
+            "next": "http://106.2.20.185:8000/container/api/v1/cloudbox/smarttms/shipper/goodslist?limit=2&offset=2"
         },
-        {
-            "ava_number": 500,
-            "goods_name": "秋刀鱼",
-            "goods_id": "2",
-            "goods_unit": "件"
-        },
-        {
-            "ava_number": 500,
-            "goods_name": "黑鱼",
-            "goods_id": "3",
-            "goods_unit": "件"
-        }
-    ]
+        "offset": 0
+    }
 }
 
 ```
