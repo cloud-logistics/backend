@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 from rest_framework import status
 from django.http import JsonResponse
-from util import logger
+from django.db import transaction
 from smarttms.utils.retcode import retcode, errcode
 from smarttms.utils.logger import get_logger
 from smarttms.models import GoodsOrderDetail, GoodsOrder, OrderItem
@@ -40,31 +40,38 @@ def ack_order(request):
     except Exception:
         return JsonResponse(retcode({}, "9999", '云箱id不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
     try:
-        goods_order_detail = GoodsOrderDetail.objects.get(box__deviceid=deviceid, driver_take_status=0)
+        user_id = data['user_id']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", 'user_id不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        goods_order_detail = GoodsOrderDetail.objects.get(order__driver__user_id=user_id, box__deviceid=deviceid,
+                                                          driver_take_status=0)
+        # print goods_order_detail.driver_take_status
+        try:
+            with transaction.atomic():
+                goods_order_detail.driver_take_status = 1
+                goods_order_detail.save()
+                goods_order_detail_list = GoodsOrderDetail.objects.filter(order=goods_order_detail.order)
+                detail_total_num = goods_order_detail_list.count()
+                detail_ack_num = 0
+                for item in goods_order_detail_list:
+                    if item.driver_take_status == 1:
+                        detail_ack_num = + 1
+                    else:
+                        continue
+                if detail_ack_num == detail_total_num and detail_ack_num != 0:
+                    goods_order = goods_order_detail.order
+                    goods_order.driver_take_status = 1
+                    ret['shop_id'] = goods_order.shop.id
+                    goods_order.save()
+                    log.info("the goods order has been ack")
+                ret['detail_total_num'] = detail_total_num
+                ret['detail_ack_num'] = detail_ack_num
+        except Exception, e:
+            log.error(repr(e))
     except GoodsOrderDetail.DoesNotExist, e:
         log.error(repr(e))
         return JsonResponse(retcode(errcode("0400", '云箱不存在'), "0400", '云箱不存在'), safe=True, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    try:
-        goods_order_detail.driver_take_status = 1
-        goods_order_detail.save()
-        goods_order_detail_list = GoodsOrderDetail.objects.filter(order=goods_order_detail.order)
-        detail_total_num = goods_order_detail_list.count()
-        detail_ack_num = 0
-        for item in goods_order_detail_list:
-            if item.driver_take_status == 1:
-                detail_ack_num = + 1
-            else:
-                continue
-        if detail_ack_num == detail_total_num and detail_ack_num != 0:
-            goods_order = goods_order_detail.order
-            goods_order.driver_take_status = 1
-            ret['shop_id'] = goods_order.shop.id
-            goods_order.save()
-            log.info("the goods order has been ack")
-    except Exception, e:
-        log.error(repr(e))
-    ret['detail_total_num'] = detail_total_num
-    ret['detail_ack_num'] = detail_ack_num
     return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
 
 
@@ -125,3 +132,25 @@ def order_detail(request, order_id):
         order_detail['order_items'] = item_list
     order_list_ret.append(order_detail)
     return JsonResponse(retcode(order_list_ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def arrive_ack(request):
+    ret = {}
+    data = JSONParser().parse(request)
+    try:
+        order_id = data['order_id']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", '运单id不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user_id = data['user_id']
+    except Exception:
+        return JsonResponse(retcode({}, "9999", 'user_id不能为空'), safe=True, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        goods_order = GoodsOrder.objects.get(id=order_id, driver__user_id=user_id, driver_arrive_shop_status=0)
+        goods_order.driver_arrive_shop_status = 1
+        goods_order.save()
+    except GoodsOrder.DoesNotExist, e:
+        log.error(repr(e))
+    return JsonResponse(retcode(ret, "0000", "Succ"), safe=True, status=status.HTTP_200_OK)
